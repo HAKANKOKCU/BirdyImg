@@ -1,0 +1,182 @@
+*,*::before,*::after {
+  box-sizing: border-box;
+  font-weight: normal;
+}
+body, html {
+  font-family: Verdana, sans-serif;
+  margin: 0;
+  --animate-speed: 1s;
+}
+body {
+  height: 100%;
+  width: 100%;
+}
+body.dark {
+  background-color: rgb(20,20,20);
+  color:white;
+}
+body.dark * {
+  scrollbar-color: rgb(200,200,200) rgb(50,50,50) !important;
+}
+
+.limon.pill {
+  border-radius: 40px;
+  padding: 4px;
+}
+.limon.rounded {
+    border-radius: 5px;
+}
+
+.limon.darkshandow.always {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+.limon.lightshandow.always {
+  box-shadow: 0 4px 8px 0 rgba(255, 255, 255, 0.2), 0 6px 20px 0 rgba(255, 255, 255, 0.19);
+}
+
+.limon.darkshandow:hover {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+.limon.lightshandow:hover {
+  box-shadow: 0 4px 8px 0 rgba(255, 255, 255, 0.2), 0 6px 20px 0 rgba(255, 255, 255, 0.19);
+}
+
+
+button.limon {
+  padding: 5px;
+}
+button.limon.dark {
+  background-color: rgb(44, 44, 44);
+  border: none;
+  color: white;
+}
+button.limon.dark:hover {
+  background-color: rgb(64,64,64)
+}
+button.limon.dark:active {
+  background-color: rgb(10,10,10)
+}
+button.limon.dark:focus {
+  outline: solid white 2px;
+}
+
+button.limon.light {
+  background-color: rgb(230, 230, 230);
+  border: none;
+  color:black;
+}
+button.limon.light:hover {
+  background-color: rgb(210,210,210)
+}
+button.limon.light:active {
+  background-color: rgb(240,240,240)
+}
+button.limon.light:focus {
+  outline: solid black 2px;
+}
+
+
+input.limon {
+  border-radius: 2px
+}
+input.limon.dark {
+  background-color: rgb(44, 44, 44);
+  border: transparent solid 2px;
+  color: white;
+}
+input.limon.dark:hover {
+  border: rgb(64,64,64) solid 2px;
+}
+input.limon.dark:active {
+  border: rgb(10,10,10) solid 2px;
+}
+input.limon.dark:focus {
+  border: rgb(200,200,200) solid 2px;
+  outline: none;
+}
+
+input.limon.light {
+  background-color: rgb(230, 230, 230);
+  border: transparent solid 2px;
+  color:black;
+}
+input.limon.light:hover {
+  border: rgb(210,210,210) solid 2px;
+}
+input.limon.light:active {
+  border: rgb(240,240,240) solid 2px;
+}
+input.limon.light:focus {
+  border: rgb(0,0,0) solid 2px;
+  outline: none;
+}
+
+
+select.limon.light {
+  background-color: rgb(250,250,250);
+  border: transparent solid 2px;
+  color:black
+}
+select.limon.dark {
+  background-color: rgb(20,20,20);
+  border: transparent solid 2px;
+  color:white
+}
+
+ul.no-bullets {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+ul.inside-bul {
+  list-style-position: inside;
+}
+ul.limon.boxed {
+  list-style-position: inside;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+ul.limon.boxed > li {
+  padding: 4px;
+  border: 1px solid rgba(150,150,150,0.5);
+  margin: 0
+}
+
+
+div.limon.titlebar {
+  position: sticky;
+  display: flex;
+  top:0;
+  left:0;
+  right: 0;
+  width: 100%;
+  padding: 4px;
+  z-index: 90;
+}
+
+div.limon.titlebar.light {
+  background-color: rgb(220,220,220);
+  color:black
+}
+div.limon.titlebar.dark {
+  background-color: rgb(40,40,40);
+  color: white
+}
+
+
+p {padding: 4px;margin: 0}
+
+
+.block {display: block}
+.inline-block {display: inline-block}
+.inline {display: inline}
+.flex {display: flex}
+.inline-flex {display: inline-flex}
+.grid {display: grid}
+
+.animated {
+  transition: var(--animate-speed);
+}
+
+h1 {margin:2px;padding:0}

@@ -1,0 +1,15 @@
+{
+	"file":"File",
+	"open":"Open",
+	"view":"View",
+	"previousImage":"Previous Image",
+	"nextImage":"Next Image",
+	"centerImage":"Center Image",
+	"showFullImage":"Show Full Image",
+	"showRealImageSize":"Show Real Image Size",
+	"loadingImage":"Loading Image..",
+	"width":"Width",
+	"height":"Height",
+	"fileSize":"File Size",
+	"imageInfo":"Image Info"
+}

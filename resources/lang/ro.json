@@ -1,0 +1,15 @@
+{
+	"file":"Fișier",
+	"open":"Deschide",
+	"view":"Vedere",
+	"previousImage":"Imaginea Dinainte",
+	"nextImage":"Următoarea Imagine",
+	"centerImage":"Setează imaginea la mijloc",
+	"showFullImage":"Vezi toata imaginea",
+	"showRealImageSize":"Vezi marimea reala a imaginii",
+	"loadingImage":"Se incarca imaginea...",
+	"width":"Lăţime",
+	"height":"Înălţime",
+	"fileSize":"Marimea fisierului",
+	"imageInfo":"Informatii despre imagine"
+}

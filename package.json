@@ -1,0 +1,24 @@
+{
+  "name": "birdyimg",
+  "version": "1.0.0",
+  "description": "BirdyImg Image Viewer",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+	"pack": "npx electron-packager . BirdyImg --platform=win32 --arch=x64 --extra-resource='./resources/asset'"
+  },
+  "keywords": [
+    "ImageViewer",
+    "Images"
+  ],
+  "author": "HAKANKOKCU",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^9.4.4",
+    "electron-packager": "^15.5.1"
+  },
+  "dependencies": {
+    "fs-extra": "^10.1.0",
+    "image-size": "^1.0.2"
+  }
+}

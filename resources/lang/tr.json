@@ -1,0 +1,15 @@
+{
+	"file":"Dosya",
+	"open":"Aç",
+	"view":"Görüntü",
+	"previousImage":"Önceki Resim",
+	"nextImage":"Sonraki Resim",
+	"centerImage":"Resmi Ortala",
+	"showFullImage":"Tüm Resmi Göster",
+	"showRealImageSize":"Gerçek Resim Boyutunda Göster",
+	"loadingImage":"Resim Yükleniyor..",
+	"width":"Genişlik",
+	"height":"Yükseklik",
+	"fileSize":"Dosya Boyutu",
+	"imageInfo":"Dosya Bilgisi"
+}
