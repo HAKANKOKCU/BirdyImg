@@ -106,10 +106,13 @@ main {
 		color:black;
 	}
 	svg {fill:black}
-	select {color:white;background:rgb(20,20,20)}
+	select {color:black;background:white}
 	toolbar {background:white}
 	toolbar > button {background: white}
 	toolbar > button:hover {background: lightgray}
 	button {background: rgb(240,240,240)}
 	button:hover {background: rgb(200,200,200)}
 }
+
+.ilitem {display:flex;}
+.ilitem > marquee {max-width:250px;}

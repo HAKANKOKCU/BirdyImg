@@ -11,5 +11,6 @@
 	"width":"Lăţime",
 	"height":"Înălţime",
 	"fileSize":"Marimea fisierului",
-	"imageInfo":"Informatii despre imagine"
+	"imageInfo":"Informatii despre imagine",
+	"name":"Nume"
 }

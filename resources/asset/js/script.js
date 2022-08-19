@@ -76,11 +76,19 @@ ipcRenderer.on("imageinfo", (event,data) => {
 });
 
 function openFileInfo() {
-	var pane = openRightPane("<h1>" + langpack.imageInfo + "</h1><p></p><p>" + langpack.width + ": " + imgW.toString() + " (" + fileInf.size.width + ")" + "</p><p>" + langpack.height + ": " + imgH.toString() + " (" + fileInf.size.height + ")" + "</p><p>" + langpack.fileSize + ": <span class='PKAbleSizeUpdateSpan'>" + Math.round(fileInf.filesize / 1024).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p>");
+	var filfo = fileInf;
+	var namestr = getFileName(filfo.path);
+	var fnstr;
+	if (namestr.length > 24) {
+		fnstr = "<marquee>" + namestr + "</marquee>"
+	}else {
+		fnstr = namestr
+	}
+	var pane = openRightPane("<h1>" + langpack.imageInfo + "</h1><p></p><p class='ilitem'>" + langpack.name + ": " + fnstr + "</p><p class='ilitem'>" + langpack.width + ": " + imgW.toString() + " (" + filfo.size.width + ")" + "</p><p class='ilitem'>" + langpack.height + ": " + imgH.toString() + " (" + filfo.size.height + ")" + "</p><p class='ilitem'>" + langpack.fileSize + ": <span class='PKAbleSizeUpdateSpan'>" + Math.round(filfo.filesize / 1024).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p>");
 	var PKAbleSelect = pane.getElementsByClassName("PKAbleSizeSelect")[0];
 	var PKAbleUpdate = pane.getElementsByClassName("PKAbleSizeUpdateSpan")[0];
 	PKAbleSelect.addEventListener("change", function() {
-		PKAbleUpdate.innerHTML = Math.round(fileInf.filesize / PKAbleSelect.value).toString()
+		PKAbleUpdate.innerHTML = Math.round(filfo.filesize / PKAbleSelect.value).toString()
 	});
 }
 
@@ -419,4 +427,10 @@ function rotR() {
 	//imgH = imgW;
 	//imgW = imgHold;
 	posImg();
+}
+
+function getFileName(path) {
+	var pathR = path.replace(/\\/g,"/");
+	var pt = pathR.split("/");
+	return pt[pt.length - 1]
 }
