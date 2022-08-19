@@ -1,6 +1,6 @@
 //global.sharedObject = {prop1: process.argv};
 
-const {BrowserWindow,app,Menu,ipcMain,dialog} = require("electron");
+const {BrowserWindow,app,Menu,ipcMain,dialog,nativeTheme} = require("electron");
 //const { FileManager } = require("./lib/FileManager");
 const fs = require("fs-extra");
 const pathlib = require('path');
@@ -84,7 +84,6 @@ function bulidapp() {
 	});
 	app_window.loadFile("resources/asset/index.html");
 	//app_window.openDevTools();
-	//const fileMan = new FileManager(app_window);
 	let menu_list = [
 		{
 			label: langdata.file,
@@ -169,6 +168,19 @@ function bulidapp() {
 		app_window.show();
 	});
 }
+
+ipcMain.handle('dark-mode:toggle', () => {
+	if (nativeTheme.shouldUseDarkColors) {
+		nativeTheme.themeSource = 'light'
+	} else {
+		nativeTheme.themeSource = 'dark'
+	}
+	return nativeTheme.shouldUseDarkColors
+})
+
+ipcMain.handle('dark-mode:system', () => {
+	nativeTheme.themeSource = 'system'
+})
 
 ipcMain.on("openfile", (e,arg) => {
 	dialog

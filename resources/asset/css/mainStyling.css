@@ -1,5 +1,7 @@
 body {overflow:hidden}
 
+* {outline:none}
+
 #imgView {
 	position:relative;
 	overflow:hidden;
@@ -77,4 +79,37 @@ main {
 	left:0;
 	color:gray;
 	z-index: 5;
+}
+
+.PKAbleSizeSelect {
+	border:none;
+}
+
+
+@media (prefers-color-scheme: dark) {
+	body {
+		background-color: rgb(20,20,20);
+		color:white;
+	}
+	svg {fill:white}
+	select {color:white;background:rgb(20,20,20)}
+	toolbar {background:rgb(20,20,20)}
+	toolbar > button {background: rgb(20,20,20)}
+	toolbar > button:hover {background: rgb(50,50,50)}
+	button {background: rgb(40,40,40)}
+	button:hover {background: rgb(70,70,70)}
+}
+
+@media (prefers-color-scheme: light) {
+	body {
+		background-color: white;
+		color:black;
+	}
+	svg {fill:black}
+	select {color:white;background:rgb(20,20,20)}
+	toolbar {background:white}
+	toolbar > button {background: white}
+	toolbar > button:hover {background: lightgray}
+	button {background: rgb(240,240,240)}
+	button:hover {background: rgb(200,200,200)}
 }

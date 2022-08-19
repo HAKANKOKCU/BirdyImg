@@ -72,8 +72,17 @@ ipcRenderer.on("langpack", (event,data) => {
 	loadingText.innerText = langpack.loadingImage;
 });
 ipcRenderer.on("imageinfo", (event,data) => {
-	openRightPane("<h1>" + langpack.imageInfo + "</h1><p></p><p>" + langpack.width + ": " + imgW.toString() + " (" + fileInf.size.width + ")" + "</p><p>" + langpack.height + ": " + imgH.toString() + " (" + fileInf.size.height + ")" + "</p><p>" + langpack.fileSize + ": " + Math.round(fileInf.filesize / 1024).toString() + "KB</p>");
+	openFileInfo();
 });
+
+function openFileInfo() {
+	var pane = openRightPane("<h1>" + langpack.imageInfo + "</h1><p></p><p>" + langpack.width + ": " + imgW.toString() + " (" + fileInf.size.width + ")" + "</p><p>" + langpack.height + ": " + imgH.toString() + " (" + fileInf.size.height + ")" + "</p><p>" + langpack.fileSize + ": <span class='PKAbleSizeUpdateSpan'>" + Math.round(fileInf.filesize / 1024).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p>");
+	var PKAbleSelect = pane.getElementsByClassName("PKAbleSizeSelect")[0];
+	var PKAbleUpdate = pane.getElementsByClassName("PKAbleSizeUpdateSpan")[0];
+	PKAbleSelect.addEventListener("change", function() {
+		PKAbleUpdate.innerHTML = Math.round(fileInf.filesize / PKAbleSelect.value).toString()
+	});
+}
 
 ipcRenderer.on("dsimg", (event,data) => {
 	zoomPrct = 1;
@@ -358,7 +367,7 @@ function openRightPane(html) {
 	var closeBtn = document.createElement("button");
 	closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6Z"/></svg>';
 	closeBtn.style.float = "right";
-	closeBtn.classList.add("limon","light","pill");
+	closeBtn.classList.add("limon","pill");
 	closeBtn.addEventListener("click", function() {maincont.removeChild(sb);
 	if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
 		animateZoomPos()
@@ -385,6 +394,7 @@ function openRightPane(html) {
 	}
 	posImg();
 	retimgIfOut();
+	return sbcontent;
 }
 
 function rotL() {

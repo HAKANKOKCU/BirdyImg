@@ -44,10 +44,10 @@ body.dark * {
 
 button.limon {
   padding: 5px;
+  border: none;
 }
 button.limon.dark {
   background-color: rgb(44, 44, 44);
-  border: none;
   color: white;
 }
 button.limon.dark:hover {
@@ -62,7 +62,6 @@ button.limon.dark:focus {
 
 button.limon.light {
   background-color: rgb(230, 230, 230);
-  border: none;
   color:black;
 }
 button.limon.light:hover {
