@@ -12,5 +12,6 @@
 	"height":"Yükseklik",
 	"fileSize":"Dosya Boyutu",
 	"imageInfo":"Dosya Bilgisi",
-	"name":"İsim"
+	"name":"İsim",
+	"filelist":"Dosya Listesi"
 }

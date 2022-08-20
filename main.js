@@ -107,6 +107,12 @@ function bulidapp() {
 					click: function() {
 						app_window.webContents.send("imageinfo", "");
 					}
+				},
+				{
+					label: langdata.filelist,
+					click: function() {
+						app_window.webContents.send("showfilelist", "");
+					}
 				}
 			]
 		},
@@ -200,6 +206,9 @@ ipcMain.on("prvfile", (e,arg) => {
 	}
 	openFil(filelist[fileID]);
 });
+ipcMain.on("openfilep", (e,arg) => {
+	openFil(arg);
+})
 ipcMain.on("nextfile", (e,arg) => {
 	fileID += 1
 	if (fileID > filelist.length - 1 ) {
@@ -214,33 +223,39 @@ ipcMain.on("recylefile", (e,arg) => {
 var cfil;
 
 function openFil(path) {
-	var dimensions;
-	try {
-		dimensions = sizeOf(path);
-	}catch {
-		dimensions = {width:0,height:0}
-	}
-	app_window.webContents.send("filedata"	, {
-		path: path,
-		size: dimensions,
-		filesize: getFilesizeInBytes(path)
-	});
-	cfil = path;
-	filelist = [];
-	var cid = 0;
-	fs.readdir(pathlib.dirname(path), (err, files) => {
-		files.forEach(file => {
-			if (allowedext.includes(pathlib.extname(file).toLowerCase())) {
-				//console.log(pathlib.resolve(pathlib.dirname(path), file));
-				var pathresolve = pathlib.resolve(pathlib.dirname(path), file);
-				filelist.push(pathresolve);
-				if (pathresolve.toLowerCase() == path.toLowerCase()) {
-					fileID = cid;
-				}
-				cid++;
-			}
+	if (path != undefined) {
+		var dimensions;
+		try {
+			dimensions = sizeOf(path);
+		}catch {
+			dimensions = {width:0,height:0}
+		}
+		app_window.webContents.send("filedata", {
+			path: path,
+			size: dimensions,
+			filesize: getFilesizeInBytes(path)
 		});
-	});
+		cfil = path;
+		filelist = [];
+		var cid = 0;
+		fs.readdir(pathlib.dirname(path), (err, files) => {
+			files.forEach(file => {
+				if (allowedext.includes(pathlib.extname(file).toLowerCase())) {
+					//console.log(pathlib.resolve(pathlib.dirname(path), file));
+					var pathresolve = pathlib.resolve(pathlib.dirname(path), file);
+					filelist.push(pathresolve);
+					if (pathresolve.toLowerCase() == path.toLowerCase()) {
+						fileID = cid;
+					}
+					cid++;
+				}
+			});
+			app_window.webContents.send("filelist", {
+				fileID: fileID,
+				list: filelist
+			});
+		});
+	}
 }
 function getFilesizeInBytes(filename) {
     var stats = fs.statSync(filename);

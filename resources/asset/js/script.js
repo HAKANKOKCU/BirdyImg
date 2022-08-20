@@ -8,6 +8,8 @@ let loadingText = document.getElementById("loadingText");
 var zoomPrct = 1;
 var rot = 0;
 var dragging = false;
+var fileID;
+var filelist;
 var oldpos = {
 	"x":0,
 	"y":0
@@ -67,6 +69,34 @@ ipcRenderer.on("filedata", (event,data) => {
 	}
 	posImg();
 });
+
+ipcRenderer.on("filelist", (event,data) => {
+	fileID = data.fileID;
+	filelist = data.list;
+	var fil = document.getElementsByClassName("fileListItem");
+	[].forEach.call(fil,(item) => {
+		if (item.getAttribute("data-imageid") == fileID) {
+			item.style.backgroundColor = "lightgray"
+		}else {
+			item.style.backgroundColor = ""
+		}
+	})
+});
+
+ipcRenderer.on("showfilelist", (event,data) => {
+	showfList();
+})
+
+function showfList() {
+	var HTMLs = "<h1>" + langpack.filelist + "</h1>"
+	filelist.forEach((item,index) => {
+		var extraCSSLI = "";
+		if (index == fileID) {extraCSSLI = "background-color:lightgray"}
+		HTMLs += "<div class='fileListItem' data-imageid='" + index + "' title='" + getFileName(item) + "' style='" + extraCSSLI + "' onclick='ipcRenderer.send(`openfilep`,`" + item.replace(/\\/g,"\\\\") + "`)'><center><img src='" + item + "' style='max-height:100px;max-width:245px' loading='lazy' class='limon darkshandow'></center></div>"
+	});
+	openRightPane(HTMLs)
+}
+
 ipcRenderer.on("langpack", (event,data) => {
 	langpack = data;
 	loadingText.innerText = langpack.loadingImage;
@@ -236,8 +266,8 @@ imgViewCnt.addEventListener("wheel",function(evt) {
 		}
 		if (imgW * zoomPrct > imgViewCnt.offsetWidth) {
 			if (imgH * zoomPrct > imgViewCnt.offsetHeight) {
-				imgX -= (mouseX - (imgViewCnt.offsetWidth / 2)) / 4;
-				imgY -= (mouseY - (imgViewCnt.offsetHeight / 2)) / 4;
+				imgX -= (mouseX - (imgViewCnt.offsetWidth / 2)) / 2;
+				imgY -= (mouseY - (imgViewCnt.offsetHeight / 2)) / 2;
 				retimgIfOut();
 				animateZoomPos();
 			}
@@ -369,12 +399,17 @@ function recyleImg() {
 
 function openRightPane(html) {
 	var sb = document.createElement("div");
-	sb.style.minWidth = "250px";
+	sb.style.minWidth = "265px";
 	sb.style.height = "100%";
 	sb.style.overflow = "auto";
+	sb.style.position = "relative";
 	var closeBtn = document.createElement("button");
 	closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6Z"/></svg>';
-	closeBtn.style.float = "right";
+	//closeBtn.style.float = "right";
+	closeBtn.style.position = "sticky";
+	closeBtn.style.right = "0";
+	closeBtn.style.left = "100%";
+	closeBtn.style.top = "0";
 	closeBtn.classList.add("limon","pill");
 	closeBtn.addEventListener("click", function() {maincont.removeChild(sb);
 	if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
@@ -389,6 +424,9 @@ function openRightPane(html) {
 	retimgIfOut()});
 	var sbcontent = document.createElement("div");
 	sbcontent.innerHTML = html;
+	sbcontent.style.position = "absolute";
+	sbcontent.style.top = "0";
+	sbcontent.style.left = "0";
 	sb.appendChild(closeBtn);
 	sb.appendChild(sbcontent);
 	maincont.appendChild(sb);
