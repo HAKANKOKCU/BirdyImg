@@ -44,6 +44,7 @@ toolbar > button {
 	background:white;
 	border:none;
 	outline:none;
+	transition:background 0.2s;
 }
 
 toolbar > button:hover {

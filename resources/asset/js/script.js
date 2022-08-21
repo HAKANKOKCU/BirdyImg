@@ -399,10 +399,13 @@ function recyleImg() {
 
 function openRightPane(html) {
 	var sb = document.createElement("div");
-	sb.style.minWidth = "265px";
 	sb.style.height = "100%";
+	sb.style.width = "0";
+	//sb.style.maxWidth = "1px";
+	sb.style.transition = "width 200ms"; //max-width 500ms,min-width 500ms
 	sb.style.overflow = "auto";
 	sb.style.position = "relative";
+	sb.style.flexShrink = 0;
 	var closeBtn = document.createElement("button");
 	closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6Z"/></svg>';
 	//closeBtn.style.float = "right";
@@ -410,36 +413,61 @@ function openRightPane(html) {
 	closeBtn.style.right = "0";
 	closeBtn.style.left = "100%";
 	closeBtn.style.top = "0";
+	closeBtn.style.zIndex = "1";
 	closeBtn.classList.add("limon","pill");
-	closeBtn.addEventListener("click", function() {maincont.removeChild(sb);
-	if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
-		animateZoomPos()
-		imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2)
-	}
-	if (imgH * zoomPrct < imgViewCnt.offsetHeight) {
-		animateZoomPos()
-		imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
-	}
-	posImg();
-	retimgIfOut()});
+	closeBtn.addEventListener("click", function() {
+		sb.style.width = "0";
+		var aniposer = setInterval(function() {
+			if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
+				imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2)
+			}
+			if (imgH * zoomPrct < imgViewCnt.offsetHeight) {
+				imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
+			}
+			posImg();
+			retimgIfOut();
+		},1)
+		setTimeout(function() {
+			maincont.removeChild(sb);
+			if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
+				animateZoomPos()
+				imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2)
+			}
+			if (imgH * zoomPrct < imgViewCnt.offsetHeight) {
+				animateZoomPos()
+				imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
+			}
+			posImg();
+			retimgIfOut()
+		},200)
+	});
 	var sbcontent = document.createElement("div");
 	sbcontent.innerHTML = html;
+	sbcontent.style.width = "100%";
+	//sb.style.overflowX = "hidden";
 	sbcontent.style.position = "absolute";
 	sbcontent.style.top = "0";
 	sbcontent.style.left = "0";
 	sb.appendChild(closeBtn);
 	sb.appendChild(sbcontent);
+	setTimeout(function() {
+		sb.style.width = "300px";
+	},10)
+	var aniposer = setInterval(function() {
+		if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
+			imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2)
+		}
+		if (imgH * zoomPrct < imgViewCnt.offsetHeight) {
+			imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
+		}
+		posImg();
+		retimgIfOut();
+	},1)
+	setTimeout(function() {
+		clearInterval(aniposer)
+		animateZoomPos();
+	},200)
 	maincont.appendChild(sb);
-	if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
-		animateZoomPos()
-		imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2)
-	}
-	if (imgH * zoomPrct < imgViewCnt.offsetHeight) {
-		animateZoomPos()
-		imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
-	}
-	posImg();
-	retimgIfOut();
 	return sbcontent;
 }
 
