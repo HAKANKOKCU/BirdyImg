@@ -1,7 +1,7 @@
 # BirdyImg
 BirdyImg Image Viewer  <a href="https://drive.google.com/file/d/1AtW-nxYYaj_jhO8vNVua_cGOdqlJBbUo/view?usp=sharing">Download For Windows (From Google Drive)</a>
 
-![resim](https://user-images.githubusercontent.com/103432992/185452482-355b46d3-4ff1-454e-b62f-df59f2a366d0.png)
+![resim](https://user-images.githubusercontent.com/103432992/185777905-5a83758f-c786-45a1-90a7-08f9d4362ca3.png)
 
 # Supported Languages
 * English
