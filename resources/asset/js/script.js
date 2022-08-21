@@ -88,7 +88,7 @@ ipcRenderer.on("showfilelist", (event,data) => {
 })
 
 function showfList() {
-	var HTMLs = "<h1>" + langpack.filelist + "</h1>"
+	var HTMLs = "<h1>" + langpack.fileList + "</h1>"
 	filelist.forEach((item,index) => {
 		var extraCSSLI = "";
 		if (index == fileID) {extraCSSLI = "background-color:lightgray"}

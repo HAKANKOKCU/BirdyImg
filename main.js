@@ -109,7 +109,7 @@ function bulidapp() {
 					}
 				},
 				{
-					label: langdata.filelist,
+					label: langdata.fileList,
 					click: function() {
 						app_window.webContents.send("showfilelist", "");
 					}
