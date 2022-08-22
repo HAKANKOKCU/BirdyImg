@@ -504,3 +504,8 @@ function getFileName(path) {
 	var pt = pathR.split("/");
 	return pt[pt.length - 1]
 }
+
+var fil = document.querySelectorAll("*");
+[].forEach.call(fil,(item) => {
+	item.addEventListener("mouseup",function() {item.blur()})
+})
