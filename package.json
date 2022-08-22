@@ -4,8 +4,7 @@
   "description": "BirdyImg Image Viewer",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
-	"pack": "npx electron-packager . BirdyImg --platform=win32 --arch=x64 --extra-resource='./resources/asset'"
+    "start": "electron ."
   },
   "keywords": [
     "ImageViewer",

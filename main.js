@@ -1,18 +1,23 @@
 //global.sharedObject = {prop1: process.argv};
-
+console.log("require electron")
 const {BrowserWindow,app,Menu,ipcMain,dialog,nativeTheme} = require("electron");
 //const { FileManager } = require("./lib/FileManager");
+console.log("require fs-extra")
 const fs = require("fs-extra");
+console.log("require path")
 const pathlib = require('path');
 //const { trash } = require('trash');
+console.log("require image-size")
 var sizeOf = require('image-size');
+console.log("require os")
+const os = require('os');
 const args = process.argv;
 console.log(args);
 var app_window;
-const os = require('os');
 var filelist = [];
 let locale = Intl.DateTimeFormat().resolvedOptions().locale;
 var langdata;
+console.log("init allowed image types")
 const allowedext = [".png",".jpg",".jpeg",".bmp",".gif",".ico",".ıco",".svg"];
 const flts = [{
 				name: 'Images',
@@ -44,6 +49,7 @@ var fileID;
 app.on("ready", bulidapp);
 
 function bulidapp() {
+	console.log("Ready!")
 	try {
 		if (!fs.existsSync("resources/asset/bitmap/appico.png")) {
 			//file not exists and set path to main directory of app
@@ -75,6 +81,7 @@ function bulidapp() {
 	} catch(err) {
 		console.error(err)
 	}
+	console.log("creating window")
 	app_window = new BrowserWindow({
 		webPreferences: {
 			nodeIntegration:true
@@ -84,6 +91,7 @@ function bulidapp() {
 	});
 	app_window.loadFile("resources/asset/index.html");
 	//app_window.openDevTools();
+	console.log("generating menu list")
 	let menu_list = [
 		{
 			label: langdata.file,
@@ -161,9 +169,12 @@ function bulidapp() {
 			]
 		}
 	];
+	console.log("generating menu from list")
 	const menu_design = Menu.buildFromTemplate(menu_list);
 	Menu.setApplicationMenu(menu_design);
-	app_window.webContents.on('did-finish-load', function() {
+	console.log("done generating menu from list")
+	app_window.webContents.on('dom-ready', function() {
+		console.log("dom is ready")
 		if (args.length > 1) {
 			if (args[1].toString() != ".") {
 				console.log(typeof args[1]);
@@ -171,6 +182,7 @@ function bulidapp() {
 			}
 		}
 		app_window.webContents.send("langpack", langdata); 
+		console.log("show window")
 		app_window.show();
 	});
 }
