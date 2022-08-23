@@ -15,6 +15,7 @@ const args = process.argv;
 console.log(args);
 var app_window;
 var filelist = [];
+var filesizes = [];
 let locale = Intl.DateTimeFormat().resolvedOptions().locale;
 var langdata;
 console.log("init allowed image types")
@@ -249,6 +250,7 @@ function openFil(path) {
 		});
 		cfil = path;
 		filelist = [];
+		filesizes = [];
 		var cid = 0;
 		fs.readdir(pathlib.dirname(path), (err, files) => {
 			files.forEach(file => {
@@ -256,6 +258,7 @@ function openFil(path) {
 					//console.log(pathlib.resolve(pathlib.dirname(path), file));
 					var pathresolve = pathlib.resolve(pathlib.dirname(path), file);
 					filelist.push(pathresolve);
+					filesizes.push(getFilesizeInBytes(pathresolve));
 					if (pathresolve.toLowerCase() == path.toLowerCase()) {
 						fileID = cid;
 					}
@@ -264,7 +267,8 @@ function openFil(path) {
 			});
 			app_window.webContents.send("filelist", {
 				fileID: fileID,
-				list: filelist
+				list: filelist,
+				filesizes:filesizes
 			});
 		});
 	}

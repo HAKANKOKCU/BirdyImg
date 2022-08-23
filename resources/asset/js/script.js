@@ -10,6 +10,7 @@ var rot = 0;
 var dragging = false;
 var fileID;
 var filelist;
+var filesizes;
 var oldpos = {
 	"x":0,
 	"y":0
@@ -73,6 +74,7 @@ ipcRenderer.on("filedata", (event,data) => {
 ipcRenderer.on("filelist", (event,data) => {
 	fileID = data.fileID;
 	filelist = data.list;
+	filesizes = data.filesizes;
 	var fil = document.getElementsByClassName("fileListItem");
 	[].forEach.call(fil,(item) => {
 		if (item.getAttribute("data-imageid") == fileID) {
@@ -92,7 +94,7 @@ function showfList() {
 	filelist.forEach((item,index) => {
 		var extraCSSLI = "";
 		if (index == fileID) {extraCSSLI = "background-color:lightgray"}
-		HTMLs += "<div class='fileListItem' data-imageid='" + index + "' title='" + getFileName(item) + "' style='" + extraCSSLI + "' onclick='ipcRenderer.send(`openfilep`,`" + item.replace(/\\/g,"\\\\") + "`)'><center><img src='" + item + "' style='max-height:100px;max-width:245px' loading='lazy' class='limon darkshandow'></center></div>"
+		HTMLs += "<div class='fileListItem' data-imageid='" + index + "' title='" + getFileName(item) + "&#010;" + langpack.fileSize + ": " + getReadableFileSizeString(filesizes[index])[0] + "' style='" + extraCSSLI + "' onclick='ipcRenderer.send(`openfilep`,`" + item.replace(/\\/g,"\\\\") + "`)'><center><img src='" + item + "' style='max-height:100px;max-width:245px' loading='lazy' class='limon darkshandow'></center></div>"
 	});
 	openRightPane(HTMLs)
 }
@@ -114,11 +116,11 @@ function openFileInfo() {
 	}else {
 		fnstr = namestr
 	}
-	var pane = openRightPane("<h1>" + langpack.imageInfo + "</h1><p></p><p class='ilitem'>" + langpack.name + ": " + fnstr + "</p><p class='ilitem'>" + langpack.width + ": " + imgW.toString() + " (" + filfo.size.width + ")" + "</p><p class='ilitem'>" + langpack.height + ": " + imgH.toString() + " (" + filfo.size.height + ")" + "</p><p class='ilitem'>" + langpack.fileSize + ": <span class='PKAbleSizeUpdateSpan'>" + Math.round(filfo.filesize / 1024).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p>");
+	var pane = openRightPane("<h1>" + langpack.imageInfo + "</h1><p></p><p class='ilitem'>" + langpack.name + ": " + fnstr + "</p><p class='ilitem'>" + langpack.width + ": " + imgW.toString() + " (" + filfo.size.width + ")" + "</p><p class='ilitem'>" + langpack.height + ": " + imgH.toString() + " (" + filfo.size.height + ")" + "</p><p class='ilitem'>" + langpack.fileSize + ": <span class='PKAbleSizeUpdateSpan'>" + Math.max(filfo.filesize / 1024, 0.1).toFixed(1).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p>");
 	var PKAbleSelect = pane.getElementsByClassName("PKAbleSizeSelect")[0];
 	var PKAbleUpdate = pane.getElementsByClassName("PKAbleSizeUpdateSpan")[0];
 	PKAbleSelect.addEventListener("change", function() {
-		PKAbleUpdate.innerHTML = Math.round(filfo.filesize / PKAbleSelect.value).toString()
+		PKAbleUpdate.innerHTML = Math.max(filfo.filesize / PKAbleSelect.value, 0.1).toFixed(1).toString();
 	});
 }
 
@@ -452,6 +454,7 @@ function openRightPane(html) {
 	sbcontent.style.position = "absolute";
 	sbcontent.style.top = "0";
 	sbcontent.style.left = "0";
+	sbcontent.style.minWidth = "270px";
 	sb.appendChild(closeBtn);
 	sb.appendChild(sbcontent);
 	setTimeout(function() {
@@ -509,3 +512,14 @@ var fil = document.querySelectorAll("*");
 [].forEach.call(fil,(item) => {
 	item.addEventListener("mouseup",function() {item.blur()})
 })
+
+function getReadableFileSizeString(fileSizeInBytes) {
+  var i = -1;
+  var byteUnits = [' KB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
+  do {
+    fileSizeInBytes /= 1024;
+    i++;
+  } while (fileSizeInBytes > 1024);
+
+  return [Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i],byteUnits[i]];
+}
