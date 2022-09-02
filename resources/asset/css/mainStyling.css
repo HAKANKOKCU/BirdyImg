@@ -83,6 +83,12 @@ main {
 	color:gray;
 	z-index: 5;
 }
+#loading {
+	position: absolute;
+	top: 50%; right: 50%;
+	transform: translate(50%,-50%);
+	z-index: 5;
+}
 
 .PKAbleSizeSelect {
 	border:none;
@@ -119,3 +125,32 @@ main {
 
 .ilitem {display:flex;}
 .ilitem > marquee {max-width:250px;}
+
+.loader {width:50px;height:50px;}
+.path {
+	stroke-dasharray: 1, 200;
+  stroke-dashoffset: 0;
+  animation: dash 1.5s ease-in-out infinite;
+  stroke-linecap: round;
+  stroke:orange;
+}
+.circular {
+  height:60px;
+  width:60px;
+  position: absolute;
+}
+@keyframes dash {
+  0% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -35px;
+  }
+  100% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -124px;
+  }
+}
+nodisplay {display:none}

@@ -10,7 +10,12 @@
 		<main>
 			<imgmain>
 				<div id="imgView">
-					<p id="loadingText">Loading Image..</p>
+					<nodisplay><p id="loadingText">Loading Image..</p></nodisplay>
+					<div class="loader" id="loading">
+						<svg class="circular" viewBox="25 25 50 50">
+							<circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2" stroke-miterlimit="20"/>
+						</svg>
+					</div>
 					<img id="view" onload="imageLoaded()"/>
 				</div>
 				<toolbar>

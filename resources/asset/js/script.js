@@ -4,7 +4,7 @@ var fileInf;
 let imgView = document.getElementById("view");
 let imgViewCnt = document.getElementById("imgView");
 let maincont = document.getElementsByTagName("main")[0];
-let loadingText = document.getElementById("loadingText");
+let loadingText = document.getElementById("loading");
 var zoomPrct = 1;
 var rot = 0;
 var dragging = false;
@@ -101,7 +101,7 @@ function showfList() {
 
 ipcRenderer.on("langpack", (event,data) => {
 	langpack = data;
-	loadingText.innerText = langpack.loadingImage;
+	//loadingText.innerText = langpack.loadingImage;
 });
 ipcRenderer.on("imageinfo", (event,data) => {
 	openFileInfo();
@@ -523,3 +523,24 @@ function getReadableFileSizeString(fileSizeInBytes) {
 
   return [Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i],byteUnits[i]];
 }
+
+const nodeList = document.querySelectorAll(".circular");
+for (let i = 0; i < nodeList.length; i++) {
+	var roat = 0;
+	setInterval(function() {
+		roat+= 1.5;
+		if (roat === 360) {roat = 0}
+		nodeList[i].style.transform = "rotate(" + roat + "deg)"
+	},1)
+}
+
+document.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+});
+
+document.addEventListener('drop', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    ipcRenderer.send('openfilep', event.dataTransfer.files[0].path);
+});
