@@ -18,6 +18,7 @@ var filelist = [];
 var filesizes = [];
 let locale = Intl.DateTimeFormat().resolvedOptions().locale;
 var langdata;
+var settingsdata;
 console.log("init allowed image types")
 const allowedext = [".png",".jpg",".jpeg",".bmp",".gif",".ico",".ıco",".svg"];
 const flts = [{
@@ -64,6 +65,17 @@ function bulidapp() {
 		if (!fs.existsSync(os.homedir() + "/BirdyImg/extensions.data")) {
 			fs.appendFile(os.homedir() + "/BirdyImg/extensions.data", "")
 		}
+		if (!fs.existsSync(os.homedir() + "/BirdyImg/settings.json")) {
+			fs.appendFile(os.homedir() + "/BirdyImg/settings.json", "{}")
+		}
+		settingsdata = JSON.parse(fs.readFileSync(os.homedir() + "/BirdyImg/settings.json"));
+		var njs = {"language":"AUTO"}
+		for (var tgn in njs) {
+			if(!settingsdata.hasOwnProperty(tgn)) {
+				settingsdata[tgn] = njs[tgn];
+			}
+		}
+		saveSettings();
 		datastr = fs.readFileSync(os.homedir() + "/BirdyImg/extensions.data")
 		datastr.toString().split("|").forEach((item) => {
 			try {
@@ -71,12 +83,17 @@ function bulidapp() {
 			}catch {}
 		})
 		var rawdata;
-		if (fs.existsSync("resources/lang/" + locale + ".json")) {
-			rawdata = fs.readFileSync("resources/lang/" + locale + ".json");
-		}else if (fs.existsSync("resources/lang/" + locale.split("-")[0] + ".json")) {
-			rawdata = fs.readFileSync("resources/lang/" + locale.split("-")[0] + ".json");
-		}else {	
-			rawdata = fs.readFileSync("resources/lang/en.json");
+		console.log(settingsdata["language"]);
+		if (settingsdata["language"] == "AUTO") {
+			if (fs.existsSync("resources/lang/" + locale + ".json")) {
+				rawdata = fs.readFileSync("resources/lang/" + locale + ".json");
+			}else if (fs.existsSync("resources/lang/" + locale.split("-")[0] + ".json")) {
+				rawdata = fs.readFileSync("resources/lang/" + locale.split("-")[0] + ".json");
+			}else {	
+				rawdata = fs.readFileSync("resources/lang/en.json");
+			}
+		}else {
+			rawdata = fs.readFileSync("resources/lang/" + settingsdata["language"] + ".json");
 		}
 		langdata = JSON.parse(rawdata);
 	} catch(err) {
@@ -121,6 +138,13 @@ function bulidapp() {
 					label: langdata.fileList,
 					click: function() {
 						app_window.webContents.send("showfilelist", "");
+					}
+				},
+				{type:"separator"},
+				{
+					label: langdata.settings,
+					click: function() {
+						app_window.webContents.send("showsettings", "");
 					}
 				}
 			]
@@ -182,7 +206,8 @@ function bulidapp() {
 				openFil(args[1].toString());
 			}
 		}
-		app_window.webContents.send("langpack", langdata); 
+		app_window.webContents.send("langpack", langdata);
+		app_window.webContents.send("settingsdata", settingsdata);
 		console.log("show window")
 		app_window.show();
 	});
@@ -211,6 +236,11 @@ ipcMain.on("openfile", (e,arg) => {
 			}
 		})
 })
+
+ipcMain.on("savesettings", (e,arg) => {
+	settingsdata = arg;
+	saveSettings();
+});
 
 ipcMain.on("prvfile", (e,arg) => {
 	fileID -= 1
@@ -277,4 +307,8 @@ function getFilesizeInBytes(filename) {
     var stats = fs.statSync(filename);
     var fileSizeInBytes = stats.size;
     return fileSizeInBytes;
+}
+function saveSettings() {
+	let data = JSON.stringify(settingsdata);
+	fs.writeFileSync(os.homedir() + "/BirdyImg/settings.json", data);
 }

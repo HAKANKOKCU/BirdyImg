@@ -11,6 +11,7 @@ var dragging = false;
 var fileID;
 var filelist;
 var filesizes;
+var settingsdata;
 var oldpos = {
 	"x":0,
 	"y":0
@@ -25,6 +26,10 @@ var ghostImg = document.createElement("img");
 document.body.appendChild(ghostImg);
 var isRoted = false;
 var mouseX = 0,mouseY = 0;
+
+ipcRenderer.on("settingsdata", (event,data) => {
+	settingsdata = data;
+});
 
 ipcRenderer.on("filedata", (event,data) => {
 	loadingText.style.display = "";
@@ -138,6 +143,9 @@ ipcRenderer.on("centerimg", (event,data) => {
 	animateZoomPos();
 	posImg();
 })
+ipcRenderer.on("showsettings", (event,data) => {
+	showSettings();
+});
 
 function zRot() {
 		try {
@@ -194,9 +202,11 @@ addEventListener('resize', (event) => {
 	posImg();
 	retimgIfOut();
 });
-
-document.body.addEventListener('keydown', function (event) {
-    console.log(event.keyCode); //for debugging
+imgViewCnt.focus();
+document.addEventListener('keydown', function (event) {
+	console.log(event.target.tagName);
+	if (event.target.tagName == "INPUT") return;
+	console.log(event.keyCode); //for debugging
 	if (event.keyCode == 37) {
 		prvFile();
 	}
@@ -399,6 +409,38 @@ ghostImg.addEventListener("onload",function () {
 
 function recyleImg() {
 	ipcRenderer.send("recylefile", fileInf.path)
+}
+
+function openFWindow(html) {
+	var win = document.createElement("div");
+	win.classList.add("fullscreenWindow");
+	var closeBtn = document.createElement("button");
+	closeBtn.classList.add("fullscreenWindowClose");
+	closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6Z"/></svg>';
+	closeBtn.classList.add("limon","pill");
+	win.appendChild(closeBtn);
+	var contDiv = document.createElement("div");
+	contDiv.classList.add("fullscreenWindowContent");
+	contDiv.innerHTML = html;
+	win.appendChild(contDiv);
+	document.body.appendChild(win);
+	setTimeout(function() {
+		win.style.top = "0";
+	},1);
+	closeBtn.addEventListener("click",function() {
+		win.style.top = "";
+		setTimeout(function() {
+			document.body.removeChild(win);
+		},600)
+	});
+	return contDiv;
+}
+function showSettings() {
+	var sets = openFWindow("<h1>" + langpack.settings + "</h1><h3>Language</h3><input value='" + settingsdata["language"] + "' class='langtb'/>");
+	sets.querySelector(".langtb").addEventListener("input",function() {
+		settingsdata["language"] = sets.querySelector(".langtb").value;
+		ipcRenderer.send('savesettings', settingsdata);
+	});
 }
 
 function openRightPane(html) {

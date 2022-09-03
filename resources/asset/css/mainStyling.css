@@ -94,6 +94,27 @@ main {
 	border:none;
 }
 
+.fullscreenWindow {
+	background: white;
+	width: 100%;
+	height: 100%;
+	position: fixed;
+	z-index:100;
+	left:0;
+	top:100%;
+	transition: top 0.6s; 
+}
+
+.fullscreenWindowContent {
+	width: 100%;
+	height: 100%;
+}
+
+.fullscreenWindowClose {
+	float:right;
+	content: '\00D7';
+	font-size: 20px;
+}
 
 @media (prefers-color-scheme: dark) {
 	body {
@@ -107,6 +128,7 @@ main {
 	toolbar > button:hover {background: rgb(50,50,50)}
 	button {background: rgb(40,40,40)}
 	button:hover {background: rgb(70,70,70)}
+	.fullscreenWindow {background: rgb(10,10,10);color:white}
 }
 
 @media (prefers-color-scheme: light) {
@@ -121,6 +143,7 @@ main {
 	toolbar > button:hover {background: lightgray}
 	button {background: rgb(240,240,240)}
 	button:hover {background: rgb(200,200,200)}
+	.fullscreenWindow {background: white;color:black}
 }
 
 .ilitem {display:flex;}
