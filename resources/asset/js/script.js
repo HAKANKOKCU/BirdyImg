@@ -21,6 +21,7 @@ var imgY = 0;
 var imgW = 0;
 var imgH = 0;
 var langpack;
+var langs;
 var ghostImg = document.createElement("img");
 //ghostImg.style.opacity = "0";
 document.body.appendChild(ghostImg);
@@ -29,6 +30,9 @@ var mouseX = 0,mouseY = 0;
 
 ipcRenderer.on("settingsdata", (event,data) => {
 	settingsdata = data;
+});
+ipcRenderer.on("langs", (event,data) => {
+	langs = data;
 });
 
 ipcRenderer.on("filedata", (event,data) => {
@@ -436,9 +440,13 @@ function openFWindow(html) {
 	return contDiv;
 }
 function showSettings() {
-	var sets = openFWindow("<h1>" + langpack.settings + "</h1><h3>Language</h3><input value='" + settingsdata["language"] + "' class='langtb'/>");
-	sets.querySelector(".langtb").addEventListener("input",function() {
-		settingsdata["language"] = sets.querySelector(".langtb").value;
+	var optSelectHTML = "<option value='AUTO'>" + langpack.automatic + "</option>";
+	langs.forEach((lang) => {
+		optSelectHTML += "<option value='" + lang + "'>" + lang + "</option>"
+	});
+	var sets = openFWindow("<h1>" + langpack.settings + "</h1><h3>Language</h3><select value='" + settingsdata["language"] + "' class='langsb'>" + optSelectHTML + "</select>");
+	sets.querySelector(".langsb").addEventListener("change",function() {
+		settingsdata["language"] = sets.querySelector(".langsb").value;
 		ipcRenderer.send('savesettings', settingsdata);
 	});
 }

@@ -1,4 +1,3 @@
-//global.sharedObject = {prop1: process.argv};
 console.log("require electron")
 const {BrowserWindow,app,Menu,ipcMain,dialog,nativeTheme} = require("electron");
 //const { FileManager } = require("./lib/FileManager");
@@ -108,7 +107,7 @@ function bulidapp() {
 		show: false
 	});
 	app_window.loadFile("resources/asset/index.html");
-	//app_window.openDevTools();
+	app_window.openDevTools();
 	console.log("generating menu list")
 	let menu_list = [
 		{
@@ -210,6 +209,14 @@ function bulidapp() {
 		app_window.webContents.send("settingsdata", settingsdata);
 		console.log("show window")
 		app_window.show();
+		var langs = [];
+		fs.readdir("resources/lang", (err, files) => {
+			console.log(files);
+			files.forEach((file) => {
+				langs.push(pathlib.parse(pathlib.resolve("resources/lang/", file)).name);
+			});
+			app_window.webContents.send("langs", langs);
+		});
 	});
 }
 

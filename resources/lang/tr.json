@@ -14,5 +14,6 @@
 	"imageInfo":"Dosya Bilgisi",
 	"name":"İsim",
 	"fileList":"Dosya Listesi",
-	"settings":"Ayarlar"
+	"settings":"Ayarlar",
+	"automatic":"Otomatik"
 }

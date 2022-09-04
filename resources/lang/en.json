@@ -14,5 +14,6 @@
 	"imageInfo":"Image Info",
 	"name":"Name",
 	"fileList":"File List",
-	"settings":"Settings"
+	"settings":"Settings",
+	"automatic":"Automatic"
 }
