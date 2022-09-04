@@ -107,7 +107,7 @@ function bulidapp() {
 		show: false
 	});
 	app_window.loadFile("resources/asset/index.html");
-	app_window.openDevTools();
+	//app_window.openDevTools();
 	console.log("generating menu list")
 	let menu_list = [
 		{
