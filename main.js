@@ -6,11 +6,8 @@ const fs = require("fs-extra");
 console.log("require path")
 const pathlib = require('path');
 //const { trash } = require('trash');
-console.log("require image-size")
-var sizeOf = require('image-size');
-console.log("require os")
-const os = require('os');
 const args = process.argv;
+var os;
 console.log(args);
 var app_window;
 var filelist = [];
@@ -58,6 +55,8 @@ function bulidapp() {
 			console.log(app.getPath("exe"))
 			process.chdir(dpath)
 		}
+		console.log("import os")
+		os = require('os');
 		initPath = os.homedir() + "/BirdyImg/";
 		if (!fs.existsSync(os.homedir() + "/BirdyImg")){
 			fs.mkdirSync(os.homedir() + "/BirdyImg");
@@ -114,9 +113,6 @@ function bulidapp() {
 		windowinf.height = settingsdata.bounds.height;
 	}
 	app_window = new BrowserWindow(windowinf);
-	if (settingsdata.isMaximized == true) {
-		app_window.maximize();
-	}
 	app_window.loadFile("resources/asset/index.html");
 	//app_window.openDevTools();
 	console.log("generating menu list")
@@ -234,6 +230,9 @@ function bulidapp() {
 		app_window.webContents.send("langpack", langdata);
 		app_window.webContents.send("settingsdata", settingsdata);
 		console.log("show window")
+			if (settingsdata.isMaximized == true) {
+				app_window.maximize();
+			}
 		app_window.show();
 		var langs = [];
 		fs.readdir("resources/lang", (err, files) => {
@@ -310,6 +309,7 @@ var cfil;
 
 function openFil(path) {
 	if (path != undefined) {
+		var sizeOf = require('image-size');
 		var dimensions;
 		try {
 			dimensions = sizeOf(path);
