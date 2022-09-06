@@ -15,5 +15,7 @@
 	"name":"Nume",
 	"fileList":"Lista de fișiere",
 	"settings":"Setări",
-	"automatic":"Automatic"
+	"automatic":"Automatic",
+	"image":"Imagine",
+	"path":"Cale"
 }

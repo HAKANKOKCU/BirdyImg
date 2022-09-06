@@ -16,10 +16,10 @@ let locale = Intl.DateTimeFormat().resolvedOptions().locale;
 var langdata;
 var settingsdata;
 console.log("init allowed image types")
-const allowedext = [".png",".jpg",".jpeg",".bmp",".gif",".ico",".ıco",".svg"];
+const allowedext = [".png",".jpg",".jpeg",".bmp",".gif",".ico",".ıco",".svg",".webp"];
 const flts = [{
 				name: 'Images',
-				extensions: ["png","jpg","jpeg","bmp","gif","ico","svg"]
+				extensions: ["png","jpg","jpeg","bmp","gif","ico","svg","webp"]
 			},{
 				name: 'PNG Image',
 				extensions: ['png']
@@ -41,6 +41,9 @@ const flts = [{
 			},{
 				name: 'SVG Image',
 				extensions: ['svg']
+			},{
+				name: 'WebP Image',
+				extensions: ['webp']
 			}]
 var fileID;
 

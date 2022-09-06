@@ -11,9 +11,11 @@
 	"width":"Genişlik",
 	"height":"Yükseklik",
 	"fileSize":"Dosya Boyutu",
-	"imageInfo":"Dosya Bilgisi",
+	"imageInfo":"Resim Bilgisi",
 	"name":"İsim",
 	"fileList":"Dosya Listesi",
 	"settings":"Ayarlar",
-	"automatic":"Otomatik"
+	"automatic":"Otomatik",
+	"image":"Resim",
+	"path":"Yol"
 }

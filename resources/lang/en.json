@@ -15,5 +15,7 @@
 	"name":"Name",
 	"fileList":"File List",
 	"settings":"Settings",
-	"automatic":"Automatic"
+	"automatic":"Automatic",
+	"image":"Image",
+	"path":"Path"
 }
