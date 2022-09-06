@@ -58,6 +58,7 @@ function bulidapp() {
 			console.log(app.getPath("exe"))
 			process.chdir(dpath)
 		}
+		initPath = os.homedir() + "/BirdyImg/";
 		if (!fs.existsSync(os.homedir() + "/BirdyImg")){
 			fs.mkdirSync(os.homedir() + "/BirdyImg");
 		}
@@ -99,13 +100,23 @@ function bulidapp() {
 		console.error(err)
 	}
 	console.log("creating window")
-	app_window = new BrowserWindow({
+	var windowinf = {
 		webPreferences: {
 			nodeIntegration:true
 		},
 		icon: "resources/asset/bitmap/appico.png",
-		show: false
-	});
+		show: false,
+	};
+	if (settingsdata.bounds != null) {
+		windowinf.x = settingsdata.bounds.x;
+		windowinf.y = settingsdata.bounds.y;
+		windowinf.width = settingsdata.bounds.width;
+		windowinf.height = settingsdata.bounds.height;
+	}
+	app_window = new BrowserWindow(windowinf);
+	if (settingsdata.isMaximized == true) {
+		app_window.maximize();
+	}
 	app_window.loadFile("resources/asset/index.html");
 	//app_window.openDevTools();
 	console.log("generating menu list")
@@ -193,6 +204,19 @@ function bulidapp() {
 			]
 		}
 	];
+	try {
+		if (args[1].toString() == ".") {
+			menu_list.push({
+				label: "Dev",
+				submenu: [
+					{
+						label: "DevTools",
+						click: function() {app_window.openDevTools()}
+					}
+				]
+			});
+		}
+	} catch {}
 	console.log("generating menu from list")
 	const menu_design = Menu.buildFromTemplate(menu_list);
 	Menu.setApplicationMenu(menu_design);
@@ -203,6 +227,8 @@ function bulidapp() {
 			if (args[1].toString() != ".") {
 				console.log(typeof args[1]);
 				openFil(args[1].toString());
+			//}else {
+			//	app_window.openDevTools();
 			}
 		}
 		app_window.webContents.send("langpack", langdata);
@@ -217,6 +243,16 @@ function bulidapp() {
 			});
 			app_window.webContents.send("langs", langs);
 		});
+	});
+	app_window.on("close", function() {
+		settingsdata.bounds = app_window.getBounds();
+		fs.writeFileSync(os.homedir() + "/BirdyImg/settings.json", JSON.stringify(settingsdata));
+	})
+	app_window.on("maximize",function() {
+		settingsdata.isMaximized = true;
+	});
+	app_window.on("unmaximize",function() {
+		settingsdata.isMaximized = false;
 	});
 }
 
