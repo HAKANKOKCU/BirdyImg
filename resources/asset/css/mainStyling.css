@@ -148,13 +148,13 @@ main {
 
 .ilitem {display:flex;}
 
-.loader {width:60px;height:60px;}
+.loader {width:60px;height:60px;border-radius:50%;background-color: rgba(0,0,0,0.5)}
 .path {
 	stroke-dasharray: 1, 200;
-  stroke-dashoffset: 0;
-  animation: dash 1.5s ease-in-out infinite;
-  stroke-linecap: round;
-  stroke:orange;
+	stroke-dashoffset: 0;
+	animation: dash 1.5s ease-in-out infinite;
+	stroke-linecap: round;
+	stroke:white;
 }
 .circular {
   height:60px;

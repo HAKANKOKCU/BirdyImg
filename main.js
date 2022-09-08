@@ -1,3 +1,4 @@
+console.time("startup");
 console.log("require electron")
 const {BrowserWindow,app,Menu,ipcMain,dialog,nativeTheme} = require("electron");
 //const { FileManager } = require("./lib/FileManager");
@@ -245,6 +246,7 @@ function bulidapp() {
 			});
 			app_window.webContents.send("langs", langs);
 		});
+		console.timeEnd("startup");
 	});
 	app_window.on("close", function() {
 		settingsdata.bounds = app_window.getBounds();

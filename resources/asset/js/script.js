@@ -36,6 +36,7 @@ ipcRenderer.on("langs", (event,data) => {
 });
 
 ipcRenderer.on("filedata", (event,data) => {
+	document.title = "BirdyImg - " + getFileName(data.path);
 	loadingText.style.display = "";
 	imgView.src = data.path;
 	ghostImg.src = data.path;
@@ -77,7 +78,7 @@ ipcRenderer.on("filedata", (event,data) => {
 		animateZoomPos()
 		imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
 	}
-	posImg();
+	//posImg();
 });
 
 ipcRenderer.on("filelist", (event,data) => {
@@ -244,14 +245,13 @@ function riNR() {
 }
 
 function riHR() {
-	if (imgH * zoomPrct < imgViewCnt.offsetWidth) {
-		imgX = (imgViewCnt.offsetWidth / 2) - (imgH * zoomPrct / 2)
-	}else if (imgX > 0) {imgX = 0}else if (imgX < -((imgH * zoomPrct) - imgViewCnt.offsetWidth)) {	imgX = -((imgH * zoomPrct) - imgViewCnt.offsetWidth)}
-	
 	if (imgW * zoomPrct < imgViewCnt.offsetHeight) {
-		imgY = (imgViewCnt.offsetHeight / 2) - (imgW * zoomPrct / 2)
-		console.log((imgViewCnt.offsetHeight / 2) - (imgW * zoomPrct / 2))
-	}else if (imgY > 0) {imgY = 0}else if (imgY < -((imgW * zoomPrct) - imgViewCnt.offsetHeight)) {imgY = -((imgW * zoomPrct) - imgViewCnt.offsetHeight)}
+		imgX = (imgViewCnt.offsetHeight / 2) - (imgW * zoomPrct / 2)
+	}else if (imgX > 0) {imgX = 0}else if (imgX < -((imgW * zoomPrct) - imgViewCnt.offsetHeight)) {	imgX = -((imgW * zoomPrct) - imgViewCnt.offsetHeight)}
+	
+	if (imgH * zoomPrct < imgViewCnt.offsetWidth) {
+		imgY = (imgViewCnt.offsetWidth / 2) - (imgH * zoomPrct / 2)
+	}else if (imgY > 0) {imgY = 0}else if (imgY < -((imgH * zoomPrct) - imgViewCnt.offsetWidth)) {imgY = -((imgH * zoomPrct) - imgViewCnt.offsetWidth)}
 }
 
 function retimgIfOut() {
@@ -264,10 +264,9 @@ function retimgIfOut() {
 	}else if (rot == -270) {
 	//	riHR();
 	}else {
-	riNR();
+		riNR();
 	}
 }
-
 imgViewCnt.addEventListener("mousedown", function() {dragging = true})
 imgViewCnt.addEventListener("mouseup", function() {dragging = false})
 imgViewCnt.addEventListener("mousemove", function(evt) {
@@ -388,6 +387,7 @@ function imageLoaded() {
 	imgW = ghostImg.clientWidth;
 	imgH = ghostImg.clientHeight;
 	console.log("set width",imgW,imgH);
+	zoomPrct = 1;
 	try {
 		while (imgW * zoomPrct > imgViewCnt.offsetWidth) {
 			zoomPrct -= 0.1
