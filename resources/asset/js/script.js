@@ -79,6 +79,23 @@ ipcRenderer.on("filedata", (event,data) => {
 		imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
 	}
 	//posImg();
+	var filfo = fileInf;
+	Array.prototype.forEach.call(document.querySelectorAll("[paneid='FileInfo']"),(item) => {
+		var pane = item.querySelector(".rightpanecontent");
+		var selectedsval = pane.getElementsByClassName("PKAbleSizeSelect")[0].value;
+		pane.innerHTML = generateFileInfoContent();
+		var PKAbleSelect = pane.getElementsByClassName("PKAbleSizeSelect")[0];
+		var PKAbleUpdate = pane.getElementsByClassName("PKAbleSizeUpdateSpan")[0];
+		var opendir = pane.getElementsByClassName("opendir")[0];
+		PKAbleSelect.addEventListener("change", function() {
+			PKAbleUpdate.innerHTML = Math.max(filfo.filesize / PKAbleSelect.value, 0.1).toFixed(1).toString();
+		});
+		opendir.addEventListener("click", function() {
+			ipcRenderer.send("launchpath", getFolderPath(filfo.path));
+		});
+		PKAbleSelect.value = selectedsval;
+		PKAbleUpdate.innerHTML = Math.max(filfo.filesize / PKAbleSelect.value, 0.1).toFixed(1).toString();
+	})
 });
 
 ipcRenderer.on("filelist", (event,data) => {
@@ -86,7 +103,7 @@ ipcRenderer.on("filelist", (event,data) => {
 	filelist = data.list;
 	filesizes = data.filesizes;
 	var fil = document.getElementsByClassName("fileListItem");
-	[].forEach.call(fil,(item) => {
+	Array.prototype.forEach.call(fil,(item) => {
 		if (item.getAttribute("data-imageid") == fileID) {
 			item.style.backgroundColor = "lightgray"
 		}else {
@@ -106,7 +123,7 @@ function showfList() {
 		if (index == fileID) {extraCSSLI = "background-color:lightgray"}
 		HTMLs += "<div class='fileListItem' data-imageid='" + index + "' title='" + getFileName(item) + "&#010;" + langpack.fileSize + ": " + getReadableFileSizeString(filesizes[index])[0] + "' style='" + extraCSSLI + "' onclick='ipcRenderer.send(`openfilep`,`" + item.replace(/\\/g,"\\\\") + "`)'><center><img src='" + item + "' style='max-height:100px;max-width:245px' loading='lazy' class='limon darkshandow'></center></div>"
 	});
-	openRightPane(HTMLs)
+	openRightPane(HTMLs,"FileList")
 }
 
 ipcRenderer.on("langpack", (event,data) => {
@@ -118,6 +135,20 @@ ipcRenderer.on("imageinfo", (event,data) => {
 });
 
 function openFileInfo() {
+	var filfo = fileInf;
+	var pane = openRightPane(generateFileInfoContent(),"FileInfo");
+	var PKAbleSelect = pane.getElementsByClassName("PKAbleSizeSelect")[0];
+	var PKAbleUpdate = pane.getElementsByClassName("PKAbleSizeUpdateSpan")[0];
+	var opendir = pane.getElementsByClassName("opendir")[0];
+	PKAbleSelect.addEventListener("change", function() {
+		PKAbleUpdate.innerHTML = Math.max(filfo.filesize / PKAbleSelect.value, 0.1).toFixed(1).toString();
+	});
+	opendir.addEventListener("click", function() {
+		ipcRenderer.send("launchpath", getFolderPath(filfo.path));
+	});
+}
+
+function generateFileInfoContent() {
 	var filfo = fileInf;
 	var namestr = getFileName(filfo.path);
 	var fnstr;
@@ -133,12 +164,7 @@ function openFileInfo() {
 	}else {
 		pstr = pathstr
 	}
-	var pane = openRightPane("<h1>" + langpack.imageInfo + "</h1><p></p><p class='ilitem'>" + langpack.name + ": " + fnstr + "</p><p class='ilitem'>" + langpack.width + ": " + imgW.toString() + " (" + filfo.size.width + ")" + "</p><p class='ilitem'>" + langpack.height + ": " + imgH.toString() + " (" + filfo.size.height + ")" + "</p><p class='ilitem'>" + langpack.fileSize + ": <span class='PKAbleSizeUpdateSpan'>" + Math.max(filfo.filesize / 1024, 0.1).toFixed(1).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p><p class='ilitem'>" + langpack.path + ": " + pstr + "</p>");
-	var PKAbleSelect = pane.getElementsByClassName("PKAbleSizeSelect")[0];
-	var PKAbleUpdate = pane.getElementsByClassName("PKAbleSizeUpdateSpan")[0];
-	PKAbleSelect.addEventListener("change", function() {
-		PKAbleUpdate.innerHTML = Math.max(filfo.filesize / PKAbleSelect.value, 0.1).toFixed(1).toString();
-	});
+	return "<h1>" + langpack.imageInfo + "</h1><p></p><p class='ilitem'>" + langpack.name + ": " + fnstr + "</p><p class=''ilitem>" + langpack.type + ": " + getFileExtension(filfo.path) + "</p><p class='ilitem'>" + langpack.width + ": " + imgW.toString() + " (" + filfo.size.width + ")" + "</p><p class='ilitem'>" + langpack.height + ": " + imgH.toString() + " (" + filfo.size.height + ")" + "</p><p class='ilitem'>" + langpack.fileSize + ": <span class='PKAbleSizeUpdateSpan'>" + Math.max(filfo.filesize / 1024, 0.1).toFixed(1).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p><p class='ilitem'>" + langpack.folder + ": <span class='opendir clickable'>" + getFolderName(filfo.path) + "</span></p><p class='ilitem'>" + langpack.path + ": " + pstr + "</p>"
 }
 
 ipcRenderer.on("dsimg", (event,data) => {
@@ -458,8 +484,9 @@ function showSettings() {
 	});
 }
 
-function openRightPane(html) {
+function openRightPane(html,paneID) {
 	var sb = document.createElement("div");
+	sb.setAttribute("paneid",paneID);
 	sb.style.height = "100%";
 	sb.style.width = "0";
 	//sb.style.maxWidth = "1px";
@@ -512,6 +539,7 @@ function openRightPane(html) {
 	sbcontent.style.top = "0";
 	sbcontent.style.left = "0";
 	sbcontent.style.minWidth = "270px";
+	sbcontent.classList.add("rightpanecontent");
 	sb.appendChild(closeBtn);
 	sb.appendChild(sbcontent);
 	setTimeout(function() {
@@ -562,6 +590,26 @@ function rotR() {
 function getFileName(path) {
 	var pathR = path.replace(/\\/g,"/");
 	var pt = pathR.split("/");
+	return pt[pt.length - 1]
+}
+
+function getFolderName(path) {
+	var pathR = path.replace(/\\/g,"/");
+	var pt = pathR.split("/");
+	return pt[pt.length - 2]
+}
+function getFolderPath(path) {
+	var pathR = path.replace(/\\/g,"/");
+	var pt = pathR.split("/");
+	var out = "";
+	for (let i = 0; i < pt.length - 1; i++) {
+		out += pt[i] + "/";
+	}
+	return out;
+}
+
+function getFileExtension(pathorfilename) {
+	var pt = pathorfilename.split(".");
 	return pt[pt.length - 1]
 }
 

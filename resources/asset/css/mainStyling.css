@@ -176,3 +176,5 @@ main {
   }
 }
 nodisplay {display:none}
+
+.clickable {cursor:pointer}

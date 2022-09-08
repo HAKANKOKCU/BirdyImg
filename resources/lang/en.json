@@ -17,5 +17,9 @@
 	"settings":"Settings",
 	"automatic":"Automatic",
 	"image":"Image",
-	"path":"Path"
+	"path":"Path",
+	"type":"Type",
+	"typeImage":"{TYPE} Image",
+	"images":"Images",
+	"folder":"Folder"
 }

@@ -18,34 +18,7 @@ var langdata;
 var settingsdata;
 console.log("init allowed image types")
 const allowedext = [".png",".jpg",".jpeg",".bmp",".gif",".ico",".ıco",".svg",".webp"];
-const flts = [{
-				name: 'Images',
-				extensions: ["png","jpg","jpeg","bmp","gif","ico","svg","webp"]
-			},{
-				name: 'PNG Image',
-				extensions: ['png']
-			},{
-				name: 'JPG Image',
-				extensions: ['jpg']
-			},{
-				name: 'JPEG Image',
-				extensions: ['jpeg']
-			},{
-				name: 'BMP Image',
-				extensions: ['bmp']
-			},{
-				name: 'GIF Image',
-				extensions: ['gif']
-			},{
-				name: 'ICO Image',
-				extensions: ['ico']
-			},{
-				name: 'SVG Image',
-				extensions: ['svg']
-			},{
-				name: 'WebP Image',
-				extensions: ['webp']
-			}]
+var flts;
 var fileID;
 
 app.on("ready", bulidapp);
@@ -79,12 +52,6 @@ function bulidapp() {
 			}
 		}
 		saveSettings();
-		datastr = fs.readFileSync(os.homedir() + "/BirdyImg/extensions.data")
-		datastr.toString().split("|").forEach((item) => {
-			try {
-				fs.readFile(item, function(err, data) {eval(item)})
-			}catch {}
-		})
 		var rawdata;
 		console.log(settingsdata["language"]);
 		if (settingsdata["language"] == "AUTO") {
@@ -102,6 +69,35 @@ function bulidapp() {
 	} catch(err) {
 		console.error(err)
 	}
+	console.log("Init Open File Types")
+	flts = [{
+				name: langdata["images"],
+				extensions: ["png","jpg","jpeg","bmp","gif","ico","svg","webp"]
+			},{
+				name: langdata["typeImage"].replace("{TYPE}","PNG"),
+				extensions: ['png']
+			},{
+				name: langdata["typeImage"].replace("{TYPE}","JPG"),
+				extensions: ['jpg']
+			},{
+				name: langdata["typeImage"].replace("{TYPE}","JPEG"),
+				extensions: ['jpeg']
+			},{
+				name: langdata["typeImage"].replace("{TYPE}","BMP"),
+				extensions: ['bmp']
+			},{
+				name: langdata["typeImage"].replace("{TYPE}","GIF"),
+				extensions: ['gif']
+			},{
+				name: langdata["typeImage"].replace("{TYPE}","ICO"),
+				extensions: ['ico']
+			},{
+				name: langdata["typeImage"].replace("{TYPE}","SVG"),
+				extensions: ['svg']
+			},{
+				name: langdata["typeImage"].replace("{TYPE}","WebP"),
+				extensions: ['webp']
+			}];
 	console.log("creating window")
 	var windowinf = {
 		webPreferences: {
@@ -217,6 +213,14 @@ function bulidapp() {
 			});
 		}
 	} catch {}
+	try{
+		datastr = fs.readFileSync(os.homedir() + "/BirdyImg/extensions.data")
+		datastr.toString().split("|").forEach((item) => {
+			try {
+				fs.readFile(item, function(err, data) {eval(item)})
+			}catch {}
+		})
+	}catch{}
 	console.log("generating menu from list")
 	const menu_design = Menu.buildFromTemplate(menu_list);
 	Menu.setApplicationMenu(menu_design);
@@ -282,6 +286,10 @@ ipcMain.on("openfile", (e,arg) => {
 				openFil(res.filePaths[0]);
 			}
 		})
+})
+
+ipcMain.on("launchpath", (e,arg) => {
+	require('child_process').exec(getStartCommand() + " \"" + arg + "\"");
 })
 
 ipcMain.on("savesettings", (e,arg) => {
@@ -359,4 +367,13 @@ function getFilesizeInBytes(filename) {
 function saveSettings() {
 	let data = JSON.stringify(settingsdata);
 	fs.writeFileSync(os.homedir() + "/BirdyImg/settings.json", data);
+}
+
+function getStartCommand() {
+   switch (process.platform) { 
+      case 'darwin' : return 'open';
+      case 'win32' : return 'start ""';
+      case 'win64' : return 'start ""';
+      default : return 'xdg-open';
+   }
 }

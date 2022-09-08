@@ -17,5 +17,9 @@
 	"settings":"Setări",
 	"automatic":"Automatic",
 	"image":"Imagine",
-	"path":"Cale"
+	"path":"Cale",
+	"type":"Tip",
+	"typeImage":"Imagine {TYPE}",
+	"images":"Imagini",
+	"folder":"Folder"
 }

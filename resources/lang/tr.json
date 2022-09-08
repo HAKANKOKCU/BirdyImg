@@ -17,5 +17,9 @@
 	"settings":"Ayarlar",
 	"automatic":"Otomatik",
 	"image":"Resim",
-	"path":"Yol"
+	"path":"Yol",
+	"type":"Tip",
+	"typeImage":"{TYPE} Resmi",
+	"images":"Resimler",
+	"folder":"Klasör"
 }
