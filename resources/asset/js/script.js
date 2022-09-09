@@ -1,5 +1,7 @@
 const { ipcRenderer } = require("electron");
 
+
+const RESIZE_BORDER_SIZE = 4;
 var fileInf;
 let imgView = document.getElementById("view");
 let imgViewCnt = document.getElementById("imgView");
@@ -105,7 +107,8 @@ ipcRenderer.on("filelist", (event,data) => {
 	var fil = document.getElementsByClassName("fileListItem");
 	Array.prototype.forEach.call(fil,(item) => {
 		if (item.getAttribute("data-imageid") == fileID) {
-			item.style.backgroundColor = "lightgray"
+			item.style.backgroundColor = "lightgray";
+			item.parentElement.parentElement.scrollTop = item.offsetTop - (item.parentElement.parentElement.offsetHeight / 2) + (item.offsetHeight / 2);
 		}else {
 			item.style.backgroundColor = ""
 		}
@@ -493,6 +496,7 @@ function openRightPane(html,paneID) {
 	sb.style.transition = "width 200ms"; //max-width 500ms,min-width 500ms
 	sb.style.overflow = "auto";
 	sb.style.position = "relative";
+	//sb.style.borderLeft = "solid rgba(0,0,0,0.2) " + RESIZE_BORDER_SIZE + "px";
 	sb.style.flexShrink = 0;
 	var closeBtn = document.createElement("button");
 	closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6Z"/></svg>';
@@ -560,6 +564,29 @@ function openRightPane(html,paneID) {
 		animateZoomPos();
 	},200)
 	maincont.appendChild(sb);
+	let m_pos;
+	function resize(e){
+	  const dx = m_pos - e.x;
+	  m_pos = e.x;
+	  sb.style.width = (parseInt(getComputedStyle(sb, '').width) + dx) + "px";
+	  retimgIfOut();
+	  posImg();
+	}
+
+	sb.addEventListener("mousedown", function(e){
+	  if (e.offsetX < RESIZE_BORDER_SIZE) {
+		m_pos = e.x;
+		document.addEventListener("mousemove", resize, false);
+		sb.style.transition = "";
+		sb.style.borderLeft = "solid rgba(0,0,0,0.2) " + RESIZE_BORDER_SIZE + "px";
+	  }
+	}, false);
+
+	document.addEventListener("mouseup", function(){
+		document.removeEventListener("mousemove", resize, false);
+		sb.style.transition = "width 200ms";
+		sb.style.borderLeft = "";
+	}, false);
 	return sbcontent;
 }
 
@@ -632,7 +659,7 @@ function getReadableFileSizeString(fileSizeInBytes) {
 const nodeList = document.querySelectorAll(".circular");
 for (let i = 0; i < nodeList.length; i++) {
 	var roat = 0;
-	setInterval(function() {
+	setInterval(async function() {
 		roat+= 1.5;
 		if (roat === 360) {roat = 0}
 		nodeList[i].style.transform = "rotate(" + roat + "deg)"
