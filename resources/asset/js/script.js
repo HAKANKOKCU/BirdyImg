@@ -167,7 +167,11 @@ function generateFileInfoContent() {
 	}else {
 		pstr = pathstr
 	}
-	return "<h1>" + langpack.imageInfo + "</h1><p></p><p class='ilitem'>" + langpack.name + ": " + fnstr + "</p><p class=''ilitem>" + langpack.type + ": " + getFileExtension(filfo.path) + "</p><p class='ilitem'>" + langpack.width + ": " + imgW.toString() + " (" + filfo.size.width + ")" + "</p><p class='ilitem'>" + langpack.height + ": " + imgH.toString() + " (" + filfo.size.height + ")" + "</p><p class='ilitem'>" + langpack.fileSize + ": <span class='PKAbleSizeUpdateSpan'>" + Math.max(filfo.filesize / 1024, 0.1).toFixed(1).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p><p class='ilitem'>" + langpack.folder + ": <span class='opendir clickable'>" + getFolderName(filfo.path) + "</span></p><p class='ilitem'>" + langpack.path + ": " + pstr + "</p>"
+	return "<h1>" + langpack.imageInfo + "</h1><p></p><p class='ilitem'>" + langpack.name + ": " + fnstr + "</p><p class=''ilitem>" + langpack.type + ": " + getFileExtension(filfo.path) + "</p><p class='ilitem'>" + langpack.width + ": " + imgW.toString() + " (" + filfo.size.width + ")" + "</p><p class='ilitem'>" + langpack.height + ": " + imgH.toString() + " (" + filfo.size.height + ")" + "</p><p class='ilitem'>" + langpack.fileSize + ": <span class='PKAbleSizeUpdateSpan'>" + Math.max(filfo.filesize / 1024, 0.1).toFixed(1).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p><p class='ilitem'>" + langpack.creationDate + ": <span>" + DateToString(filfo.stats.ctime) + "</span></p><p class='ilitem'>" + langpack.lastModifiedDate + ": <span>" + DateToString(filfo.stats.mtime) + "</span></p><p class='ilitem'>" + langpack.lastAccessDate + ": <span>" + DateToString(filfo.stats.atime) + "</span> </p><p class='ilitem'>" + langpack.folder + ": <span class='opendir clickable'>" + getFolderName(filfo.path) + "</span></p><p class='ilitem'>" + langpack.path + ": " + pstr + "</p>"
+}
+
+function DateToString(date) {
+	return date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear() + " " + date.getHours() + ":" + date.getMinutes();
 }
 
 ipcRenderer.on("dsimg", (event,data) => {

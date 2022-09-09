@@ -21,5 +21,8 @@
 	"type":"Tip",
 	"typeImage":"Imagine {TYPE}",
 	"images":"Imagini",
-	"folder":"Folder"
+	"folder":"Folder",
+	"creationDate":"Data Creării",
+	"lastModifiedDate":"Ultimul Dată Modificat",
+	"lastAccessDate":"Ultima Dată De Accesare"
 }

@@ -221,7 +221,7 @@ function bulidapp() {
 		datastr = fs.readFileSync(os.homedir() + "/BirdyImg/extensions.data")
 		datastr.toString().split("|").forEach((item) => {
 			try {
-				fs.readFile(item, function(err, data) {eval(item)})
+				fs.readFile(item, function(err, data) {eval(data.toString())})
 			}catch {}
 		})
 	}catch{}
@@ -333,10 +333,12 @@ function openFil(path) {
 		}catch {
 			dimensions = {width:0,height:0}
 		}
+		var stats = fs.statSync(path);
 		app_window.webContents.send("filedata", {
 			path: path,
 			size: dimensions,
-			filesize: getFilesizeInBytes(path)
+			filesize: stats.size,
+			stats: stats
 		});
 		cfil = path;
 		filelist = [];

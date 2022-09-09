@@ -21,5 +21,8 @@
 	"type":"Tip",
 	"typeImage":"{TYPE} Resmi",
 	"images":"Resimler",
-	"folder":"Klasör"
+	"folder":"Klasör",
+	"creationDate":"Oluşturulma Tarihi",
+	"lastModifiedDate":"Son Değiştirilme Tarihi",
+	"lastAccessDate":"Son Erişim Tarihi"
 }
