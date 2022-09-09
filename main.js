@@ -17,7 +17,7 @@ let locale = Intl.DateTimeFormat().resolvedOptions().locale;
 var langdata;
 var settingsdata;
 console.log("init allowed image types")
-const allowedext = [".png",".jpg",".jpeg",".bmp",".gif",".ico",".ıco",".svg",".webp"];
+const allowedext = [".png",".jpg",".jpeg",".bmp",".gif",".ico",".ıco",".svg",".webp",".avif",".avıf"];
 var flts;
 var fileID;
 
@@ -72,7 +72,7 @@ function bulidapp() {
 	console.log("Init Open File Types")
 	flts = [{
 				name: langdata["images"],
-				extensions: ["png","jpg","jpeg","bmp","gif","ico","svg","webp"]
+				extensions: ["png","jpg","jpeg","bmp","gif","ico","svg","webp","avif"]
 			},{
 				name: langdata["typeImage"].replace("{TYPE}","PNG"),
 				extensions: ['png']
@@ -97,11 +97,15 @@ function bulidapp() {
 			},{
 				name: langdata["typeImage"].replace("{TYPE}","WebP"),
 				extensions: ['webp']
+			},{
+				name: langdata["typeImage"].replace("{TYPE}","AVIF"),
+				extensions: ['avif']
 			}];
 	console.log("creating window")
 	var windowinf = {
 		webPreferences: {
-			nodeIntegration:true
+			nodeIntegration:true,
+			contextIsolation: false
 		},
 		icon: "resources/asset/bitmap/appico.png",
 		show: false,
