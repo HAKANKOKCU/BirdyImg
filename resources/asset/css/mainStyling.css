@@ -2,6 +2,8 @@ body {overflow:hidden}
 
 *:focus {outline: 1px solid lightgray}
 
+	b {font-weight: bold !important}
+
 #imgView {
 	position:relative;
 	overflow:hidden;
@@ -146,7 +148,8 @@ main {
 	.fullscreenWindow {background: white;color:black}
 }
 
-.ilitem {display:flex;}
+.ilitem {display:flex;margin-bottom:2px}
+.ilitem > span {word-break: break-all}
 
 .loader {width:60px;height:60px;border-radius:50%;background-color: rgba(0,0,0,0.5)}
 .path {

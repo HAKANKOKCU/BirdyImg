@@ -109,6 +109,7 @@ function bulidapp() {
 		},
 		icon: "resources/asset/bitmap/appico.png",
 		show: false,
+		backgroundColor: 'black'
 	};
 	if (settingsdata.bounds != null) {
 		windowinf.x = settingsdata.bounds.x;
@@ -221,7 +222,7 @@ function bulidapp() {
 		datastr = fs.readFileSync(os.homedir() + "/BirdyImg/extensions.data")
 		datastr.toString().split("|").forEach((item) => {
 			try {
-				fs.readFile(item, function(err, data) {eval(data.toString())})
+				fs.readFile(item, function(err, data) {try{eval(data.toString())}catch{}})
 			}catch {}
 		})
 	}catch{}
