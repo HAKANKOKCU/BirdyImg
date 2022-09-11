@@ -18,10 +18,12 @@ var langpack;
 var langs;
 var ghostImg = document.createElement("img");
 //ghostImg.style.opacity = "0";
-document.body.appendChild(ghostImg);
 var isRoted = false;
 var mouseX = 0,mouseY = 0;
 var newtabid = 0;
+
+var tabCount = 0;
+
 function newTab() {
 	var view = document.createElement("img");
 	view.setAttribute("BIMG-TabID",newtabid);
@@ -29,7 +31,16 @@ function newTab() {
 	var tswitch = document.createElement("div");
 	var tswitchHeader = document.createElement("span");
 	tswitchHeader.classList.add("tabHeader");
-	tswitchHeader.innerText = "Tab " + newtabid;
+	try {
+		tswitchHeader.innerText = langpack.newTab;
+	}catch {
+		var retint = setInterval(function() {
+			try {
+				tswitchHeader.innerText = langpack.newTab;
+				clearInterval(retint);
+			}catch {}
+		},100)
+	}
 	tswitch.appendChild(tswitchHeader)
 	var tswitchClose = document.createElement("span");
 	tswitchClose.classList.add("tabClose");
@@ -55,13 +66,14 @@ function newTab() {
 	tswitchClose.addEventListener("click",function() {
 		closeTab(ndi);
 	});
-	tswitch.addEventListener("click",function() {switchTab(ndi)});
+	tswitchHeader.addEventListener("click",function() {switchTab(ndi)});
 	view.addEventListener("load",function() {
 		imageLoaded(ndi);
 	});
 	switchTab(newtabid);
 	ipcRenderer.send("newtab", newtabid);
 	newtabid++;
+	tabCount++;
 }
 var currentTabItemHeader;
 function switchTab(id) {
@@ -101,6 +113,7 @@ function closeTab(id) {
 	elemimg.src = "";
 	imgViewCnt.removeChild(elemimg);
 	tabs[id] = null;
+	tabCount--;
 }
 
 newTab();
@@ -118,6 +131,8 @@ ipcRenderer.on("langs", (event,data) => {
 });
 
 ipcRenderer.on("filedata", (event,data) => {
+	if (tabCount == 0) newTab()
+	document.body.appendChild(ghostImg);
 	document.title = "BirdyImg - " + getFileName(data.path);
 	loadingText.style.display = "";
 	tabs[tabID].imgView.src = data.path;
@@ -342,6 +357,28 @@ document.addEventListener('keydown', function (event) {
 	if (event.keyCode == 79) {
 		openFile();
 	}
+	if (event.ctrlKey) {
+		if (event.keyCode == 84) {
+			newTab();
+		}
+		if (event.shiftKey) {
+			if (event.keyCode == 9) {
+				tabID--;
+				if (tabID < 0) {
+					tabID = 0;
+				} 
+				switchTab(tabID);
+			}
+		}else {
+			if (event.keyCode == 9) {
+				tabID++;
+				if (tabID == tabCount) {
+					tabID = tabCount - 1;
+				} 
+				switchTab(tabID);
+			}
+		}
+	}
 });
 document.addEventListener("mousemove", function(event) {
 	mouseX = event.x;
@@ -397,18 +434,28 @@ imgViewCnt.addEventListener("wheel",function(evt) {
 	if (evt.deltaY != 0) {
 		if (evt.deltaY < 0) {
 			zoomIn();
+			if (tabs[tabID].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
+				tabs[tabID].imgX -= (mouseX - (imgViewCnt.offsetWidth / 2)) / 2;
+				retimgIfOut();
+				animateZoomPos();
+			}
+			if (tabs[tabID].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
+				tabs[tabID].imgY -= (mouseY - (imgViewCnt.offsetHeight / 2)) / 2;
+				retimgIfOut();
+				animateZoomPos();
+			}
 		}else {
 			zoomOut();
-		}
-		if (tabs[tabID].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
-			tabs[tabID].imgX -= (mouseX - (imgViewCnt.offsetWidth / 2)) / 2;
-			retimgIfOut();
-			animateZoomPos();
-		}
-		if (tabs[tabID].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
-			tabs[tabID].imgY -= (mouseY - (imgViewCnt.offsetHeight / 2)) / 2;
-			retimgIfOut();
-			animateZoomPos();
+			if (tabs[tabID].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
+				tabs[tabID].imgX += (mouseX - (imgViewCnt.offsetWidth / 2)) / 2;
+				retimgIfOut();
+				animateZoomPos();
+			}
+			if (tabs[tabID].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
+				tabs[tabID].imgY += (mouseY - (imgViewCnt.offsetHeight / 2)) / 2;
+				retimgIfOut();
+				animateZoomPos();
+			}
 		}
 		posImg();
 	}
@@ -525,10 +572,11 @@ function imageLoaded(id) {
 	//},1)
 }
 
-ghostImg.addEventListener("onload",function () {
+ghostImg.addEventListener("aa   load",function () {
 	tabs[tabID].imgW = ghostImg.clientWidth;
 	tabs[tabID].imgH = ghostImg.clientHeight;
 	console.log("set width",tabs[tabID].imgW,tabs[tabID].imgH);
+	
 	posImg();
 })
 
@@ -539,6 +587,7 @@ function recyleImg() {
 function openFWindow(html) {
 	var win = document.createElement("div");
 	win.classList.add("fullscreenWindow");
+	win.style.overflow = "auto";
 	var closeBtn = document.createElement("button");
 	closeBtn.classList.add("fullscreenWindowClose");
 	closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6Z"/></svg>';

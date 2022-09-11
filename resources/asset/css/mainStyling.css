@@ -109,7 +109,6 @@ main {
 
 .fullscreenWindowContent {
 	width: 100%;
-	height: 100%;
 }
 
 .fullscreenWindowClose {
@@ -189,6 +188,6 @@ nodisplay {display:none}
 .clickable {cursor:pointer}
 
 #tabSwitcher > div {display:inline-flex;padding:3px;align-items:center;transition:0.2s;}
-.tabClose {background-color:red;border-radius:50%;width:20px;height:20px;overflow:hidden;margin-left:2px}
+.tabClose {background-color:red;border-radius:50%;width:20px;height:20px;overflow:hidden;margin-left:2px;flex-shrink:0}
 .tabClose > svg {fill:white !important}
 .tabClose > svg:hover {fill:black !important}
