@@ -133,6 +133,8 @@ main {
 	#tabSwitcher > div {color:white}
 	#tabSwitcher > div.active {background-color: rgba(255,255,255,0.3)}
 	#tabSwitcher {background-color: rgb(10,10,10)}
+	.tabClose > svg {fill:transparent}
+	.tabClose > svg:hover {fill:white}
 }
 
 @media (prefers-color-scheme: light) {
@@ -151,6 +153,8 @@ main {
 	#tabSwitcher > div {color:black}
 	#tabSwitcher > div.active {background-color: rgba(0,0,0,0.3)}
 	#tabSwitcher {background-color:white}
+	.tabClose > svg {fill:transparent}
+	.tabClose > svg:hover {fill:black}
 }
 
 .ilitem {display:flex;margin-bottom:2px}
@@ -185,9 +189,12 @@ main {
 }
 nodisplay {display:none}
 
-.clickable {cursor:pointer}
+#tabSwitcher {overflow-x: auto;overflow-y: hidden;white-space: nowrap;min-height:26px}
 
+.clickable {cursor:pointer}
+.tabHeader {text-overflow: ellipsis;width:250px;overflow: hidden;white-space: nowrap;}
 #tabSwitcher > div {display:inline-flex;padding:3px;align-items:center;transition:0.2s;}
-.tabClose {background-color:red;border-radius:50%;width:20px;height:20px;overflow:hidden;margin-left:2px;flex-shrink:0}
-.tabClose > svg {fill:white !important}
-.tabClose > svg:hover {fill:black !important}
+.tabClose {border-radius:50%;width:20px;height:20px;overflow:hidden;margin-left:2px;flex-shrink:0;transition:background 0.2s}
+#tabSwitcher > div.active > .tabClose > svg {fill:white}
+#tabSwitcher > div.active > .tabClose > svg:hover {fill:black}
+#tabSwitcher > div.active > .tabClose {background-color:red}

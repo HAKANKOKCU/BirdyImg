@@ -176,6 +176,7 @@ ipcRenderer.on("filedata", (event,data) => {
 		tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
 	}
 	currentTabItemHeader.getElementsByClassName("tabHeader")[0].innerText = getFileName(data.path);
+	currentTabItemHeader.getElementsByClassName("tabHeader")[0].title = getFileName(data.path);
 	//posImg();
 	var filfo = tabs[tabID].fileInf;
 	Array.prototype.forEach.call(document.querySelectorAll("[paneid='FileInfo']"),(item) => {
@@ -263,7 +264,7 @@ function generateFileInfoContent() {
 	}else {
 		pstr = pathstr
 	}
-	return "<h1>" + langpack.imageInfo + "</h1><p></p><p class='ilitem'><b>" + langpack.name + "</b>: <span>" + namestr + "</span></p><p class=''ilitem><b>" + langpack.type + ": </b>" + getFileExtension(filfo.path) + "</p><p class='ilitem'><b>" + langpack.width + ": </b>" + tabs[tabID].imgW.toString() + " (" + filfo.size.width + ")" + "</p><p class='ilitem'><b>" + langpack.height + ": </b>" + tabs[tabID].imgH.toString() + " (" + filfo.size.height + ")" + "</p><p class='ilitem'><b>" + langpack.fileSize + ": </b><span class='PKAbleSizeUpdateSpan'>" + Math.max(filfo.filesize / 1024, 0.1).toFixed(1).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p><p class='ilitem'><b>" + langpack.creationDate + ": </b><span>" + DateToString(filfo.stats.ctime) + "</span></p><p class='ilitem'><b>" + langpack.lastModifiedDate + ": </b><span>" + DateToString(filfo.stats.mtime) + "</span></p><p class='ilitem'><b>" + langpack.lastAccessDate + ": </b><span>" + DateToString(filfo.stats.atime) + "</span> </p><p class='ilitem'><b>" + langpack.folder + ": </b><span class='opendir clickable'>" + getFolderName(filfo.path) + "</span></p><p class='ilitem'><b>" + langpack.path + ": </b>" + pstr + "</p>"
+	return "<h1>" + langpack.imageInfo + "</h1><p></p><p class='ilitem'><b>" + langpack.name + "</b>: <span>" + namestr + "</span></p><p class='ilitem'><b>" + langpack.type + ": </b>" + getFileExtension(filfo.path) + "</p><p class='ilitem'><b>" + langpack.width + ": </b>" + tabs[tabID].imgW.toString() + " (" + filfo.size.width + ")" + "</p><p class='ilitem'><b>" + langpack.height + ": </b>" + tabs[tabID].imgH.toString() + " (" + filfo.size.height + ")" + "</p><p class='ilitem'><b>" + langpack.fileSize + ": </b><span class='PKAbleSizeUpdateSpan'>" + Math.max(filfo.filesize / 1024, 0.1).toFixed(1).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p><p class='ilitem'><b>" + langpack.creationDate + ": </b><span>" + DateToString(filfo.stats.ctime) + "</span></p><p class='ilitem'><b>" + langpack.lastModifiedDate + ": </b><span>" + DateToString(filfo.stats.mtime) + "</span></p><p class='ilitem'><b>" + langpack.lastAccessDate + ": </b><span>" + DateToString(filfo.stats.atime) + "</span> </p><p class='ilitem'><b>" + langpack.folder + ": </b><span class='opendir clickable'>" + getFolderName(filfo.path) + "</span></p><p class='ilitem'><b>" + langpack.path + ": </b>" + pstr + "</p>"
 }
 
 function DateToString(date) {
@@ -431,28 +432,34 @@ imgViewCnt.addEventListener("mousemove", function(evt) {
 	oldpos = {"x": evt.clientX,"y": evt.clientY}
 })
 imgViewCnt.addEventListener("wheel",function(evt) {
+	var oldsizeW = tabs[tabID].imgW * tabs[tabID].zoomPrct;
+	var oldsizeH = tabs[tabID].imgH * tabs[tabID].zoomPrct;
 	if (evt.deltaY != 0) {
 		if (evt.deltaY < 0) {
 			zoomIn();
+			var sizeW = tabs[tabID].imgW * tabs[tabID].zoomPrct;
+			var sizeH = tabs[tabID].imgH * tabs[tabID].zoomPrct;
 			if (tabs[tabID].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
-				tabs[tabID].imgX -= (mouseX - (imgViewCnt.offsetWidth / 2)) / 2;
+				tabs[tabID].imgX -= ((mouseX - (imgViewCnt.offsetWidth / 2)) / 2) - (oldsizeW - sizeW);
 				retimgIfOut();
 				animateZoomPos();
 			}
 			if (tabs[tabID].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
-				tabs[tabID].imgY -= (mouseY - (imgViewCnt.offsetHeight / 2)) / 2;
+				tabs[tabID].imgY -= ((mouseY - (imgViewCnt.offsetHeight / 2)) / 2) - (oldsizeH - sizeH);
 				retimgIfOut();
 				animateZoomPos();
 			}
 		}else {
 			zoomOut();
+			var sizeW = tabs[tabID].imgW * tabs[tabID].zoomPrct;
+			var sizeH = tabs[tabID].imgH * tabs[tabID].zoomPrct;
 			if (tabs[tabID].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
-				tabs[tabID].imgX += (mouseX - (imgViewCnt.offsetWidth / 2)) / 2;
+				tabs[tabID].imgX += ((mouseX - (imgViewCnt.offsetWidth / 2)) / 2) + (oldsizeW - sizeW);
 				retimgIfOut();
 				animateZoomPos();
 			}
 			if (tabs[tabID].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
-				tabs[tabID].imgY += (mouseY - (imgViewCnt.offsetHeight / 2)) / 2;
+				tabs[tabID].imgY += ((mouseY - (imgViewCnt.offsetHeight / 2)) / 2) + (oldsizeH - sizeH);
 				retimgIfOut();
 				animateZoomPos();
 			}
