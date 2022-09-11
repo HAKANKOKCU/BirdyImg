@@ -131,6 +131,9 @@ main {
 	button {background: rgb(40,40,40)}
 	button:hover {background: rgb(70,70,70)}
 	.fullscreenWindow {background: rgb(10,10,10);color:white}
+	#tabSwitcher > div {color:white}
+	#tabSwitcher > div.active {background-color: rgba(255,255,255,0.3)}
+	#tabSwitcher {background-color: rgb(10,10,10)}
 }
 
 @media (prefers-color-scheme: light) {
@@ -146,6 +149,9 @@ main {
 	button {background: rgb(240,240,240)}
 	button:hover {background: rgb(200,200,200)}
 	.fullscreenWindow {background: white;color:black}
+	#tabSwitcher > div {color:black}
+	#tabSwitcher > div.active {background-color: rgba(0,0,0,0.3)}
+	#tabSwitcher {background-color:white}
 }
 
 .ilitem {display:flex;margin-bottom:2px}
@@ -181,3 +187,8 @@ main {
 nodisplay {display:none}
 
 .clickable {cursor:pointer}
+
+#tabSwitcher > div {display:inline-flex;padding:3px;align-items:center;transition:0.2s;}
+.tabClose {background-color:red;border-radius:50%;width:20px;height:20px;overflow:hidden;margin-left:2px}
+.tabClose > svg {fill:white !important}
+.tabClose > svg:hover {fill:black !important}

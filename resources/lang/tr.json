@@ -24,5 +24,10 @@
 	"folder":"Klasör",
 	"creationDate":"Oluşturulma Tarihi",
 	"lastModifiedDate":"Son Değiştirilme Tarihi",
-	"lastAccessDate":"Son Erişim Tarihi"
+	"lastAccessDate":"Son Erişim Tarihi",
+	"general":"Genel",
+	"tab":"Sekme",
+	"tabs":"Sekmeler",
+	"newTab":"Yeni Sekme",
+	"enableTabs":"Sekmeleri Etkinleştir"
 }

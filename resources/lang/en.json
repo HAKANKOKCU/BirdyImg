@@ -24,5 +24,10 @@
 	"folder":"Folder",
 	"creationDate":"Creation Date",
 	"lastModifiedDate":"Last Modified Date",
-	"lastAccessDate":"Last Access Date"
+	"lastAccessDate":"Last Access Date",
+	"general":"General",
+	"tab":"Tab",
+	"tabs":"Tabs",
+	"newTab":"New Tab",
+	"enableTabs":"Enable Tabs"
 }

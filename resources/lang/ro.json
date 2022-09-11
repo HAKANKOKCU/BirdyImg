@@ -22,7 +22,12 @@
 	"typeImage":"Imagine {TYPE}",
 	"images":"Imagini",
 	"folder":"Folder",
-	"creationDate":"Data Creării",
+	"creationDate":"Dată Creării",
 	"lastModifiedDate":"Ultimul Dată Modificat",
-	"lastAccessDate":"Ultima Dată De Accesare"
+	"lastAccessDate":"Ultima Dată De Accesare",
+	"general":"General",
+	"tab":"Tab",
+	"tabs":"Tab-uri",
+	"newTab":"Tab Nou",
+	"enableTabs":"Activează Tab-urile"
 }

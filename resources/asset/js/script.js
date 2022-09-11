@@ -2,26 +2,18 @@ const { ipcRenderer } = require("electron");
 
 
 const RESIZE_BORDER_SIZE = 4;
-var fileInf;
-let imgView = document.getElementById("view");
 let imgViewCnt = document.getElementById("imgView");
 let maincont = document.getElementsByTagName("main")[0];
 let loadingText = document.getElementById("loading");
-var zoomPrct = 1;
-var rot = 0;
+let tabSwitcher = document.getElementById("tabSwitcher");
 var dragging = false;
-var fileID;
-var filelist;
-var filesizes;
 var settingsdata;
 var oldpos = {
 	"x":0,
 	"y":0
 }
-var imgX = 0;
-var imgY = 0;
-var imgW = 0;
-var imgH = 0;
+var tabID;
+var tabs = {};
 var langpack;
 var langs;
 var ghostImg = document.createElement("img");
@@ -29,9 +21,97 @@ var ghostImg = document.createElement("img");
 document.body.appendChild(ghostImg);
 var isRoted = false;
 var mouseX = 0,mouseY = 0;
+var newtabid = 0;
+function newTab() {
+	var view = document.createElement("img");
+	view.setAttribute("BIMG-TabID",newtabid);
+	imgViewCnt.appendChild(view);
+	var tswitch = document.createElement("div");
+	var tswitchHeader = document.createElement("span");
+	tswitchHeader.classList.add("tabHeader");
+	tswitchHeader.innerText = "Tab " + newtabid;
+	tswitch.appendChild(tswitchHeader)
+	var tswitchClose = document.createElement("span");
+	tswitchClose.classList.add("tabClose");
+	tswitchClose.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="20" width="20"><path d="M6.062 15 5 13.938 8.938 10 5 6.062 6.062 5 10 8.938 13.938 5 15 6.062 11.062 10 15 13.938 13.938 15 10 11.062Z"/></svg>';
+	tswitch.appendChild(tswitchClose)
+	tswitch.setAttribute("BIMG-TabID",newtabid);
+	tabSwitcher.appendChild(tswitch);
+	tabs[newtabid] =
+		{
+			imgX:0,
+			imgY:0,
+			imgW:0,
+			imgH:0,
+			fileInf:null,
+			imgView:view,
+			fileID:null,
+			filelist:null,
+			filesizes:null,
+			rot:0,
+			zoomPrct:1
+		}
+	var ndi = newtabid;
+	tswitchClose.addEventListener("click",function() {
+		closeTab(ndi);
+	});
+	tswitch.addEventListener("click",function() {switchTab(ndi)});
+	view.addEventListener("load",function() {
+		imageLoaded(ndi);
+	});
+	switchTab(newtabid);
+	ipcRenderer.send("newtab", newtabid);
+	newtabid++;
+}
+var currentTabItemHeader;
+function switchTab(id) {
+	var imgs = imgViewCnt.querySelectorAll("img");
+	Array.prototype.forEach.call(imgs, (item) => {
+		if (item.getAttribute("BIMG-TabID") == id) {
+			item.style.display = "";
+			var filname
+			try {
+				filname = getFileName(tabs[id].fileInf.path);
+			}catch {}
+			if (filname == null)
+				document.title = "BirdyImg";
+			else
+				document.title = "BirdyImg - " + filname;
+		}else {
+			item.style.display = "none";
+		}
+	});
+	var tis = tabSwitcher.querySelectorAll("div");
+	Array.prototype.forEach.call(tis, (item) => {
+		if (item.getAttribute("BIMG-TabID") == id) {
+			item.classList.add("active");
+			currentTabItemHeader = item;
+		}else {
+			item.classList.remove("active");
+		}
+	});
+	tabID = id;
+	ipcRenderer.send("switchtab",tabID);
+}
+
+function closeTab(id) {
+	var elemTitle = tabSwitcher.querySelector("div[BIMG-TabID=\"" + id + "\"]");
+	tabSwitcher.removeChild(elemTitle);
+	var elemimg = imgViewCnt.querySelector("img[BIMG-TabID=\"" + id + "\"]");
+	elemimg.src = "";
+	imgViewCnt.removeChild(elemimg);
+	tabs[id] = null;
+}
+
+newTab();
+
+ipcRenderer.on("createnewtab", (event,data) => {newTab()});
 
 ipcRenderer.on("settingsdata", (event,data) => {
 	settingsdata = data;
+	if (settingsdata["enableTabs"] == false) {
+		tabSwitcher.style.display = "none";
+	}
 });
 ipcRenderer.on("langs", (event,data) => {
 	langs = data;
@@ -40,48 +120,49 @@ ipcRenderer.on("langs", (event,data) => {
 ipcRenderer.on("filedata", (event,data) => {
 	document.title = "BirdyImg - " + getFileName(data.path);
 	loadingText.style.display = "";
-	imgView.src = data.path;
+	tabs[tabID].imgView.src = data.path;
 	ghostImg.src = data.path;
-	fileInf = data;
-	imgX = 0;
+	tabs[tabID].fileInf = data;
+	tabs[tabID].imgX = 0;
 	isRoted = false;
-	imgY = 0;
-	imgW = fileInf.size.width;
-	imgH = fileInf.size.height;
+	tabs[tabID].imgY = 0;
+	tabs[tabID].imgW = tabs[tabID].fileInf.size.width;
+	tabs[tabID].imgH = tabs[tabID].fileInf.size.height;
 	if (ghostImg.complete) {
-		imgW = ghostImg.clientWidth;
-		imgH = ghostImg.clientHeight;
-		console.log("set width",imgW,imgH);
+		tabs[tabID].imgW = ghostImg.clientWidth;
+		tabs[tabID].imgH = ghostImg.clientHeight;
+		console.log("set width",tabs[tabID].imgW,tabs[tabID].imgH);
 	}else {
 		setTimeout(function() {
-			imgW = ghostImg.clientWidth;
-			imgH = ghostImg.clientHeight;
-			console.log("set width",imgW,imgH);
+			tabs[tabID].imgW = ghostImg.clientWidth;
+			tabs[tabID].imgH = ghostImg.clientHeight;
+			console.log("set width",tabs[tabID].imgW,tabs[tabID].imgH);
 			posImg();
 		},100)
 	}
-	zoomPrct = 1;
-	rot = 0;
+	tabs[tabID].zoomPrct = 1;
+	tabs[tabID].rot = 0;
 	try {
-		while (imgW * zoomPrct > imgViewCnt.offsetWidth) {
-			zoomPrct -= 0.1
+		while (tabs[tabID].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
+			tabs[tabID].zoomPrct -= 0.1
 		}
 	}catch {}
 	try {
-		while (imgH * zoomPrct > imgViewCnt.offsetHeight) {
-			zoomPrct -= 0.1
+		while (tabs[tabID].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
+			tabs[tabID].zoomPrct -= 0.1
 		}
 	}catch {}
-	if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
+	if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
 		animateZoomPos()
-		imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2)
+		tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
 	}
-	if (imgH * zoomPrct < imgViewCnt.offsetHeight) {
+	if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
 		animateZoomPos()
-		imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
+		tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
 	}
+	currentTabItemHeader.getElementsByClassName("tabHeader")[0].innerText = getFileName(data.path);
 	//posImg();
-	var filfo = fileInf;
+	var filfo = tabs[tabID].fileInf;
 	Array.prototype.forEach.call(document.querySelectorAll("[paneid='FileInfo']"),(item) => {
 		var pane = item.querySelector(".rightpanecontent");
 		var selectedsval = pane.getElementsByClassName("PKAbleSizeSelect")[0].value;
@@ -101,12 +182,12 @@ ipcRenderer.on("filedata", (event,data) => {
 });
 
 ipcRenderer.on("filelist", (event,data) => {
-	fileID = data.fileID;
-	filelist = data.list;
-	filesizes = data.filesizes;
+	tabs[tabID].fileID = data.fileID;
+	tabs[tabID].filelist = data.list;
+	tabs[tabID].filesizes = data.filesizes;
 	var fil = document.getElementsByClassName("fileListItem");
 	Array.prototype.forEach.call(fil,(item) => {
-		if (item.getAttribute("data-imageid") == fileID) {
+		if (item.getAttribute("data-imageid") == tabs[tabID].fileID) {
 			item.style.backgroundColor = "lightgray";
 			item.parentElement.parentElement.scrollTop = item.offsetTop - (item.parentElement.parentElement.offsetHeight / 2) + (item.offsetHeight / 2);
 		}else {
@@ -121,12 +202,12 @@ ipcRenderer.on("showfilelist", (event,data) => {
 
 function showfList() {
 	var HTMLs = "<h1>" + langpack.fileList + "</h1>"
-	filelist.forEach((item,index) => {
+	tabs[tabID].filelist.forEach((item,index) => {
 		var extraCSSLI = "";
-		if (index == fileID) {extraCSSLI = "background-color:lightgray"}
-		HTMLs += "<div class='fileListItem' data-imageid='" + index + "' title='" + getFileName(item) + "&#010;" + langpack.fileSize + ": " + getReadableFileSizeString(filesizes[index])[0] + "' style='" + extraCSSLI + "' onclick='ipcRenderer.send(`openfilep`,`" + item.replace(/\\/g,"\\\\") + "`)'><center><img src='" + item + "' style='max-height:100px;max-width:245px' loading='lazy' class='limon darkshandow'></center></div>"
+		if (index == tabs[tabID].fileID) {extraCSSLI = "background-color:lightgray"}
+		HTMLs += "<div class='fileListItem' data-imageid='" + index + "' title='" + getFileName(item) + "&#010;" + langpack.fileSize + ": " + getReadableFileSizeString(tabs[tabID].filesizes[index])[0] + "' style='" + extraCSSLI + "' onclick='ipcRenderer.send(`openfilep`,`" + item.replace(/\\/g,"\\\\") + "`)'><center><img src='" + item + "' style='max-height:100px;max-width:245px' loading='lazy' class='limon darkshandow'></center></div>"
 	});
-	openRightPane(HTMLs,"FileList")
+	openRightPane(HTMLs,"filelist")
 }
 
 ipcRenderer.on("langpack", (event,data) => {
@@ -138,7 +219,7 @@ ipcRenderer.on("imageinfo", (event,data) => {
 });
 
 function openFileInfo() {
-	var filfo = fileInf;
+	var filfo = tabs[tabID].fileInf;
 	var pane = openRightPane(generateFileInfoContent(),"FileInfo");
 	var PKAbleSelect = pane.getElementsByClassName("PKAbleSizeSelect")[0];
 	var PKAbleUpdate = pane.getElementsByClassName("PKAbleSizeUpdateSpan")[0];
@@ -152,7 +233,7 @@ function openFileInfo() {
 }
 
 function generateFileInfoContent() {
-	var filfo = fileInf;
+	var filfo = tabs[tabID].fileInf;
 	var namestr = getFileName(filfo.path);
 	//var fnstr;
 	//if (namestr.length > 24) {
@@ -167,7 +248,7 @@ function generateFileInfoContent() {
 	}else {
 		pstr = pathstr
 	}
-	return "<h1>" + langpack.imageInfo + "</h1><p></p><p class='ilitem'><b>" + langpack.name + "</b>: <span>" + namestr + "</span></p><p class=''ilitem><b>" + langpack.type + ": </b>" + getFileExtension(filfo.path) + "</p><p class='ilitem'><b>" + langpack.width + ": </b>" + imgW.toString() + " (" + filfo.size.width + ")" + "</p><p class='ilitem'><b>" + langpack.height + ": </b>" + imgH.toString() + " (" + filfo.size.height + ")" + "</p><p class='ilitem'><b>" + langpack.fileSize + ": </b><span class='PKAbleSizeUpdateSpan'>" + Math.max(filfo.filesize / 1024, 0.1).toFixed(1).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p><p class='ilitem'><b>" + langpack.creationDate + ": </b><span>" + DateToString(filfo.stats.ctime) + "</span></p><p class='ilitem'><b>" + langpack.lastModifiedDate + ": </b><span>" + DateToString(filfo.stats.mtime) + "</span></p><p class='ilitem'><b>" + langpack.lastAccessDate + ": </b><span>" + DateToString(filfo.stats.atime) + "</span> </p><p class='ilitem'><b>" + langpack.folder + ": </b><span class='opendir clickable'>" + getFolderName(filfo.path) + "</span></p><p class='ilitem'><b>" + langpack.path + ": </b>" + pstr + "</p>"
+	return "<h1>" + langpack.imageInfo + "</h1><p></p><p class='ilitem'><b>" + langpack.name + "</b>: <span>" + namestr + "</span></p><p class=''ilitem><b>" + langpack.type + ": </b>" + getFileExtension(filfo.path) + "</p><p class='ilitem'><b>" + langpack.width + ": </b>" + tabs[tabID].imgW.toString() + " (" + filfo.size.width + ")" + "</p><p class='ilitem'><b>" + langpack.height + ": </b>" + tabs[tabID].imgH.toString() + " (" + filfo.size.height + ")" + "</p><p class='ilitem'><b>" + langpack.fileSize + ": </b><span class='PKAbleSizeUpdateSpan'>" + Math.max(filfo.filesize / 1024, 0.1).toFixed(1).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p><p class='ilitem'><b>" + langpack.creationDate + ": </b><span>" + DateToString(filfo.stats.ctime) + "</span></p><p class='ilitem'><b>" + langpack.lastModifiedDate + ": </b><span>" + DateToString(filfo.stats.mtime) + "</span></p><p class='ilitem'><b>" + langpack.lastAccessDate + ": </b><span>" + DateToString(filfo.stats.atime) + "</span> </p><p class='ilitem'><b>" + langpack.folder + ": </b><span class='opendir clickable'>" + getFolderName(filfo.path) + "</span></p><p class='ilitem'><b>" + langpack.path + ": </b>" + pstr + "</p>"
 }
 
 function DateToString(date) {
@@ -175,16 +256,16 @@ function DateToString(date) {
 }
 
 ipcRenderer.on("dsimg", (event,data) => {
-	zoomPrct = 1;
-	imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2);
-	imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2);
+	tabs[tabID].zoomPrct = 1;
+	tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2);
+	tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2);
 	animateZoomPos();
 	posImg();
 })
 
 ipcRenderer.on("centerimg", (event,data) => {
-	imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2);
-	imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2);
+	tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2);
+	tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2);
 	animateZoomPos();
 	posImg();
 })
@@ -194,55 +275,55 @@ ipcRenderer.on("showsettings", (event,data) => {
 
 function zRot() {
 		try {
-			while (imgH * zoomPrct > imgViewCnt.offsetWidth) {
-				zoomPrct -= 0.1
+			while (tabs[tabID].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
+				tabs[tabID].zoomPrct -= 0.1
 			}
 		}catch {}
 		try {
-			while (imgW * zoomPrct > imgViewCnt.offsetHeight) {
-				zoomPrct -= 0.1
+			while (tabs[tabID].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
+				tabs[tabID].zoomPrct -= 0.1
 			}
 		}catch {}
-		//imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2);
-		//imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2);
+		//tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2);
+		//tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2);
 }
 
 ipcRenderer.on("fullimg", (event,data) => {
-	zoomPrct = 1;
-	if (rot == 90) {
+	tabs[tabID].zoomPrct = 1;
+	if (tabs[tabID].rot == 90) {
 		zRot();
-	}else if (rot == 270) {
+	}else if (tabs[tabID].rot == 270) {
 		zRot();
-	}else if (rot == -90) {
+	}else if (tabs[tabID].rot == -90) {
 		zRot();
-	}else if (rot == -270) {
+	}else if (tabs[tabID].rot == -270) {
 		zRot();
 	}else {
 		try {
-			while (imgW * zoomPrct > imgViewCnt.offsetWidth) {
-				zoomPrct -= 0.1
+			while (tabs[tabID].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
+				tabs[tabID].zoomPrct -= 0.1
 			}
 		}catch {}
 		try {
-			while (imgH * zoomPrct > imgViewCnt.offsetHeight) {
-				zoomPrct -= 0.1
+			while (tabs[tabID].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
+				tabs[tabID].zoomPrct -= 0.1
 			}
 		}catch {}
 	}
-	imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2);
-	imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2);
+	tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2);
+	tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2);
 	animateZoomPos();
 	posImg();
 })
 
 addEventListener('resize', (event) => {
-	if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
+	if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
 		animateZoomPos()
-		imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2)
+		tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
 	}
-	if (imgH * zoomPrct < imgViewCnt.offsetHeight) {
+	if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
 		animateZoomPos()
-		imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
+		tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
 	}
 	posImg();
 	retimgIfOut();
@@ -268,33 +349,33 @@ document.addEventListener("mousemove", function(event) {
 })
 
 function riNR() {
-	if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
-		imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2)
-	}else if (imgX > 0) {imgX = 0}else if (imgX < -((imgW * zoomPrct) - imgViewCnt.offsetWidth)) {	imgX = -((imgW * zoomPrct) - imgViewCnt.offsetWidth)}
+	if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
+		tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
+	}else if (tabs[tabID].imgX > 0) {tabs[tabID].imgX = 0}else if (tabs[tabID].imgX < -((tabs[tabID].imgW * tabs[tabID].zoomPrct) - imgViewCnt.offsetWidth)) {	tabs[tabID].imgX = -((tabs[tabID].imgW * tabs[tabID].zoomPrct) - imgViewCnt.offsetWidth)}
 	
-	if (imgH * zoomPrct < imgViewCnt.offsetHeight) {
-		imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
-	}else if (imgY > 0) {imgY = 0}else if (imgY < -((imgH * zoomPrct) - imgViewCnt.offsetHeight)) {imgY = -((imgH * zoomPrct) - imgViewCnt.offsetHeight)}
+	if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
+		tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
+	}else if (tabs[tabID].imgY > 0) {tabs[tabID].imgY = 0}else if (tabs[tabID].imgY < -((tabs[tabID].imgH * tabs[tabID].zoomPrct) - imgViewCnt.offsetHeight)) {tabs[tabID].imgY = -((tabs[tabID].imgH * tabs[tabID].zoomPrct) - imgViewCnt.offsetHeight)}
 }
 
 function riHR() {
-	if (imgW * zoomPrct < imgViewCnt.offsetHeight) {
-		imgX = (imgViewCnt.offsetHeight / 2) - (imgW * zoomPrct / 2)
-	}else if (imgX > 0) {imgX = 0}else if (imgX < -((imgW * zoomPrct) - imgViewCnt.offsetHeight)) {	imgX = -((imgW * zoomPrct) - imgViewCnt.offsetHeight)}
+	if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
+		tabs[tabID].imgX = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
+	}else if (tabs[tabID].imgX > 0) {tabs[tabID].imgX = 0}else if (tabs[tabID].imgX < -((tabs[tabID].imgW * tabs[tabID].zoomPrct) - imgViewCnt.offsetHeight)) {	tabs[tabID].imgX = -((tabs[tabID].imgW * tabs[tabID].zoomPrct) - imgViewCnt.offsetHeight)}
 	
-	if (imgH * zoomPrct < imgViewCnt.offsetWidth) {
-		imgY = (imgViewCnt.offsetWidth / 2) - (imgH * zoomPrct / 2)
-	}else if (imgY > 0) {imgY = 0}else if (imgY < -((imgH * zoomPrct) - imgViewCnt.offsetWidth)) {imgY = -((imgH * zoomPrct) - imgViewCnt.offsetWidth)}
+	if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
+		tabs[tabID].imgY = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
+	}else if (tabs[tabID].imgY > 0) {tabs[tabID].imgY = 0}else if (tabs[tabID].imgY < -((tabs[tabID].imgH * tabs[tabID].zoomPrct) - imgViewCnt.offsetWidth)) {tabs[tabID].imgY = -((tabs[tabID].imgH * tabs[tabID].zoomPrct) - imgViewCnt.offsetWidth)}
 }
 
 function retimgIfOut() {
-	if (rot == 90) {
+	if (tabs[tabID].rot == 90) {
 	//	riHR();
-	}else if (rot == 270) {
+	}else if (tabs[tabID].rot == 270) {
 	//	riHR();
-	}else if (rot == -90) {
+	}else if (tabs[tabID].rot == -90) {
 	//	riHR();
-	}else if (rot == -270) {
+	}else if (tabs[tabID].rot == -270) {
 	//	riHR();
 	}else {
 		riNR();
@@ -304,10 +385,10 @@ imgViewCnt.addEventListener("mousedown", function() {dragging = true})
 imgViewCnt.addEventListener("mouseup", function() {dragging = false})
 imgViewCnt.addEventListener("mousemove", function(evt) {
 	if (dragging) {
-		imgX += evt.clientX - oldpos.x;
-		imgY += evt.clientY - oldpos.y;
+		tabs[tabID].imgX += evt.clientX - oldpos.x;
+		tabs[tabID].imgY += evt.clientY - oldpos.y;
 		retimgIfOut();
-		//console.log(imgX,imgY);
+		//console.log(tabs[tabID].imgX,tabs[tabID].imgY);
 		posImg();
 	}
 	oldpos = {"x": evt.clientX,"y": evt.clientY}
@@ -319,13 +400,13 @@ imgViewCnt.addEventListener("wheel",function(evt) {
 		}else {
 			zoomOut();
 		}
-		if (imgW * zoomPrct > imgViewCnt.offsetWidth) {
-			imgX -= (mouseX - (imgViewCnt.offsetWidth / 2)) / 2;
+		if (tabs[tabID].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
+			tabs[tabID].imgX -= (mouseX - (imgViewCnt.offsetWidth / 2)) / 2;
 			retimgIfOut();
 			animateZoomPos();
 		}
-		if (imgH * zoomPrct > imgViewCnt.offsetHeight) {
-			imgY -= (mouseY - (imgViewCnt.offsetHeight / 2)) / 2;
+		if (tabs[tabID].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
+			tabs[tabID].imgY -= (mouseY - (imgViewCnt.offsetHeight / 2)) / 2;
 			retimgIfOut();
 			animateZoomPos();
 		}
@@ -334,30 +415,30 @@ imgViewCnt.addEventListener("wheel",function(evt) {
 })
 
 function fsize() {
-	imgView.style.height = imgW * zoomPrct;
-	imgView.style.width = imgH * zoomPrct;
+	tabs[tabID].imgView.style.height = tabs[tabID].imgW * tabs[tabID].zoomPrct;
+	tabs[tabID].imgView.style.width = tabs[tabID].imgH * tabs[tabID].zoomPrct;
 }
 
 function posImg() {
-	imgView.style.top = imgY + "px";
-	imgView.style.left = imgX + "px";
-	//if (rot == 90) {
+	tabs[tabID].imgView.style.top = tabs[tabID].imgY + "px";
+	tabs[tabID].imgView.style.left = tabs[tabID].imgX + "px";
+	//if (tabs[tabID].rot == 90) {
 	//	fsize();
-	//}else if (rot == 270) {
+	//}else if (tabs[tabID].rot == 270) {
 	//	fsize();
-	//}else if (rot == -90) {
+	//}else if (tabs[tabID].rot == -90) {
 	//	fsize();
-	//}else if (rot == -270) {
+	//}else if (tabs[tabID].rot == -270) {
 	//	fsize();
 	//}else {	
-		imgView.style.width = imgW * zoomPrct;
-		imgView.style.height = imgH * zoomPrct;
+		tabs[tabID].imgView.style.width = tabs[tabID].imgW * tabs[tabID].zoomPrct;
+		tabs[tabID].imgView.style.height = tabs[tabID].imgH * tabs[tabID].zoomPrct;
 	//}
 	var extStr = "";
 	//if (isRoted) {
-	//	extStr = " translate(" + (25 * zoomPrct) + "% , -" + (25 * zoomPrct) + "%)"
+	//	extStr = " translate(" + (25 * tabs[tabID].zoomPrct) + "% , -" + (25 * tabs[tabID].zoomPrct) + "%)"
 	//}
-	imgView.style.transform = "rotate(" + rot + "deg)" + extStr;
+	tabs[tabID].imgView.style.transform = "rotate(" + tabs[tabID].rot + "deg)" + extStr;
 }
 
 var remfunc = null;
@@ -366,78 +447,78 @@ function animateZoomPos() {
 	if (remfunc != null) {
 		clearTimeout(remfunc);
 	}
-	imgView.classList.add("aniLR");
+	tabs[tabID].imgView.classList.add("aniLR");
 	//setTimeout(functodo ,1);
 	remfunc = setTimeout(function() {
-		imgView.classList.remove("aniLR")
+		tabs[tabID].imgView.classList.remove("aniLR")
 	}, 201)
 }
 
 function openFile() {
-	ipcRenderer.send("openfile", "")
+	ipcRenderer.send("openfile", tabID)
 }
 
 function prvFile() {
-	ipcRenderer.send("prvfile", "")
+	ipcRenderer.send("prvfile", tabID)
 }
 
 function nextFile() {
-	ipcRenderer.send("nextfile", "")
+	ipcRenderer.send("nextfile", tabID)
 }
 
 function zoomIn() {
-	zoomPrct += 0.1;
-	if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
+	tabs[tabID].zoomPrct += 0.1;
+	if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
 		animateZoomPos()
-		imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2)
+		tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
 	}
-	if (imgH * zoomPrct < imgViewCnt.offsetHeight) {
+	if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
 		animateZoomPos()
-		imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
+		tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
 	}
 	retimgIfOut();
 	posImg();
 }
 
 function zoomOut() {
-	zoomPrct -= 0.1;
-	if (zoomPrct <= 0) {zoomPrct = 0.1}
-	if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
+	tabs[tabID].zoomPrct -= 0.1;
+	if (tabs[tabID].zoomPrct <= 0) {tabs[tabID].zoomPrct = 0.1}
+	if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
 		animateZoomPos()
-		imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2)
+		tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
 	}
-	if (imgH * zoomPrct < imgViewCnt.offsetHeight) {
+	if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
 		animateZoomPos()
-		imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
+		tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
 	}
 	retimgIfOut();
 	posImg();
 }
 
-function imageLoaded() {
+function imageLoaded(id) {
 	loadingText.style.display = "none";
 	//setTimeout(function() {
-	imgW = ghostImg.clientWidth;
-	imgH = ghostImg.clientHeight;
-	console.log("set width",imgW,imgH);
-	zoomPrct = 1;
+	tabs[id].imgW = ghostImg.clientWidth;
+	tabs[id].imgH = ghostImg.clientHeight;
+	console.log("set width",tabs[id].imgW,tabs[id].imgH);
+	tabs[tabID].zoomPrct = 1;
 	try {
-		while (imgW * zoomPrct > imgViewCnt.offsetWidth) {
-			zoomPrct -= 0.1
+		while (tabs[id].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
+			tabs[tabID].zoomPrct -= 0.1
 		}
 	}catch {}
 	try {
-		while (imgH * zoomPrct > imgViewCnt.offsetHeight) {
-			zoomPrct -= 0.1
+		while (tabs[id].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
+			tabs[tabID].zoomPrct -= 0.1
 		}
 	}catch {}
-	if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
+	if (tabs[id].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
 		animateZoomPos()
-		imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2)
+		tabs[id].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[id].imgW * tabs[tabID].zoomPrct / 2)
 	}
-	if (imgH * zoomPrct < imgViewCnt.offsetHeight) {
+	if (tabs[id].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
 		animateZoomPos()
-		imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
+		tabs[id].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[id].imgH * tabs[tabID].zoomPrct / 2)
 	}
 	animateZoomPos();
 	posImg();
@@ -445,14 +526,14 @@ function imageLoaded() {
 }
 
 ghostImg.addEventListener("onload",function () {
-	imgW = ghostImg.clientWidth;
-	imgH = ghostImg.clientHeight;
-	console.log("set width",imgW,imgH);
+	tabs[tabID].imgW = ghostImg.clientWidth;
+	tabs[tabID].imgH = ghostImg.clientHeight;
+	console.log("set width",tabs[tabID].imgW,tabs[tabID].imgH);
 	posImg();
 })
 
 function recyleImg() {
-	ipcRenderer.send("recylefile", fileInf.path)
+	ipcRenderer.send("recylefile", tabs[tabID].fileInf.path)
 }
 
 function openFWindow(html) {
@@ -484,9 +565,15 @@ function showSettings() {
 	langs.forEach((lang) => {
 		optSelectHTML += "<option value='" + lang + "'>" + lang + "</option>"
 	});
-	var sets = openFWindow("<h1>" + langpack.settings + "</h1><h3>Language</h3><select value='" + settingsdata["language"] + "' class='langsb'>" + optSelectHTML + "</select>");
+	var sets = openFWindow("<h1>" + langpack.settings + "</h1><h3>" + langpack.general + "</h3><input type='checkbox' name='cbEnableTabs' id='cbEnableTabs' class='enabletab'/><label for='cbEnableTabs'>" + langpack.enableTabs + "</label><br><h3>Language</h3><select value='" + settingsdata["language"] + "' class='langsb'>" + optSelectHTML + "</select>");
 	sets.querySelector(".langsb").addEventListener("change",function() {
 		settingsdata["language"] = sets.querySelector(".langsb").value;
+		ipcRenderer.send('savesettings', settingsdata);
+	});
+	sets.querySelector(".langsb").value = settingsdata["language"];
+	sets.querySelector(".enabletab").checked = settingsdata["enableTabs"];
+	sets.querySelector(".enabletab").addEventListener("click", function() {
+		settingsdata["enableTabs"] = sets.querySelector(".enabletab").checked;
 		ipcRenderer.send('savesettings', settingsdata);
 	});
 }
@@ -514,24 +601,24 @@ function openRightPane(html,paneID) {
 	closeBtn.addEventListener("click", function() {
 		sb.style.width = "0";
 		var aniposer = setInterval(function() {
-			if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
-				imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2)
+			if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
+				tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
 			}
-			if (imgH * zoomPrct < imgViewCnt.offsetHeight) {
-				imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
+			if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
+				tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
 			}
 			posImg();
 			retimgIfOut();
 		},1)
 		setTimeout(function() {
 			maincont.removeChild(sb);
-			if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
+			if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
 				animateZoomPos()
-				imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2)
+				tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
 			}
-			if (imgH * zoomPrct < imgViewCnt.offsetHeight) {
+			if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
 				animateZoomPos()
-				imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
+				tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
 			}
 			posImg();
 			retimgIfOut();
@@ -554,11 +641,11 @@ function openRightPane(html,paneID) {
 		sb.style.width = "300px";
 	},10)
 	var aniposer = setInterval(function() {
-		if (imgW * zoomPrct < imgViewCnt.offsetWidth) {
-			imgX = (imgViewCnt.offsetWidth / 2) - (imgW * zoomPrct / 2)
+		if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
+			tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
 		}
-		if (imgH * zoomPrct < imgViewCnt.offsetHeight) {
-			imgY = (imgViewCnt.offsetHeight / 2) - (imgH * zoomPrct / 2)
+		if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
+			tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
 		}
 		posImg();
 		retimgIfOut();
@@ -595,26 +682,26 @@ function openRightPane(html,paneID) {
 }
 
 function rotL() {
-	rot -= 90;
-	if (rot == -360) {
-		rot = 0
+	tabs[tabID].rot -= 90;
+	if (tabs[tabID].rot == -360) {
+		tabs[tabID].rot = 0
 	}
 	isRoted = !isRoted;
-	//var imgHold = imgH;
-	//imgH = imgW;
-	//imgW = imgHold;
+	//var tabs[tabID].imgHold = tabs[tabID].imgH;
+	//tabs[tabID].imgH = tabs[tabID].imgW;
+	//tabs[tabID].imgW = tabs[tabID].imgHold;
 	posImg();
 }
 
 function rotR() {
-	rot += 90;
-	if (rot == 360) {
-		rot = 0
+	tabs[tabID].rot += 90;
+	if (tabs[tabID].rot == 360) {
+		tabs[tabID].rot = 0
 	}
 	isRoted = !isRoted;
-	//var imgHold = imgH;
-	//imgH = imgW;
-	//imgW = imgHold;
+	//var tabs[tabID].imgHold = tabs[tabID].imgH;
+	//tabs[tabID].imgH = tabs[tabID].imgW;
+	//tabs[tabID].imgW = tabs[tabID].imgHold;
 	posImg();
 }
 

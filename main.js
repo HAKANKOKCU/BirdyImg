@@ -11,16 +11,55 @@ const args = process.argv;
 var os;
 console.log(args);
 var app_window;
-var filelist = [];
-var filesizes = [];
 let locale = Intl.DateTimeFormat().resolvedOptions().locale;
 var langdata;
 var settingsdata;
+var tabID;
+var tabs = {};
 console.log("init allowed image types")
 const allowedext = [".png",".jpg",".jpeg",".bmp",".gif",".ico",".ıco",".svg",".webp",".avif",".avıf"];
 var flts;
-var fileID;
 
+function saveSettings() {
+	let data = JSON.stringify(settingsdata);
+	fs.writeFileSync(os.homedir() + "/BirdyImg/settings.json", data);
+}
+
+os = require('os');
+//initPath = os.homedir() + "/BirdyImg/";
+settingsdata = JSON.parse(fs.readFileSync(os.homedir() + "/BirdyImg/settings.json"));
+var njs = {"language":"AUTO","enableTabs":true}
+for (var tgn in njs) {
+	if(!settingsdata.hasOwnProperty(tgn)) {
+		settingsdata[tgn] = njs[tgn];
+	}
+}
+saveSettings();
+var gotTheLock = true;
+
+if (settingsdata["enableTabs"]) {
+	gotTheLock = app.requestSingleInstanceLock()
+}
+    
+if (!gotTheLock) {
+  app.quit()
+} else {
+if (settingsdata["enableTabs"]) {
+	app.on('second-instance', (event, commandLine, workingDirectory) => {
+		console.log(commandLine);
+		if (app_window) {
+			if (app_window.isMinimized()) app_window.restore()
+			app_window.focus()
+			if (commandLine.length > 2) {
+				if (commandLine[2].toString() != ".") {
+					console.log(typeof commandLine[2]);
+					app_window.webContents.send("createnewtab","");
+					openFil(commandLine[2].toString());
+				}
+			}
+		}
+	})
+}
 app.on("ready", bulidapp);
 
 function bulidapp() {
@@ -32,9 +71,6 @@ function bulidapp() {
 			console.log(app.getPath("exe"))
 			process.chdir(dpath)
 		}
-		console.log("import os")
-		os = require('os');
-		initPath = os.homedir() + "/BirdyImg/";
 		if (!fs.existsSync(os.homedir() + "/BirdyImg")){
 			fs.mkdirSync(os.homedir() + "/BirdyImg");
 		}
@@ -44,14 +80,6 @@ function bulidapp() {
 		if (!fs.existsSync(os.homedir() + "/BirdyImg/settings.json")) {
 			fs.appendFile(os.homedir() + "/BirdyImg/settings.json", "{}")
 		}
-		settingsdata = JSON.parse(fs.readFileSync(os.homedir() + "/BirdyImg/settings.json"));
-		var njs = {"language":"AUTO"}
-		for (var tgn in njs) {
-			if(!settingsdata.hasOwnProperty(tgn)) {
-				settingsdata[tgn] = njs[tgn];
-			}
-		}
-		saveSettings();
 		var rawdata;
 		console.log(settingsdata["language"]);
 		if (settingsdata["language"] == "AUTO") {
@@ -166,21 +194,21 @@ function bulidapp() {
 				{
 					label: langdata.previousImage,
 					click: function() {
-						fileID -= 1
-						if (fileID < 0 ) {
-							fileID = 0;
+						tabs[tabID].fileID -= 1
+						if (tabs[tabID].fileID < 0 ) {
+							tabs[tabID].fileID = 0;
 						}
-						openFil(filelist[fileID]);
+						openFil(tabs[tabID].filelist[tabs[tabID].fileID]);
 					}
 				},
 				{
 					label: langdata.nextImage,
 					click: function() {
-						fileID += 1
-						if (fileID < 0 ) {
-							fileID = 0;
+						tabs[tabID].fileID += 1
+						if (tabs[tabID].fileID < 0 ) {
+							tabs[tabID].fileID = 0;
 						}
-						openFil(filelist[fileID]);
+						openFil(tabs[tabID].filelist[tabs[tabID].fileID]);
 					}
 				},
 				{type: 'separator'},
@@ -205,6 +233,17 @@ function bulidapp() {
 			]
 		}
 	];
+	if (settingsdata.enableTabs == true) {
+		menu_list.push({
+			label: langdata.tabs,
+			submenu: [
+				{
+					label: langdata.newTab,
+					click: function() {app_window.webContents.send("createnewtab","")}
+				}
+			]
+		});
+	}
 	try {
 		if (args[1].toString() == ".") {
 			menu_list.push({
@@ -297,27 +336,38 @@ ipcMain.on("launchpath", (e,arg) => {
 	require('child_process').exec(getStartCommand() + " \"" + arg + "\"");
 })
 
+ipcMain.on("newtab", (e,arg) => {
+	tabs[arg] =	{
+				filelist: [],
+				filesizes: [],
+				fileID: null
+			};
+})
+ipcMain.on("switchtab", (e,arg) => {
+	tabID = arg;
+})
+
 ipcMain.on("savesettings", (e,arg) => {
 	settingsdata = arg;
 	saveSettings();
 });
 
 ipcMain.on("prvfile", (e,arg) => {
-	fileID -= 1
-	if (fileID < 0 ) {
-		fileID = 0;
+	tabs[tabID].fileID -= 1
+	if (tabs[tabID].fileID < 0 ) {
+		tabs[tabID].fileID = 0;
 	}
-	openFil(filelist[fileID]);
+	openFil(tabs[tabID].filelist[tabs[tabID].fileID]);
 });
 ipcMain.on("openfilep", (e,arg) => {
 	openFil(arg);
 })
 ipcMain.on("nextfile", (e,arg) => {
-	fileID += 1
-	if (fileID > filelist.length - 1 ) {
-		fileID = filelist.length - 1;
+	tabs[tabID].fileID += 1
+	if (tabs[tabID].fileID > tabs[tabID].filelist.length - 1 ) {
+		tabs[tabID].fileID = tabs[tabID].filelist.length - 1;
 	}
-	openFil(filelist[fileID]);
+	openFil(tabs[tabID].filelist[tabs[tabID].fileID]);
 });
 ipcMain.on("recylefile", (e,arg) => {
 	alert(arg);
@@ -342,26 +392,26 @@ function openFil(path) {
 			stats: stats
 		});
 		cfil = path;
-		filelist = [];
-		filesizes = [];
+		tabs[tabID].filelist = [];
+		tabs[tabID].filesizes = [];
 		var cid = 0;
 		fs.readdir(pathlib.dirname(path), (err, files) => {
 			files.forEach(file => {
 				if (allowedext.includes(pathlib.extname(file).toLowerCase())) {
 					//console.log(pathlib.resolve(pathlib.dirname(path), file));
 					var pathresolve = pathlib.resolve(pathlib.dirname(path), file);
-					filelist.push(pathresolve);
-					filesizes.push(getFilesizeInBytes(pathresolve));
+					tabs[tabID].filelist.push(pathresolve);
+					tabs[tabID].filesizes.push(getFilesizeInBytes(pathresolve));
 					if (pathresolve.toLowerCase() == path.toLowerCase()) {
-						fileID = cid;
+						tabs[tabID].fileID = cid;
 					}
 					cid++;
 				}
 			});
 			app_window.webContents.send("filelist", {
-				fileID: fileID,
-				list: filelist,
-				filesizes:filesizes
+				fileID: tabs[tabID].fileID,
+				list: tabs[tabID].filelist,
+				filesizes:tabs[tabID].filesizes
 			});
 		});
 	}
@@ -371,10 +421,6 @@ function getFilesizeInBytes(filename) {
     var fileSizeInBytes = stats.size;
     return fileSizeInBytes;
 }
-function saveSettings() {
-	let data = JSON.stringify(settingsdata);
-	fs.writeFileSync(os.homedir() + "/BirdyImg/settings.json", data);
-}
 
 function getStartCommand() {
    switch (process.platform) { 
@@ -383,4 +429,5 @@ function getStartCommand() {
       case 'win64' : return 'start ""';
       default : return 'xdg-open';
    }
+}
 }
