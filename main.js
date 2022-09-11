@@ -1,31 +1,19 @@
 console.time("startup");
 console.log("require electron")
 const {BrowserWindow,app,Menu,ipcMain,dialog,nativeTheme} = require("electron");
-//const { FileManager } = require("./lib/FileManager");
 console.log("require fs-extra")
 const fs = require("fs-extra");
-console.log("require path")
-const pathlib = require('path');
 //const { trash } = require('trash');
-const args = process.argv;
-var os;
-console.log(args);
+const os = require('os');
 var app_window;
 let locale = Intl.DateTimeFormat().resolvedOptions().locale;
-var langdata;
 var settingsdata;
-var tabID;
-var tabs = {};
-console.log("init allowed image types")
-const allowedext = [".png",".jpg",".jpeg",".bmp",".gif",".ico",".ıco",".svg",".webp",".avif",".avıf"];
-var flts;
 
 function saveSettings() {
 	let data = JSON.stringify(settingsdata);
 	fs.writeFileSync(os.homedir() + "/BirdyImg/settings.json", data);
 }
 
-os = require('os');
 //initPath = os.homedir() + "/BirdyImg/";
 settingsdata = JSON.parse(fs.readFileSync(os.homedir() + "/BirdyImg/settings.json"));
 var njs = {"language":"AUTO","enableTabs":true}
@@ -37,13 +25,22 @@ for (var tgn in njs) {
 saveSettings();
 var gotTheLock = true;
 
-if (settingsdata["enableTabs"]) {
+if (settingsdata["enableTabs"] == true) {
 	gotTheLock = app.requestSingleInstanceLock()
 }
     
 if (!gotTheLock) {
   app.quit()
 } else {
+console.log("init allowed image types")
+const allowedext = [".png",".jpg",".jpeg",".bmp",".gif",".ico",".ıco",".svg",".webp",".avif",".avıf"];
+const args = process.argv;
+const pathlib = require('path');
+console.log(args);
+var tabID;
+var tabs = {};
+var flts;
+var langdata;
 if (settingsdata["enableTabs"]) {
 	app.on('second-instance', (event, commandLine, workingDirectory) => {
 		console.log(commandLine);
