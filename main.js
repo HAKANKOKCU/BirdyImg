@@ -41,6 +41,17 @@ var tabID;
 var tabs = {};
 var flts;
 var langdata;
+try {
+	if (!fs.existsSync(os.homedir() + "/BirdyImg")){
+		fs.mkdirSync(os.homedir() + "/BirdyImg");
+	}
+	if (!fs.existsSync(os.homedir() + "/BirdyImg/extensions.data")) {
+		fs.appendFile(os.homedir() + "/BirdyImg/extensions.data", "")
+	}
+	if (!fs.existsSync(os.homedir() + "/BirdyImg/settings.json")) {
+		fs.appendFile(os.homedir() + "/BirdyImg/settings.json", "{}")
+	}
+}catch{}
 if (settingsdata["enableTabs"]) {
 	app.on('second-instance', (event, commandLine, workingDirectory) => {
 		console.log(commandLine);
@@ -67,15 +78,6 @@ function bulidapp() {
 			var dpath = pathlib.dirname(app.getPath("exe"));
 			console.log(app.getPath("exe"))
 			process.chdir(dpath)
-		}
-		if (!fs.existsSync(os.homedir() + "/BirdyImg")){
-			fs.mkdirSync(os.homedir() + "/BirdyImg");
-		}
-		if (!fs.existsSync(os.homedir() + "/BirdyImg/extensions.data")) {
-			fs.appendFile(os.homedir() + "/BirdyImg/extensions.data", "")
-		}
-		if (!fs.existsSync(os.homedir() + "/BirdyImg/settings.json")) {
-			fs.appendFile(os.homedir() + "/BirdyImg/settings.json", "{}")
 		}
 		var rawdata;
 		console.log(settingsdata["language"]);
