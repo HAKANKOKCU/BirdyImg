@@ -12,6 +12,9 @@ BirdyImg Image Viewer  <a href="https://drive.google.com/file/d/1AtW-nxYYaj_jhO8
 * Right Arrow: Next Image
 * Left Arrow: Previous Image
 * O: Open
+* Ctrl + T: New Tab
+* Ctrl + Tab: Next Tab
+* Ctrl + Shift + Tab: Previous Tab
 
 # Supported Languages
 * English
