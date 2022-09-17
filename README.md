@@ -4,6 +4,10 @@ BirdyImg Image Viewer  <a href="https://drive.google.com/file/d/1AtW-nxYYaj_jhO8
 <!--![resim](https://user-images.githubusercontent.com/103432992/185777954-95c9db41-91af-4e6e-9b0a-f45470d2a6b3.png)-->
 ![resim](https://user-images.githubusercontent.com/103432992/189284081-a4f9760f-bf57-4d0a-84a6-61e0dc0afc3c.png)
 
+# How much memory it uses?
+* When you open it it uses around 57mb (i also dont know how electron uses this low amount of ram)
+* When you open 9mb image (9.030 KB) it uses around 70mb
+
 # Keyboard Shortcuts
 * Right Arrow: Next Image
 * Left Arrow: Previous Image
