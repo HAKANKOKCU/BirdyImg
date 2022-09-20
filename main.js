@@ -3,6 +3,7 @@ console.log("require electron")
 const {BrowserWindow,app,Menu,ipcMain,dialog,nativeTheme} = require("electron");
 console.log("require fs-extra")
 const fs = require("fs-extra");
+const pathlib = require('path');
 //const { trash } = require('trash');
 const os = require('os');
 var app_window;
@@ -54,7 +55,6 @@ if (!gotTheLock) {
 console.log("init allowed image types")
 const allowedext = [".png",".jpg",".jpeg",".bmp",".gif",".ico",".ıco",".svg",".webp",".avif",".avıf"];
 const args = process.argv;
-const pathlib = require('path');
 console.log(args);
 var tabID;
 var tabs = {};
