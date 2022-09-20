@@ -14,6 +14,25 @@ function saveSettings() {
 	fs.writeFileSync(os.homedir() + "/BirdyImg/settings.json", data);
 }
 
+if (!fs.existsSync("resources/asset/bitmap/appico.png")) {
+	//file not exists and set path to main directory of app
+	var dpath = pathlib.dirname(app.getPath("exe"));
+	console.log(app.getPath("exe"))
+	process.chdir(dpath)
+}
+
+try {
+	if (!fs.existsSync(os.homedir() + "/BirdyImg")){
+		fs.mkdirSync(os.homedir() + "/BirdyImg");
+	}
+	if (!fs.existsSync(os.homedir() + "/BirdyImg/extensions.data")) {
+		fs.appendFile(os.homedir() + "/BirdyImg/extensions.data", "")
+	}
+	if (!fs.existsSync(os.homedir() + "/BirdyImg/settings.json")) {
+		fs.appendFile(os.homedir() + "/BirdyImg/settings.json", "{}")
+	}
+}catch{}
+
 //initPath = os.homedir() + "/BirdyImg/";
 settingsdata = JSON.parse(fs.readFileSync(os.homedir() + "/BirdyImg/settings.json"));
 var njs = {"language":"AUTO","enableTabs":true}
@@ -41,17 +60,7 @@ var tabID;
 var tabs = {};
 var flts;
 var langdata;
-try {
-	if (!fs.existsSync(os.homedir() + "/BirdyImg")){
-		fs.mkdirSync(os.homedir() + "/BirdyImg");
-	}
-	if (!fs.existsSync(os.homedir() + "/BirdyImg/extensions.data")) {
-		fs.appendFile(os.homedir() + "/BirdyImg/extensions.data", "")
-	}
-	if (!fs.existsSync(os.homedir() + "/BirdyImg/settings.json")) {
-		fs.appendFile(os.homedir() + "/BirdyImg/settings.json", "{}")
-	}
-}catch{}
+
 if (settingsdata["enableTabs"]) {
 	app.on('second-instance', (event, commandLine, workingDirectory) => {
 		console.log(commandLine);
@@ -73,12 +82,6 @@ app.on("ready", bulidapp);
 function bulidapp() {
 	console.log("Ready!")
 	try {
-		if (!fs.existsSync("resources/asset/bitmap/appico.png")) {
-			//file not exists and set path to main directory of app
-			var dpath = pathlib.dirname(app.getPath("exe"));
-			console.log(app.getPath("exe"))
-			process.chdir(dpath)
-		}
 		var rawdata;
 		console.log(settingsdata["language"]);
 		if (settingsdata["language"] == "AUTO") {
@@ -168,12 +171,14 @@ function bulidapp() {
 				},
 				{
 					label: langdata.imageInfo,
+					accelerator: 'CmdOrCtrl+I',
 					click: function() {
 						app_window.webContents.send("imageinfo", "");
 					}
 				},
 				{
 					label: langdata.fileList,
+					accelerator: 'CmdOrCtrl+L',
 					click: function() {
 						app_window.webContents.send("showfilelist", "");
 					}
@@ -181,6 +186,7 @@ function bulidapp() {
 				{type:"separator"},
 				{
 					label: langdata.settings,
+					accelerator: 'CmdOrCtrl+S',
 					click: function() {
 						app_window.webContents.send("showsettings", "");
 					}
@@ -228,7 +234,9 @@ function bulidapp() {
 					click: function() {
 						app_window.webContents.send("dsimg", "");
 					}
-				}
+				},
+				{type: "separator"},
+				{ role: 'togglefullscreen',label:langdata.fullscreen }
 			]
 		}
 	];
@@ -248,10 +256,9 @@ function bulidapp() {
 			menu_list.push({
 				label: "Dev",
 				submenu: [
-					{
-						label: "DevTools",
-						click: function() {app_window.openDevTools()}
-					}
+					{ role: 'reload' },
+					{ role: 'forceReload' },
+					{ role: 'toggleDevTools' }
 				]
 			});
 		}

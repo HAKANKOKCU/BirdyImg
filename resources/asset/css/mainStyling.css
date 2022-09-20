@@ -172,6 +172,11 @@ main {
   height:60px;
   width:60px;
   position: absolute;
+  animation: rotate 1s linear infinite;
+}
+@keyframes rotate {
+	0% {transform: rotate(0deg)}
+	100% {transform: rotate(360deg)}
 }
 @keyframes dash {
   0% {
@@ -189,7 +194,7 @@ main {
 }
 nodisplay {display:none}
 
-#tabSwitcher {overflow-x: auto;overflow-y: hidden;white-space: nowrap;min-height:26px}
+#tabSwitcher {overflow-x: auto;overflow-y: hidden;white-space: nowrap;min-height:26px;}
 
 .clickable {cursor:pointer}
 .tabHeader {text-overflow: ellipsis;width:250px;overflow: hidden;white-space: nowrap;}

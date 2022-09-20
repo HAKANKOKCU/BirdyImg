@@ -6,14 +6,38 @@ let imgViewCnt = document.getElementById("imgView");
 let maincont = document.getElementsByTagName("main")[0];
 let loadingText = document.getElementById("loading");
 let tabSwitcher = document.getElementById("tabSwitcher");
+
+// Toolbar buttons:
+
+let prvFileButton = document.getElementById("prvFileButton");
+let nextFileButton = document.getElementById("nextFileButton");
+//----
+let zoomInButton = document.getElementById("zoomInButton");
+let zoomOutButton = document.getElementById("zoomOutButton");
+//----
+let rotateLeftButton = document.getElementById("rotateLeftButton");
+let rotateRightButton = document.getElementById("rotateRightButton");
+//----
+let openFileButton = document.getElementById("openFileButton");
+
+// Add events to buttons:
+
+prvFileButton.addEventListener("click", prvFile);
+nextFileButton.addEventListener("click", nextFile);
+zoomInButton.addEventListener("click", zoomIn);
+zoomOutButton.addEventListener("click", zoomOut);
+openFileButton.addEventListener("click", openFile);
+rotateLeftButton.addEventListener("click", rotL);
+rotateRightButton.addEventListener("click", rotR);
+
 var dragging = false;
 var settingsdata;
 var oldpos = {
 	"x":0,
 	"y":0
 }
-var tabID;
 var tabs = {};
+var tabID;
 var langpack;
 var langs;
 var ghostImg = document.createElement("img");
@@ -803,15 +827,15 @@ function getReadableFileSizeString(fileSizeInBytes) {
   return [Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i],byteUnits[i]];
 }
 
-const nodeList = document.querySelectorAll(".circular");
-for (let i = 0; i < nodeList.length; i++) {
-	var roat = 0;
-	setInterval(async function() {
-		roat+= 1.5;
-		if (roat === 360) {roat = 0}
-		nodeList[i].style.transform = "rotate(" + roat + "deg)"
-	},1)
-}
+//const nodeList = document.querySelectorAll(".circular");
+//for (let i = 0; i < nodeList.length; i++) {
+//	var roat = 0;
+//	setInterval(async function() {
+//		roat+= 1.5;
+//		if (roat === 360) {roat = 0}
+//		nodeList[i].style.transform = "rotate(" + roat + "deg)"
+//	},1)
+//}
 
 document.addEventListener('dragover', (e) => {
     e.preventDefault();
