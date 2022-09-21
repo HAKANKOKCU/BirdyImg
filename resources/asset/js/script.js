@@ -40,6 +40,7 @@ var tabs = {};
 var tabID;
 var langpack;
 var langs;
+var hiddenpart = document.getElementsByTagName("hiddenpart")[0];
 var ghostImg = document.createElement("img");
 //ghostImg.style.opacity = "0";
 var isRoted = false;
@@ -156,7 +157,7 @@ ipcRenderer.on("langs", (event,data) => {
 
 ipcRenderer.on("filedata", (event,data) => {
 	if (tabCount == 0) newTab()
-	document.body.appendChild(ghostImg);
+	hiddenpart.appendChild(ghostImg);
 	document.title = "BirdyImg - " + getFileName(data.path);
 	loadingText.style.display = "";
 	tabs[tabID].imgView.src = data.path;
@@ -245,9 +246,16 @@ function showfList() {
 	tabs[tabID].filelist.forEach((item,index) => {
 		var extraCSSLI = "";
 		if (index == tabs[tabID].fileID) {extraCSSLI = "background-color:lightgray"}
-		HTMLs += "<div class='fileListItem' data-imageid='" + index + "' title='" + getFileName(item) + "&#010;" + langpack.fileSize + ": " + getReadableFileSizeString(tabs[tabID].filesizes[index])[0] + "' style='" + extraCSSLI + "' onclick='ipcRenderer.send(`openfilep`,`" + item.replace(/\\/g,"\\\\") + "`)'><center><img src='" + item + "' style='max-height:100px;max-width:245px' loading='lazy' class='limon darkshandow'></center></div>"
+		HTMLs += "<div class='fileListItem' data-imageid='" + index + "' title='" + getFileName(item) + "&#010;" + langpack.fileSize + ": " + getReadableFileSizeString(tabs[tabID].filesizes[index])[0] + "' style='" + extraCSSLI + "'><center><img src='" + item + "' loading='lazy' class='limon darkshandow'></center></div>"
 	});
-	openRightPane(HTMLs,"filelist")
+	var pane = openRightPane(HTMLs,"filelist");
+	var listelem = pane.getElementsByClassName("fileListItem")
+	Array.prototype.forEach.call(listelem, (item) => {
+		var fitem = tabs[tabID].filelist[item.getAttribute("data-imageid")];
+		item.addEventListener("click",function() {
+			ipcRenderer.send("openfilep", fitem)
+		})
+	})
 }
 
 ipcRenderer.on("langpack", (event,data) => {

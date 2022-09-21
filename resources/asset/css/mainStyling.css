@@ -202,4 +202,8 @@ nodisplay {display:none}
 .tabClose {border-radius:50%;width:20px;height:20px;overflow:hidden;margin-left:2px;flex-shrink:0;transition:background 0.2s}
 #tabSwitcher > div.active > .tabClose > svg {fill:white}
 #tabSwitcher > div.active > .tabClose > svg:hover {fill:black}
-#tabSwitcher > div.active > .tabClose {background-color:red}
+/*#tabSwitcher > div.active > .tabClose {background-color:red}*/
+
+hiddenpart {width:0;height:0;overflow:hidden;display:block}
+
+.fileListItem > center > img {max-height:100px;max-width:245px}
