@@ -1,4 +1,4 @@
-> As windows is the buggiest os in the universe, it somehow gave permissions of my setup exe's to system or a user has higher permissions that wont allow reading of file.. and even editing permissions.. while i'm trying to delete them (You may say just format it but its at data partition), you have to bulid the app yourself..
+> ~As windows is the buggiest os in the universe, it somehow gave permissions of my setup exe's to system or a user has higher permissions that wont allow reading of file.. and even editing permissions.. while i'm trying to delete them (You may say just format it but its at data partition), you have to bulid the app yourself..~ It seems like disapeared so you dont have to do that
 
 # BirdyImg
 BirdyImg Image Viewer  <a href="https://drive.google.com/file/d/1AtW-nxYYaj_jhO8vNVua_cGOdqlJBbUo/view?usp=sharing">Download For Windows 64Bit</a> <a href="https://drive.google.com/file/d/11KEGL1mm7Y3AGrSwQiFOECoolPVaHr8r/view?usp=sharing">Download For Windows 32Bit</a> (From Google Drive)
