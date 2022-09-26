@@ -73,6 +73,18 @@ function drawlineat(x1, y1, x2, y2) {
     drawundocounter++;
     lines.push([x1, y1, x2, y2, lineW, currentcolor]);
 }
+function drawlineattemp(x1, y1, x2, y2) {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x1, y1, lineW / 2, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(x2, y2, lineW / 2, 0, 2 * Math.PI);
+    ctx.fill();
+}
 
 function redraw() {
     ctx.drawImage(ghostImg, 0, 0);
@@ -80,7 +92,7 @@ function redraw() {
         ctx.fillStyle = item[5];
         ctx.strokeStyle = item[5];
         ctx.lineWidth = item[4];
-        drawlineat(item[0],item[1],item[2],item[3])
+        drawlineattemp(item[0],item[1],item[2],item[3])
     })
 }
 
