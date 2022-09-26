@@ -1,30 +1,40 @@
-body {overflow:hidden}
+html {
+	--panecolor: rgb(255,255,255);
+	--textcolor: rgb(0,0,0);
+}
+body {
+	overflow: hidden
+}
 
-*:focus {outline: 1px solid lightgray}
+*:focus {
+	outline: 1px solid lightgray
+}
 
-	b {font-weight: bold !important}
+b {
+	font-weight: bold !important
+}
 
 #imgView {
-	position:relative;
-	overflow:hidden;
-	width:100%;
-	height:100%;
-	background-color:black;
+	position: relative;
+	overflow: hidden;
+	width: 100%;
+	height: 100%;
+	background-color: black;
 	object-fit: cover;
 }
 
-#imgView > img {
-	position:absolute;
+#imgView>img {
+	position: absolute;
 	-webkit-user-drag: none;
 	-khtml-user-drag: none;
 	-moz-user-drag: none;
 	-o-user-drag: none;
-	user-drag: none;
-	transition:width 0.2s, height 0.2s, transform 0.2s;
+	/*user-drag: none;*/
+	transition: width 0.2s, height 0.2s, transform 0.2s;
 }
 
-#imgView > img.aniLR {
-	transition:width 0.2s, height 0.2s, top 0.2s, left 0.2s, transform 0.2s;
+#imgView>img.aniLR {
+	transition: width 0.2s, height 0.2s, top 0.2s, left 0.2s, transform 0.2s;
 }
 
 toolbar {
@@ -37,63 +47,79 @@ toolbar {
 	user-select: none;
 }
 
-* {user-select: none;}
-
-toolbar > button {
-	padding:3px;
-	width:30px;
-	height:30px;
-	background:white;
-	border:none;
-	transition:background 0.1s;
+* {
+	user-select: none;
 }
 
-toolbar > button:hover {
-	background:lightgray;
-}
-toolbar > button:active {
-	background:gray;
-}
-
-toolbar > button > svg {
-	width:24px;
-	height:24px;
+toolbar>input[type="color"] {
+	padding: 3px;
+	width: 30px;
+	height: 30px;
+	margin: 0;
+	border: none;
+	transition: background 0.1s;
+	transition-delay: -0.02s;
 }
 
-toolbar > sep {
-	display:block;
-	width:6px;
+toolbar>button {
+	padding: 3px;
+	width: 30px;
+	height: 30px;
+	background: white;
+	border: none;
+	transition: background 0.1s;
+	transition-delay: -0.02s;
+}
+
+toolbar>button:hover {
+	background: lightgray;
+}
+
+toolbar>button:active {
+	background: gray;
+}
+
+toolbar>button>svg {
+	width: 24px;
+	height: 24px;
+}
+
+toolbar>sep {
+	display: block;
+	width: 6px;
 }
 
 imgmain {
 	display: flex;
 	flex-direction: column;
-	width:100%;
-	height:100%;
+	width: 100%;
+	height: 100%;
 }
 
 main {
 	display: flex;
-	width:100%;
-	height:100%;
+	width: 100%;
+	height: 100%;
 }
 
 #loadingText {
-	position:absolute;
-	top:0;
-	left:0;
-	color:gray;
+	position: absolute;
+	top: 0;
+	left: 0;
+	color: gray;
 	z-index: 5;
 }
+
 #loading {
 	position: absolute;
-	top: 50%; right: 50%;
-	transform: translate(50%,-50%);
+	top: 50%;
+	right: 50%;
+	transform: translate(50%, -50%);
 	z-index: 5;
 }
 
 .PKAbleSizeSelect {
-	border:none;
+	border: none;
 }
 
 .fullscreenWindow {
@@ -101,10 +127,10 @@ main {
 	width: 100%;
 	height: 100%;
 	position: fixed;
-	z-index:100;
-	left:0;
-	top:100%;
-	transition: top 0.6s; 
+	z-index: 100;
+	left: 0;
+	top: 100%;
+	transition: top 0.6s;
 }
 
 .fullscreenWindowContent {
@@ -112,98 +138,288 @@ main {
 }
 
 .fullscreenWindowClose {
-	float:right;
+	float: right;
 	content: '\00D7';
 	font-size: 20px;
 }
 
+input {border:none}
+
 @media (prefers-color-scheme: dark) {
 	body {
-		background-color: rgb(20,20,20);
+		background-color: rgb(20, 20, 20);
+		color: white;
+	}
+
+	svg {
+		fill: white
+	}
+
+	select {
+		color: white;
+		background: rgb(20, 20, 20)
+	}
+
+	toolbar {
+		background: rgb(20, 20, 20)
+	}
+
+	toolbar>button {
+		background: rgb(20, 20, 20)
+	}
+
+	toolbar>button:hover {
+		background: rgb(50, 50, 50)
+	}
+
+	button {
+		background: rgb(40, 40, 40)
+	}
+
+	button:hover {
+		background: rgb(70, 70, 70)
+	}
+
+	.fullscreenWindow {
+		background: rgb(10, 10, 10);
+		color: white
+	}
+
+	#tabSwitcher>div {
+		color: white
+	}
+
+	#tabSwitcher>div.active {
+		background-color: rgba(255, 255, 255, 0.3)
+	}
+
+	#tabSwitcher {
+		background-color: rgb(10, 10, 10)
+	}
+
+	.tabClose>svg {
+		fill: transparent
+	}
+
+	.tabClose>svg:hover {
+		fill: white
+	}
+
+	html {
+		--panecolor: rgb(20,20,20);
+		color:white;
+		--textcolor: rgb(255,255,255);
+	}
+
+	button {
 		color:white;
 	}
-	svg {fill:white}
-	select {color:white;background:rgb(20,20,20)}
-	toolbar {background:rgb(20,20,20)}
-	toolbar > button {background: rgb(20,20,20)}
-	toolbar > button:hover {background: rgb(50,50,50)}
-	button {background: rgb(40,40,40)}
-	button:hover {background: rgb(70,70,70)}
-	.fullscreenWindow {background: rgb(10,10,10);color:white}
-	#tabSwitcher > div {color:white}
-	#tabSwitcher > div.active {background-color: rgba(255,255,255,0.3)}
-	#tabSwitcher {background-color: rgb(10,10,10)}
-	.tabClose > svg {fill:transparent}
-	.tabClose > svg:hover {fill:white}
 }
 
 @media (prefers-color-scheme: light) {
 	body {
 		background-color: white;
+		color: black;
+	}
+
+	svg {
+		fill: black
+	}
+
+	select {
+		color: black;
+		background: white
+	}
+
+	toolbar {
+		background: white
+	}
+
+	toolbar>button {
+		background: white
+	}
+
+	toolbar>button:hover {
+		background: lightgray
+	}
+
+	button {
+		background: rgb(240, 240, 240)
+	}
+
+	button:hover {
+		background: rgb(200, 200, 200)
+	}
+
+	.fullscreenWindow {
+		background: white;
+		color: black
+	}
+
+	#tabSwitcher>div {
+		color: black
+	}
+
+	#tabSwitcher>div.active {
+		background-color: rgba(0, 0, 0, 0.3)
+	}
+
+	#tabSwitcher {
+		background-color: white
+	}
+
+	.tabClose>svg {
+		fill: transparent
+	}
+
+	.tabClose>svg:hover {
+		fill: black
+	}
+	html {
+		--panecolor: rgb(255,255,255);
+
+		color:black;
+		--textcolor: rgb(0,0,0);
+	}
+	button {
 		color:black;
 	}
-	svg {fill:black}
-	select {color:black;background:white}
-	toolbar {background:white}
-	toolbar > button {background: white}
-	toolbar > button:hover {background: lightgray}
-	button {background: rgb(240,240,240)}
-	button:hover {background: rgb(200,200,200)}
-	.fullscreenWindow {background: white;color:black}
-	#tabSwitcher > div {color:black}
-	#tabSwitcher > div.active {background-color: rgba(0,0,0,0.3)}
-	#tabSwitcher {background-color:white}
-	.tabClose > svg {fill:transparent}
-	.tabClose > svg:hover {fill:black}
 }
 
-.ilitem {display:flex;margin-bottom:2px}
-.ilitem > span {word-break: break-all}
+.ilitem {
+	display: flex;
+	margin-bottom: 2px
+}
 
-.loader {width:60px;height:60px;border-radius:50%;background-color: rgba(0,0,0,0.5)}
-.path {
+.ilitem>span {
+	word-break: break-all
+}
+
+.loader {
+	width: 60px;
+	height: 60px;
+	border-radius: 50%;
+	background-color: rgba(0, 0, 0, 0.5)
+}
+
+.circular>.path {
 	stroke-dasharray: 1, 200;
 	stroke-dashoffset: 0;
 	animation: dash 1.5s ease-in-out infinite;
 	stroke-linecap: round;
-	stroke:white;
+	stroke: white;
 }
+
 .circular {
-  height:60px;
-  width:60px;
-  position: absolute;
-  animation: rotate 1s linear infinite;
+	height: 60px;
+	width: 60px;
+	position: absolute;
+	animation: rotate 1s linear infinite;
 }
+
 @keyframes rotate {
-	0% {transform: rotate(0deg)}
-	100% {transform: rotate(360deg)}
+	0% {
+		transform: rotate(0deg)
+	}
+
+	100% {
+		transform: rotate(360deg)
+	}
 }
+
 @keyframes dash {
-  0% {
-    stroke-dasharray: 1, 200;
-    stroke-dashoffset: 0;
-  }
-  50% {
-    stroke-dasharray: 89, 200;
-    stroke-dashoffset: -35px;
-  }
-  100% {
-    stroke-dasharray: 89, 200;
-    stroke-dashoffset: -124px;
-  }
+	0% {
+		stroke-dasharray: 1, 200;
+		stroke-dashoffset: 0;
+	}
+
+	50% {
+		stroke-dasharray: 89, 200;
+		stroke-dashoffset: -35px;
+	}
+
+	100% {
+		stroke-dasharray: 89, 200;
+		stroke-dashoffset: -124px;
+	}
 }
-nodisplay {display:none}
 
-#tabSwitcher {overflow-x: auto;overflow-y: hidden;white-space: nowrap;min-height:26px;}
+nodisplay {
+	display: none
+}
 
-.clickable {cursor:pointer}
-.tabHeader {text-overflow: ellipsis;width:250px;overflow: hidden;white-space: nowrap;}
-#tabSwitcher > div {display:inline-flex;padding:3px;align-items:center;transition:0.2s;}
-.tabClose {border-radius:50%;width:20px;height:20px;overflow:hidden;margin-left:2px;flex-shrink:0;transition:background 0.2s}
-#tabSwitcher > div.active > .tabClose > svg {fill:white}
-#tabSwitcher > div.active > .tabClose > svg:hover {fill:black}
+#tabSwitcher {
+	overflow-x: auto;
+	overflow-y: hidden;
+	white-space: nowrap;
+	min-height: 26px;
+}
+
+.clickable {
+	cursor: pointer
+}
+
+.tabHeader {
+	text-overflow: ellipsis;
+	width: 250px;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+#tabSwitcher>div {
+	display: inline-flex;
+	padding: 3px;
+	align-items: center;
+	transition: 0.2s;
+}
+
+.tabClose {
+	border-radius: 50%;
+	width: 20px;
+	height: 20px;
+	overflow: hidden;
+	margin-left: 2px;
+	flex-shrink: 0;
+	transition: background 0.2s
+}
+
+#tabSwitcher>div.active>.tabClose>svg {
+	fill: white
+}
+
+#tabSwitcher>div.active>.tabClose>svg:hover {
+	fill: black
+}
+
 /*#tabSwitcher > div.active > .tabClose {background-color:red}*/
 
-hiddenpart {width:0;height:0;overflow:hidden;display:block}
+hiddenpart {
+	width: 0;
+	height: 0;
+	overflow: hidden;
+	display: block
+}
 
-.fileListItem > center > img {max-height:100px;max-width:245px}
+.fileListItem>center>img {
+	max-height: 100px;
+	max-width: 245px
+}
+
+editorImageScrollablePart {
+	display: block;
+	overflow: auto;
+	width: 100%;
+	height: 100%;
+}
+editormain {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
+}
+
+marginAuto {
+	display: inline-block;
+	margin: auto;
+}
+button {border:0;background-color: transparent;}

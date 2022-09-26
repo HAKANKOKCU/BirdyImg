@@ -30,5 +30,7 @@
 	"tabs":"Sekmeler",
 	"newTab":"Yeni Sekme",
 	"enableTabs":"Sekmeleri Etkinleştir",
-	"fullscreen":"Tam Ekran"
+	"fullscreen":"Tam Ekran",
+	"makeDarker":"Daha Karanlık Yap",
+	"makeLighter":"Daha Aydınlık Yap"
 }

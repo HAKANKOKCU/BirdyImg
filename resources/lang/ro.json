@@ -30,5 +30,7 @@
 	"tabs":"Tab-uri",
 	"newTab":"Tab Nou",
 	"enableTabs":"Activează Tab-urile",
-	"fullscreen":"Ecran Complet"
+	"fullscreen":"Ecran Complet",
+	"makeDarker":"Mai Întunecat",
+	"makeLighter":"Mai Luminat"
 }

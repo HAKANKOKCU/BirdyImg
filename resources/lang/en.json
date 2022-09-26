@@ -30,5 +30,7 @@
 	"tabs":"Tabs",
 	"newTab":"New Tab",
 	"enableTabs":"Enable Tabs",
-	"fullscreen":"Fullscreen"
+	"fullscreen":"Fullscreen",
+	"makeDarker":"Make Darker",
+	"makeLighter":"Make Lighter"
 }
