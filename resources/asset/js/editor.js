@@ -14,10 +14,13 @@ const editorsavebutton = document.getElementById("editorSaveButton");
 const editorundobutton = document.getElementById("editorUndoButton");
 const canvasscrollable = document.getElementsByTagName("editorImageScrollablePart")[0];
 const editorlockbutton = document.getElementById("editorLockButton");
+const editorTools = document.getElementById("editorTools");
+const editorToolsMenu = document.getElementById("editorToolsMenu");
 var editorlock = false;
 window.isInEditor = false;
 
 var ctx = canvas.getContext("2d");
+var tool = "pen";
 window.enterEditor = function enterEditor() {
     editorMain.style.display = "";
     viewMain.style.display = "none";
@@ -32,7 +35,7 @@ window.exitEditor = function exitEditor() {
 };
 exiteditorbutton.onclick = exitEditor;
 window.loadFileInEditor = function loadFileInEditor() {
-    lines = [];
+    drawing = [];
     canvas.width = tabs[tabID].imgW;
     canvas.height = tabs[tabID].imgH;
     canvas.style.width = tabs[tabID].imgW;
@@ -52,7 +55,7 @@ window.saveEditorImage = function save() {
 editorsavebutton.onclick = saveEditorImage;
 
 var lineW = 3;
-var lines = [];
+var drawing = [];
 var drawundos = [];
 var drawundocounter = 0;
 
@@ -71,9 +74,20 @@ function drawlineat(x1, y1, x2, y2) {
     ctx.arc(x2, y2, lineW / 2, 0, 2 * Math.PI);
     ctx.fill();
     drawundocounter++;
-    lines.push([x1, y1, x2, y2, lineW, currentcolor]);
+    drawing.push({type:"line",x1:x1,y1: y1,x2: x2,y2: y2,lineW: lineW,currentColor: currentcolor});
 }
-function drawlineattemp(x1, y1, x2, y2) {
+
+function eraseXY(x,y) {
+    ctx.clearRect(x - (lineW / 2), y - (lineW / 2), lineW, lineW);
+    drawundocounter++;
+    drawing.push({type:"eraser",x:x,y: y,lineW: lineW});
+}
+
+function eraseXYtemp(x,y,lineW) {
+    ctx.clearRect(x - (lineW / 2), y - (lineW / 2), lineW, lineW);
+}
+
+function drawlineattemp(x1, y1, x2, y2, lineW) {
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
@@ -87,18 +101,22 @@ function drawlineattemp(x1, y1, x2, y2) {
 }
 
 function redraw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height)
     ctx.drawImage(ghostImg, 0, 0);
-    lines.forEach(function (item) {
-        ctx.fillStyle = item[5];
-        ctx.strokeStyle = item[5];
-        ctx.lineWidth = item[4];
-        drawlineattemp(item[0],item[1],item[2],item[3])
+    drawing.forEach(function (item) {
+        ctx.fillStyle = item.currentColor;
+        ctx.strokeStyle = item.currentColor;
+        ctx.lineWidth = item.lineW;
+        if (item.type == "line") drawlineattemp(item.x1,item.y1,item.x2,item.y2,item.lineW);
+        if (item.type == "darker") makeDarker();
+        if (item.type == "lighter") makeLighter();
+        if (item.type == "eraser") eraseXYtemp(item.x,item.y,item.lineW);
     })
 }
 
 window.editorUndo = function() {
     for (let i = 0;i < drawundos[drawundos.length - 1];i++) {
-        lines.pop()
+        drawing.pop()
     }
     drawundos.pop();
     redraw()
@@ -111,7 +129,8 @@ var isdrawing = false;
 canvas.onmousemove = function (event) {
     if (!isdrawing) return;
     try {
-        drawlineat(event.offsetX, event.offsetY, oldevent.offsetX, oldevent.offsetY);
+        if (tool == "pen") drawlineat(event.offsetX, event.offsetY, oldevent.offsetX, oldevent.offsetY);
+        if (tool == "eraser") eraseXY(event.offsetX, event.offsetY); 
     } catch { }
     oldevent = event;
 }
@@ -120,7 +139,8 @@ canvas.ontouchmove = function (event) {
     if (!isdrawing) return;
     //console.log(event)
     try {
-        drawlineat(event.touches[0].clientX + canvasscrollable.scrollLeft, event.touches[0].clientY + canvasscrollable.scrollTop, oldevent.touches[0].clientX + canvasscrollable.scrollLeft, oldevent.touches[0].clientY + canvasscrollable.scrollTop);
+        if (tool == "pen") drawlineat(event.touches[0].clientX + canvasscrollable.scrollLeft, event.touches[0].clientY + canvasscrollable.scrollTop, oldevent.touches[0].clientX + canvasscrollable.scrollLeft, oldevent.touches[0].clientY + canvasscrollable.scrollTop);
+        if (tool == "eraser") eraseXY(event.touches[0].clientX + canvasscrollable.scrollLeft, event.touches[0].clientY + canvasscrollable.scrollTop); 
     } catch { }
     oldevent = event;
     event.preventDefault();
@@ -146,20 +166,38 @@ effectsbutton.onclick = function () {
     }
 }
 
+editorTools.onclick = function () {
+    if (editorToolsMenu.style.display == "none") {
+        editorToolsMenu.style.display = ""
+    }else {
+        editorToolsMenu.style.display = "none"
+    }
+}
+
+Array.prototype.forEach.call(editorToolsMenu.querySelectorAll("button"), (item) => {
+    item.onclick = function () {
+        tool = item.getAttribute("data-toolname");
+    }
+});
+
 //editorMain.addEventListener("mousedown", function (event) {
 //    if (event.target == effectsmenu) return;
 //    effectsmenu.style.display = "none"
 //})
 
-effects_darkerbutton.onclick = function () {
+effects_darkerbutton.onclick = function() {makeDarker();drawing.push({type:"darker"});drawundos.push(1)};
+
+function makeDarker() {
     ctx.fillStyle = "rgba(0,0,0,0.05)"
     ctx.fillRect(0,0,canvas.width,canvas.height);
 }
 
-effects_lighterbutton.onclick = function () {
+function makeLighter() {
     ctx.fillStyle = "rgba(255,255,255,0.05)"
     ctx.fillRect(0,0,canvas.width,canvas.height);
 }
+
+effects_lighterbutton.onclick = function() {makeLighter();drawing.push({type:"lighter"});drawundos.push(1)};
 
 editorlockbutton.onclick = function () {
     editorlock = !editorlock;

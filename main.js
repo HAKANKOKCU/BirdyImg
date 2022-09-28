@@ -136,7 +136,7 @@ if (!gotTheLock) {
 				contextIsolation: false
 			},
 			icon: "resources/asset/bitmap/appico.png",
-			show: false,
+			//show: false,
 			backgroundColor: 'black'
 		};
 		if (settingsdata.bounds != null) {
@@ -274,6 +274,9 @@ if (!gotTheLock) {
 		const menu_design = Menu.buildFromTemplate(menu_list);
 		Menu.setApplicationMenu(menu_design);
 		console.log("done generating menu from list")
+		if (settingsdata.isMaximized == true) {
+			app_window.maximize();
+		}
 		app_window.webContents.on('dom-ready', function () {
 			console.log("dom is ready")
 			if (args.length > 1) {
@@ -287,9 +290,7 @@ if (!gotTheLock) {
 			app_window.webContents.send("langpack", langdata);
 			app_window.webContents.send("settingsdata", settingsdata);
 			console.log("show window")
-			if (settingsdata.isMaximized == true) {
-				app_window.maximize();
-			}
+			
 			app_window.show();
 			var langs = [];
 			fs.readdir("resources/lang", (err, files) => {
