@@ -41,7 +41,7 @@ window.loadFileInEditor = function loadFileInEditor() {
     canvas.style.width = tabs[tabID].imgW;
     canvas.style.height = tabs[tabID].imgH;
     ctx = canvas.getContext("2d");
-    ctx.drawImage(ghostImg, 0, 0);
+    ctx.drawImage(tabs[tabID].ghostImg, 0, 0);
 }
 window.saveEditorImage = function save() {
 	let canvasUrl = canvas.toDataURL("image/png", 0.5);
@@ -102,7 +102,7 @@ function drawlineattemp(x1, y1, x2, y2, lineW) {
 
 function redraw() {
     ctx.clearRect(0,0,canvas.width,canvas.height)
-    ctx.drawImage(ghostImg, 0, 0);
+    ctx.drawImage(tabs[tabID].ghostImg, 0, 0);
     drawing.forEach(function (item) {
         ctx.fillStyle = item.currentColor;
         ctx.strokeStyle = item.currentColor;

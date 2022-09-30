@@ -48,8 +48,7 @@ window.tabID;
 var langpack;
 var langs;
 var hiddenpart = document.getElementsByTagName("hiddenpart")[0];
-window.ghostImg = document.createElement("img");
-//ghostImg.style.opacity = "0";
+//tabs[tabID].ghostImg.style.opacity = "0";
 var isRoted = false;
 var mouseX = 0, mouseY = 0;
 var newtabid = 0;
@@ -92,7 +91,8 @@ function newTab() {
 		filelist: null,
 		filesizes: null,
 		rot: 0,
-		zoomPrct: 1
+		zoomPrct: 1,
+		ghostImg: document.createElement("img")
 	}
 	var ndi = newtabid;
 	tswitchClose.addEventListener("click", function () {
@@ -102,10 +102,10 @@ function newTab() {
 	view.addEventListener("load", function () {
 		imageLoaded(ndi);
 	});
-	switchTab(newtabid);
 	ipcRenderer.sendSync("newtab", newtabid);
 	newtabid++;
 	tabCount++;
+	switchTab(ndi);
 }
 var currentTabItemHeader;
 function switchTab(id) {
@@ -138,7 +138,7 @@ function switchTab(id) {
 	ipcRenderer.sendSync("switchtab", tabID);
 	var filfo = tabs[tabID].fileInf;
 	Array.prototype.forEach.call(document.querySelectorAll("[paneid='FileInfo']"), (item) => {
-		var pane = item.querySelector(".rightpanecontent");
+		var pane = item.querySelector(".panecontent");
 		var selectedsval = pane.getElementsByClassName("PKAbleSizeSelect")[0].value;
 		pane.innerHTML = generateFileInfoContent();
 		var PKAbleSelect = pane.getElementsByClassName("PKAbleSizeSelect")[0];
@@ -161,6 +161,10 @@ function closeTab(id) {
 	var elemimg = imgViewCnt.querySelector("img[BIMG-TabID=\"" + id + "\"]");
 	elemimg.src = "";
 	imgViewCnt.removeChild(elemimg);
+	try {
+		hiddenpart.removeChild(tabs[tabID].ghostImg);
+		tabs[tabID].ghostImg.src = "";
+	}catch {}
 	tabs[id] = null;
 	tabCount--;
 }
@@ -181,25 +185,25 @@ ipcRenderer.on("langs", (event, data) => {
 
 ipcRenderer.on("filedata", (event, data) => {
 	if (tabCount == 0) newTab()
-	hiddenpart.appendChild(ghostImg);
+	hiddenpart.appendChild(tabs[tabID].ghostImg);
 	document.title = "BirdyImg - " + getFileName(data.path);
 	loadingText.style.display = "";
 	tabs[tabID].imgView.src = data.path;
-	ghostImg.src = data.path;
+	tabs[tabID].ghostImg.src = data.path;
 	tabs[tabID].fileInf = data;
 	tabs[tabID].imgX = 0;
 	isRoted = false;
 	tabs[tabID].imgY = 0;
 	tabs[tabID].imgW = tabs[tabID].fileInf.size.width;
 	tabs[tabID].imgH = tabs[tabID].fileInf.size.height;
-	if (ghostImg.complete) {
-		tabs[tabID].imgW = ghostImg.clientWidth;
-		tabs[tabID].imgH = ghostImg.clientHeight;
+	if (tabs[tabID].ghostImg.complete) {
+		tabs[tabID].imgW = tabs[tabID].ghostImg.clientWidth;
+		tabs[tabID].imgH = tabs[tabID].ghostImg.clientHeight;
 		console.log("set width", tabs[tabID].imgW, tabs[tabID].imgH);
 	} else {
 		setTimeout(function () {
-			tabs[tabID].imgW = ghostImg.clientWidth;
-			tabs[tabID].imgH = ghostImg.clientHeight;
+			tabs[tabID].imgW = tabs[tabID].ghostImg.clientWidth;
+			tabs[tabID].imgH = tabs[tabID].ghostImg.clientHeight;
 			console.log("set width", tabs[tabID].imgW, tabs[tabID].imgH);
 			posImg();
 		}, 100)
@@ -229,7 +233,7 @@ ipcRenderer.on("filedata", (event, data) => {
 	//posImg();
 	var filfo = tabs[tabID].fileInf;
 	Array.prototype.forEach.call(document.querySelectorAll("[paneid='FileInfo']"), (item) => {
-		var pane = item.querySelector(".rightpanecontent");
+		var pane = item.querySelector(".panecontent");
 		var selectedsval = pane.getElementsByClassName("PKAbleSizeSelect")[0].value;
 		pane.innerHTML = generateFileInfoContent();
 		var PKAbleSelect = pane.getElementsByClassName("PKAbleSizeSelect")[0];
@@ -629,8 +633,8 @@ function zoomOut() {
 function imageLoaded(id) {
 	loadingText.style.display = "none";
 	//setTimeout(function() {
-	tabs[id].imgW = ghostImg.clientWidth;
-	tabs[id].imgH = ghostImg.clientHeight;
+	tabs[id].imgW = tabs[tabID].ghostImg.clientWidth;
+	tabs[id].imgH = tabs[tabID].ghostImg.clientHeight;
 	console.log("set width", tabs[id].imgW, tabs[id].imgH);
 	tabs[tabID].zoomPrct = 1;
 	try {
@@ -656,9 +660,9 @@ function imageLoaded(id) {
 	//},1)
 }
 
-ghostImg.addEventListener("aa   load", function () {
-	tabs[tabID].imgW = ghostImg.clientWidth;
-	tabs[tabID].imgH = ghostImg.clientHeight;
+tabs[tabID].ghostImg.addEventListener("aa   load", function () {
+	tabs[tabID].imgW = tabs[tabID].ghostImg.clientWidth;
+	tabs[tabID].imgH = tabs[tabID].ghostImg.clientHeight;
 	console.log("set width", tabs[tabID].imgW, tabs[tabID].imgH);
 
 	posImg();
@@ -712,6 +716,20 @@ function showSettings() {
 }
 
 function openRightPane(html, paneID) {
+	var sb = createPane(html, paneID, true);
+	maincont.appendChild(sb);
+	var sbcontent = sb.getElementsByClassName("panecontent")[0];
+	return sbcontent;
+}
+
+function openLeftPane(html, paneID) {
+	var sb = createPane(html, paneID, false);
+	maincont.insertBefore(sb, maincont.firstChild);
+	var sbcontent = sb.getElementsByClassName("panecontent")[0];
+	return sbcontent;
+}
+
+function createPane(html, paneID, isAtRight) {
 	var sb = document.createElement("div");
 	sb.setAttribute("paneid", paneID);
 	sb.style.height = "100%";
@@ -720,6 +738,10 @@ function openRightPane(html, paneID) {
 	sb.style.transition = "width 200ms"; //max-width 500ms,min-width 500ms
 	sb.style.overflow = "auto";
 	sb.style.position = "relative";
+	if (isAtRight)
+		sb.style.borderLeft = "solid rgba(0,0,0,0)" + RESIZE_BORDER_SIZE + "px";
+	else
+		sb.style.borderRight = "solid rgba(0,0,0,0)" + RESIZE_BORDER_SIZE + "px";
 	//sb.style.borderLeft = "solid rgba(0,0,0,0.2) " + RESIZE_BORDER_SIZE + "px";
 	sb.style.flexShrink = 0;
 	var closeBtn = document.createElement("button");
@@ -767,7 +789,7 @@ function openRightPane(html, paneID) {
 	sbcontent.style.top = "0";
 	sbcontent.style.left = "0";
 	sbcontent.style.minWidth = "270px";
-	sbcontent.classList.add("rightpanecontent");
+	sbcontent.classList.add("panecontent");
 	sb.appendChild(closeBtn);
 	sb.appendChild(sbcontent);
 	setTimeout(function () {
@@ -787,31 +809,43 @@ function openRightPane(html, paneID) {
 		clearInterval(aniposer)
 		animateZoomPos();
 	}, 200)
-	maincont.appendChild(sb);
 	let m_pos;
 	function resize(e) {
-		const dx = m_pos - e.x;
-		m_pos = e.x;
-		sb.style.width = (parseInt(getComputedStyle(sb, '').width) + dx) + "px";
+		if (isAtRight) {
+			const dx = m_pos - e.x;
+			m_pos = e.x;
+			sb.style.width = (parseInt(getComputedStyle(sb, '').width) + dx) + "px";
+		}else {
+			const dx = m_pos - e.x;
+			m_pos = e.x;
+			sb.style.width = (parseInt(getComputedStyle(sb, '').width) - dx) + "px";
+		}
 		retimgIfOut();
 		posImg();
 	}
 
 	sb.addEventListener("mousedown", function (e) {
-		if (e.offsetX < RESIZE_BORDER_SIZE) {
+		if (e.target != sb) return;
+		if (isAtRight ? (e.offsetX < RESIZE_BORDER_SIZE) : (e.offsetX > parseInt(sb.style.width) - RESIZE_BORDER_SIZE)) {
 			m_pos = e.x;
 			document.addEventListener("mousemove", resize, false);
 			sb.style.transition = "";
-			sb.style.borderLeft = "solid rgba(0,0,0,0.2) " + RESIZE_BORDER_SIZE + "px";
+			if (isAtRight)
+				sb.style.borderLeft = "solid rgba(0,0,0,2)" + RESIZE_BORDER_SIZE + "px";
+			else
+				sb.style.borderRight = "solid rgba(0,0,0,2)" + RESIZE_BORDER_SIZE + "px";
 		}
 	}, false);
 
 	document.addEventListener("mouseup", function () {
 		document.removeEventListener("mousemove", resize, false);
 		sb.style.transition = "width 200ms";
-		sb.style.borderLeft = "";
+		if (isAtRight)
+			sb.style.borderLeft = "solid rgba(0,0,0,0)" + RESIZE_BORDER_SIZE + "px";
+		else
+			sb.style.borderRight = "solid rgba(0,0,0,0)" + RESIZE_BORDER_SIZE + "px";
 	}, false);
-	return sbcontent;
+	return sb;
 }
 
 function rotL() {
@@ -866,6 +900,7 @@ function getFileExtension(pathorfilename) {
 
 var fil = document.querySelectorAll("*");
 [].forEach.call(fil, (item) => {
+	// Unfocus item when clicked
 	item.addEventListener("mouseup", function (e) { if (e.target.tagName != "INPUT") item.blur() })
 })
 
@@ -906,6 +941,8 @@ document.addEventListener('drop', (event) => {
 		} catch { }
 	}, 100)
 });
+
+// Some parts from LimonJS:
 
 function asyncfor(start, end, step, importedvar, func, speed) {
 	var stp = start;
