@@ -59,11 +59,13 @@ if (!gotTheLock) {
 			if (app_window) {
 				if (app_window.isMinimized()) app_window.restore()
 				app_window.focus()
-				commandLine.forEach((item) => {
-					if (!item.startsWith("--")) {
-						console.log(item);
-						app_window.webContents.send("createnewtab", "");
-						openFil(item);
+				commandLine.forEach((item,index) => {
+					if (index != 0) {
+						if (!item.startsWith("--")) {
+							console.log(item);
+							app_window.webContents.send("createnewtab", "");
+							openFil(item);
+						}
 					}
 				});
 			}
