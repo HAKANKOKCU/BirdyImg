@@ -188,8 +188,16 @@ ipcRenderer.on("filedata", (event, data) => {
 	hiddenpart.appendChild(tabs[tabID].ghostImg);
 	document.title = "BirdyImg - " + getFileName(data.path);
 	loadingText.style.display = "";
-	tabs[tabID].imgView.src = data.path;
-	tabs[tabID].ghostImg.src = data.path;
+	console.log(data);
+	if (data.useDURL == true) {
+		var tiff = new Tiff({buffer: data.DURL});
+		var dataurl = tiff.toDataURL();
+		tabs[tabID].imgView.src = dataurl;
+		tabs[tabID].ghostImg.src = dataurl;
+	}else {
+		tabs[tabID].imgView.src = data.path;
+		tabs[tabID].ghostImg.src = data.path;
+	}
 	tabs[tabID].fileInf = data;
 	tabs[tabID].imgX = 0;
 	isRoted = false;

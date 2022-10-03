@@ -4,8 +4,6 @@ const { BrowserWindow, app, Menu, ipcMain, dialog, nativeTheme } = require("elec
 console.log("require fs-extra")
 const fs = require("fs-extra");
 const os = require('os');
-var app_window;
-let locale = Intl.DateTimeFormat().resolvedOptions().locale;
 var settingsdata;
 
 function saveSettings() {
@@ -21,7 +19,7 @@ try {
 		fs.appendFile(os.homedir() + "/BirdyImg/extensions.data", "")
 	}
 	if (!fs.existsSync(os.homedir() + "/BirdyImg/settings.json")) {
-		fs.appendFile(os.homedir() + "/BirdyImg/settings.json", "{}")
+		fs.appendFileSync(os.homedir() + "/BirdyImg/settings.json", "{}")
 	}
 } catch { }
 
@@ -43,6 +41,8 @@ if (settingsdata["enableTabs"] == true) {
 if (!gotTheLock) {
 	app.quit()
 } else {
+	var app_window;
+	let locale = Intl.DateTimeFormat().resolvedOptions().locale;
 	const pathlib = require('path');
 	console.log("init allowed image types")
 	const allowedext = [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".ico", ".ıco", ".svg", ".webp", ".avif", ".avıf"];
@@ -59,13 +59,13 @@ if (!gotTheLock) {
 			if (app_window) {
 				if (app_window.isMinimized()) app_window.restore()
 				app_window.focus()
-				if (commandLine.length > 2) {
-					if (commandLine[2].toString() != ".") {
-						console.log(typeof commandLine[2]);
+				commandLine.forEach((item) => {
+					if (!item.startsWith("--")) {
+						console.log(item);
 						app_window.webContents.send("createnewtab", "");
-						openFil(commandLine[2].toString());
+						openFil(item);
 					}
-				}
+				});
 			}
 		})
 	}
@@ -76,8 +76,9 @@ if (!gotTheLock) {
 		try {
 			if (!fs.existsSync("resources/asset/bitmap/appico.png")) {
 				//file not exists and set path to main directory of app
-				var dpath = pathlib.dirname(app.getPath("exe"));
-				console.log(app.getPath("exe"))
+				var exep = app.getPath("exe");
+				var dpath = pathlib.dirname(exep);
+				console.log(exep)
 				process.chdir(dpath)
 			}
 			var rawdata;
@@ -136,8 +137,8 @@ if (!gotTheLock) {
 				contextIsolation: false
 			},
 			icon: "resources/asset/bitmap/appico.png",
-			//show: false,
-			backgroundColor: 'black'
+			show: false,
+			backgroundColor: '#000000'
 		};
 		if (settingsdata.bounds != null) {
 			windowinf.x = settingsdata.bounds.x;
@@ -277,6 +278,7 @@ if (!gotTheLock) {
 		if (settingsdata.isMaximized == true) {
 			app_window.maximize();
 		}
+		app_window.show();
 		app_window.webContents.on('dom-ready', function () {
 			console.log("dom is ready")
 			if (args.length > 1) {
@@ -396,6 +398,8 @@ if (!gotTheLock) {
 
 	function openFil(path) {
 		if (path != undefined) {
+			var stats = fs.statSync(path);
+			console.log(pathlib.extname(path).toLowerCase());
 			var sizeOf = require('image-size');
 			var dimensions;
 			try {
@@ -403,13 +407,25 @@ if (!gotTheLock) {
 			} catch {
 				dimensions = { width: 0, height: 0 }
 			}
-			var stats = fs.statSync(path);
-			app_window.webContents.send("filedata", {
-				path: path,
-				size: dimensions,
-				filesize: stats.size,
-				stats: stats
-			});
+			if (pathlib.extname(path).toLowerCase() == ".tif") {
+				var filedata = fs.readFileSync(path);
+				app_window.webContents.send("filedata", {
+					path: path,
+					size: dimensions,
+					filesize: stats.size,
+					stats: stats,
+					useDURL: true,
+					DURL: filedata
+				});
+			}else {
+				app_window.webContents.send("filedata", {
+					path: path,
+					size: dimensions,
+					filesize: stats.size,
+					stats: stats,
+					useDURL: false
+				});
+			}
 			cfil = path;
 			tabs[tabID].filelist = [];
 			tabs[tabID].filesizes = [];
@@ -435,6 +451,14 @@ if (!gotTheLock) {
 			});
 		}
 	}
+
+	app.on('activate', () => {
+		if (BrowserWindow.getAllWindows().length === 0) createWindow()
+	})
+	app.on('window-all-closed', () => {
+		if (process.platform !== 'darwin') app.quit()
+	})
+
 	function getFilesizeInBytes(filename) {
 		var stats = fs.statSync(filename);
 		var fileSizeInBytes = stats.size;
