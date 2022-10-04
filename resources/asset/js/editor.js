@@ -44,13 +44,18 @@ window.loadFileInEditor = function loadFileInEditor() {
     ctx.drawImage(tabs[tabID].ghostImg, 0, 0);
 }
 window.saveEditorImage = function save() {
-	let canvasUrl = canvas.toDataURL("image/png", 0.5);
-	console.log(canvasUrl);
-	const createEl = document.createElement('a');
-	createEl.href = canvasUrl;
-	createEl.download = "Editor Save";
-	createEl.click();
-	createEl.remove();
+    var win = openFWindow("<h1>" + langpack.exportAs + "</h1><button data-export='image/png'>" + langpack.typeImage.replace("{TYPE}", "PNG") + "</button><button data-export='image/jpeg'>" + langpack.typeImage.replace("{TYPE}", "JPEG") + "</button><button data-export='image/webp'>" + langpack.typeImage.replace("{TYPE}", "WebP") + "</button>");
+    Array.prototype.forEach.call(win.querySelectorAll("button[data-export]"),(item) => {
+        item.onclick = function() {
+            let canvasUrl = canvas.toDataURL(item.getAttribute("data-export"), 1.0);
+            console.log(canvasUrl);
+            const createEl = document.createElement('a');
+            createEl.href = canvasUrl;
+            createEl.download = "Editor Save";
+            createEl.click();
+            createEl.remove();
+        }
+    });
 }
 editorsavebutton.onclick = saveEditorImage;
 

@@ -265,6 +265,25 @@ if (!gotTheLock) {
 				});
 			}
 		} catch { }
+		let editorMenu_list = [
+			{
+				label: langdata.file,
+				submenu: [
+					{
+						label: langdata.export,
+						click: function() {
+							app_window.webContents.send("exportImg", "");
+						}
+					}
+				]
+			},
+			{
+				label: langdata.view,
+				submenu: [
+					{ role: 'togglefullscreen', label: langdata.fullscreen }
+				]
+			}
+		];
 		try {
 			datastr = fs.readFileSync(os.homedir() + "/BirdyImg/extensions.data")
 			datastr.toString().split("|").forEach((item) => {
@@ -274,7 +293,8 @@ if (!gotTheLock) {
 			})
 		} catch { }
 		console.log("generating menu from list")
-		const menu_design = Menu.buildFromTemplate(menu_list);
+		global.editormenu_design = Menu.buildFromTemplate(editorMenu_list);
+		global.menu_design = Menu.buildFromTemplate(menu_list);
 		Menu.setApplicationMenu(menu_design);
 		console.log("done generating menu from list")
 		if (settingsdata.isMaximized == true) {
@@ -332,11 +352,11 @@ if (!gotTheLock) {
 	})
 
 	ipcMain.on("enterEditor", (e, arg) => {
-		app_window.setMenuBarVisibility(false);
+		Menu.setApplicationMenu(editormenu_design);
 	})
 
 	ipcMain.on("exitEditor", (e, arg) => {
-		app_window.setMenuBarVisibility(true);
+		Menu.setApplicationMenu(menu_design);
 	})
 
 	ipcMain.on("openfile", (e, arg) => {
@@ -401,7 +421,7 @@ if (!gotTheLock) {
 	function openFil(path) {
 		if (path != undefined) {
 			var stats = fs.statSync(path);
-			console.log(pathlib.extname(path).toLowerCase());
+			//console.log(pathlib.extname(path).toLowerCase());
 			var sizeOf = require('image-size');
 			var dimensions;
 			try {

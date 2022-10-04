@@ -45,7 +45,6 @@ var oldpos = {
 }
 window.tabs = {};
 window.tabID;
-var langpack;
 var langs;
 var hiddenpart = document.getElementsByTagName("hiddenpart")[0];
 //tabs[tabID].ghostImg.style.opacity = "0";
@@ -54,6 +53,9 @@ var mouseX = 0, mouseY = 0;
 var newtabid = 0;
 
 var tabCount = 0;
+
+//Add ipc listener to a editor function. Not for the viewer.
+ipcRenderer.on("exportImg",(event,dt) => editorsavebutton.click());
 
 function newTab() {
 	var view = document.createElement("img");
@@ -295,7 +297,7 @@ function showfList() {
 }
 
 ipcRenderer.on("langpack", (event, data) => {
-	langpack = data;
+	window.langpack = data;
 	//loadingText.innerText = langpack.loadingImage;
 	const effects_darkerbutton = document.getElementById("editorMakeDarker");
 	const effects_lighterbutton = document.getElementById("editorMakeLighter");

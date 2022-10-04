@@ -32,5 +32,7 @@
 	"enableTabs":"Enable Tabs",
 	"fullscreen":"Fullscreen",
 	"makeDarker":"Make Darker",
-	"makeLighter":"Make Lighter"
+	"makeLighter":"Make Lighter",
+	"exportAs":"Export As",
+	"export":"Export"
 }

@@ -32,5 +32,7 @@
 	"enableTabs":"Sekmeleri Etkinleştir",
 	"fullscreen":"Tam Ekran",
 	"makeDarker":"Daha Karanlık Yap",
-	"makeLighter":"Daha Aydınlık Yap"
+	"makeLighter":"Daha Aydınlık Yap",
+	"exportAs":"Dışa Aktar",
+	"export":"Dışa Aktar"
 }
