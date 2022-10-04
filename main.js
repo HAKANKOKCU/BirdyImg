@@ -2,7 +2,7 @@ console.time("startup");
 console.log("require electron")
 const { BrowserWindow, app, Menu, ipcMain, dialog, nativeTheme } = require("electron");
 console.log("require fs-extra")
-const fs = require("fs-extra");
+var fs = require("fs-extra");
 const os = require('os');
 var settingsdata;
 
@@ -59,7 +59,7 @@ if (!gotTheLock) {
 			if (app_window) {
 				if (app_window.isMinimized()) app_window.restore()
 				app_window.focus()
-				commandLine.forEach((item,index) => {
+				commandLine.forEach((item, index) => {
 					if (index != 0) {
 						if (!item.startsWith("--")) {
 							console.log(item);
@@ -271,7 +271,7 @@ if (!gotTheLock) {
 				submenu: [
 					{
 						label: langdata.export,
-						click: function() {
+						click: function () {
 							app_window.webContents.send("exportImg", "");
 						}
 					}
@@ -314,7 +314,7 @@ if (!gotTheLock) {
 			app_window.webContents.send("langpack", langdata);
 			app_window.webContents.send("settingsdata", settingsdata);
 			console.log("show window")
-			
+
 			app_window.show();
 			var langs = [];
 			fs.readdir("resources/lang", (err, files) => {
@@ -380,7 +380,8 @@ if (!gotTheLock) {
 		tabs[arg] = {
 			filelist: [],
 			filesizes: [],
-			fileID: null
+			fileID: null,
+			oldDirPath: null
 		};
 		e.returnValue = "";
 	})
@@ -401,6 +402,7 @@ if (!gotTheLock) {
 		}
 		openFil(tabs[tabID].filelist[tabs[tabID].fileID]);
 	});
+
 	ipcMain.on("openfilep", (e, arg) => {
 		openFil(arg);
 		e.returnValue = "";
@@ -416,7 +418,9 @@ if (!gotTheLock) {
 		alert(arg);
 	});
 
-	var cfil;
+	ipcMain.on("closeTab", (e, arg) => {
+		delete tabs[arg];
+	});
 
 	function openFil(path) {
 		if (path != undefined) {
@@ -439,43 +443,47 @@ if (!gotTheLock) {
 					useDURL: true,
 					DURL: filedata
 				});
-			}else {
+			} else {
 				app_window.webContents.send("filedata", {
 					path: path,
 					size: dimensions,
 					filesize: stats.size,
 					stats: stats,
-					useDURL: false
+					useDURL: false,
+					fileID: tabs[tabID].fileID
 				});
 			}
-			cfil = path;
-			tabs[tabID].filelist = [];
-			tabs[tabID].filesizes = [];
-			var cid = 0;
-			fs.readdir(pathlib.dirname(path), (err, files) => {
-				files.forEach(file => {
-					if (allowedext.includes(pathlib.extname(file).toLowerCase())) {
-						//console.log(pathlib.resolve(pathlib.dirname(path), file));
-						var pathresolve = pathlib.resolve(pathlib.dirname(path), file);
-						tabs[tabID].filelist.push(pathresolve);
-						tabs[tabID].filesizes.push(getFilesizeInBytes(pathresolve));
-						if (pathresolve.toLowerCase() == path.toLowerCase()) {
-							tabs[tabID].fileID = cid;
+			var dirpath = pathlib.dirname(path);
+			if (tabs[tabID].oldDirPath != dirpath) {
+				tabs[tabID].filelist = [];
+				tabs[tabID].filesizes = [];
+				fs.readdir(dirpath, (err, files) => {
+					var cid = 0;
+					files.forEach((file) => {
+						if (allowedext.includes(pathlib.extname(file).toLowerCase())) {
+							//console.log(pathlib.resolve(pathlib.dirname(path), file));
+							var pathresolve = pathlib.resolve(dirpath, file);
+							tabs[tabID].filelist.push(pathresolve);
+							tabs[tabID].filesizes.push(getFilesizeInBytes(pathresolve));
+							if (pathresolve.toLowerCase() == path.toLowerCase()) {
+								tabs[tabID].fileID = cid;
+							}
+							cid++;
 						}
-						cid++;
-					}
+					});
+					app_window.webContents.send("filelist", {
+						fileID: tabs[tabID].fileID,
+						list: tabs[tabID].filelist,
+						filesizes: tabs[tabID].filesizes
+					});
 				});
-				app_window.webContents.send("filelist", {
-					fileID: tabs[tabID].fileID,
-					list: tabs[tabID].filelist,
-					filesizes: tabs[tabID].filesizes
-				});
-			});
+				tabs[tabID].oldDirPath = dirpath;
+			}
 		}
 	}
 
 	app.on('activate', () => {
-		if (BrowserWindow.getAllWindows().length === 0) createWindow()
+		if (BrowserWindow.getAllWindows().length === 0) bulidapp();
 	})
 	app.on('window-all-closed', () => {
 		if (process.platform !== 'darwin') app.quit()

@@ -1,4 +1,4 @@
-const { ipcRenderer } = require("electron");
+const { ipcRenderer, ipcMain } = require("electron");
 
 
 const RESIZE_BORDER_SIZE = 4;
@@ -34,6 +34,7 @@ openFileButton.addEventListener("click", openFile);
 rotateLeftButton.addEventListener("click", rotL);
 rotateRightButton.addEventListener("click", rotR);
 fitScreenButton.addEventListener("click", fullimg);
+fitScreenButton.addEventListener("contextmenu", fullimagesize);
 enterEditorButton.addEventListener("click", enterEditor);
 enterEditorButton.addEventListener("click", loadFileInEditor);
 
@@ -53,9 +54,6 @@ var mouseX = 0, mouseY = 0;
 var newtabid = 0;
 
 var tabCount = 0;
-
-//Add ipc listener to a editor function. Not for the viewer.
-ipcRenderer.on("exportImg",(event,dt) => editorsavebutton.click());
 
 function newTab() {
 	var view = document.createElement("img");
@@ -166,9 +164,10 @@ function closeTab(id) {
 	try {
 		hiddenpart.removeChild(tabs[tabID].ghostImg);
 		tabs[tabID].ghostImg.src = "";
-	}catch {}
-	tabs[id] = null;
+	} catch { }
+	delete tabs[id];
 	tabCount--;
+	ipcMain.send("closeTab", id);
 }
 
 newTab();
@@ -192,11 +191,11 @@ ipcRenderer.on("filedata", (event, data) => {
 	loadingText.style.display = "";
 	console.log(data);
 	if (data.useDURL == true) {
-		var tiff = new Tiff({buffer: data.DURL});
+		var tiff = new Tiff({ buffer: data.DURL });
 		var dataurl = tiff.toDataURL();
 		tabs[tabID].imgView.src = dataurl;
 		tabs[tabID].ghostImg.src = dataurl;
-	}else {
+	} else {
 		tabs[tabID].imgView.src = data.path;
 		tabs[tabID].ghostImg.src = data.path;
 	}
@@ -258,13 +257,8 @@ ipcRenderer.on("filedata", (event, data) => {
 		PKAbleSelect.value = selectedsval;
 		PKAbleUpdate.innerHTML = Math.max(filfo.filesize / PKAbleSelect.value, 0.1).toFixed(1).toString();
 	})
-});
-
-ipcRenderer.on("filelist", (event, data) => {
-	tabs[tabID].fileID = data.fileID;
-	tabs[tabID].filelist = data.list;
-	tabs[tabID].filesizes = data.filesizes;
 	var fil = document.getElementsByClassName("fileListItem");
+	tabs[tabID].fileID = data.fileID;
 	Array.prototype.forEach.call(fil, (item) => {
 		if (item.getAttribute("data-imageid") == tabs[tabID].fileID) {
 			item.style.backgroundColor = "lightgray";
@@ -273,6 +267,11 @@ ipcRenderer.on("filelist", (event, data) => {
 			item.style.backgroundColor = ""
 		}
 	})
+});
+
+ipcRenderer.on("filelist", (event, data) => {
+	tabs[tabID].filelist = data.list;
+	tabs[tabID].filesizes = data.filesizes;
 });
 
 ipcRenderer.on("showfilelist", (event, data) => {
@@ -345,13 +344,15 @@ function DateToString(date) {
 	return date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear() + " " + date.getHours() + ":" + date.getMinutes();
 }
 
-ipcRenderer.on("dsimg", (event, data) => {
+ipcRenderer.on("dsimg", (event, data) => fullimagesize())
+
+function fullimagesize() {
 	tabs[tabID].zoomPrct = 1;
 	tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2);
 	tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2);
 	animateZoomPos();
 	posImg();
-})
+}
 
 ipcRenderer.on("centerimg", (event, data) => {
 	tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2);
@@ -421,7 +422,7 @@ addEventListener('resize', (event) => {
 	posImg();
 	retimgIfOut();
 });
-imgViewCnt.focus();
+
 document.addEventListener('keydown', function (event) {
 	console.log(event.target.tagName);
 	if (event.target.tagName == "INPUT") return;
@@ -475,15 +476,15 @@ function riNR() {
 	} else if (tabs[tabID].imgY > 0) { tabs[tabID].imgY = 0 } else if (tabs[tabID].imgY < -((tabs[tabID].imgH * tabs[tabID].zoomPrct) - imgViewCnt.offsetHeight)) { tabs[tabID].imgY = -((tabs[tabID].imgH * tabs[tabID].zoomPrct) - imgViewCnt.offsetHeight) }
 }
 
-function riHR() {
-	if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
-		tabs[tabID].imgX = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
-	} else if (tabs[tabID].imgX > 0) { tabs[tabID].imgX = 0 } else if (tabs[tabID].imgX < -((tabs[tabID].imgW * tabs[tabID].zoomPrct) - imgViewCnt.offsetHeight)) { tabs[tabID].imgX = -((tabs[tabID].imgW * tabs[tabID].zoomPrct) - imgViewCnt.offsetHeight) }
-
-	if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
-		tabs[tabID].imgY = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
-	} else if (tabs[tabID].imgY > 0) { tabs[tabID].imgY = 0 } else if (tabs[tabID].imgY < -((tabs[tabID].imgH * tabs[tabID].zoomPrct) - imgViewCnt.offsetWidth)) { tabs[tabID].imgY = -((tabs[tabID].imgH * tabs[tabID].zoomPrct) - imgViewCnt.offsetWidth) }
-}
+//function riHR() {
+//	if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
+//		tabs[tabID].imgX = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
+//	} else if (tabs[tabID].imgX > 0) { tabs[tabID].imgX = 0 } else if (tabs[tabID].imgX < -((tabs[tabID].imgW * tabs[tabID].zoomPrct) - imgViewCnt.offsetHeight)) { tabs[tabID].imgX = -((tabs[tabID].imgW * tabs[tabID].zoomPrct) - imgViewCnt.offsetHeight) }
+//
+//	if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
+//		tabs[tabID].imgY = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
+//	} else if (tabs[tabID].imgY > 0) { tabs[tabID].imgY = 0 } else if (tabs[tabID].imgY < -((tabs[tabID].imgH * tabs[tabID].zoomPrct) - imgViewCnt.offsetWidth)) { tabs[tabID].imgY = -((tabs[tabID].imgH * tabs[tabID].zoomPrct) - imgViewCnt.offsetWidth) }
+//}
 
 function retimgIfOut() {
 	if (tabs[tabID].rot == 90) {
@@ -559,10 +560,10 @@ imgViewCnt.addEventListener("wheel", function (evt) {
 	}
 })
 
-function fsize() {
-	tabs[tabID].imgView.style.height = tabs[tabID].imgW * tabs[tabID].zoomPrct;
-	tabs[tabID].imgView.style.width = tabs[tabID].imgH * tabs[tabID].zoomPrct;
-}
+//function fsize() {
+//	tabs[tabID].imgView.style.height = tabs[tabID].imgW * tabs[tabID].zoomPrct;
+//	tabs[tabID].imgView.style.width = tabs[tabID].imgH * tabs[tabID].zoomPrct;
+//}
 
 function posImg() {
 	tabs[tabID].imgView.style.top = tabs[tabID].imgY + "px";
@@ -825,7 +826,7 @@ function createPane(html, paneID, isAtRight) {
 			const dx = m_pos - e.x;
 			m_pos = e.x;
 			sb.style.width = (parseInt(getComputedStyle(sb, '').width) + dx) + "px";
-		}else {
+		} else {
 			const dx = m_pos - e.x;
 			m_pos = e.x;
 			sb.style.width = (parseInt(getComputedStyle(sb, '').width) - dx) + "px";
@@ -909,7 +910,7 @@ function getFileExtension(pathorfilename) {
 }
 
 var fil = document.querySelectorAll("*");
-[].forEach.call(fil, (item) => {
+Array.prototype.forEach.call(fil, (item) => {
 	// Unfocus item when clicked
 	item.addEventListener("mouseup", function (e) { if (e.target.tagName != "INPUT") item.blur() })
 })
@@ -924,16 +925,6 @@ function getReadableFileSizeString(fileSizeInBytes) {
 
 	return [Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i], byteUnits[i]];
 }
-
-//const nodeList = document.querySelectorAll(".circular");
-//for (let i = 0; i < nodeList.length; i++) {
-//	var roat = 0;
-//	setInterval(async function() {
-//		roat+= 1.5;
-//		if (roat === 360) {roat = 0}
-//		nodeList[i].style.transform = "rotate(" + roat + "deg)"
-//	},1)
-//}
 
 document.addEventListener('dragover', (e) => {
 	e.preventDefault();
