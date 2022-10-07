@@ -5,7 +5,8 @@
 	<title>BirdyImg</title>
 	<link rel="stylesheet" href="./css/limonny.css">
 	<link rel="stylesheet" href="./css/mainStyling.css">
-	<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'">
+	<meta http-equiv="Content-Security-Policy"
+		content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src data: file: *">
 </head>
 
 <body>
@@ -81,6 +82,12 @@
 					</svg>
 				</button>
 				<sep></sep>
+				<button id="copyImageButton">
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
+						<path
+							d="M19 19H8q-.825 0-1.412-.587Q6 17.825 6 17V3q0-.825.588-1.413Q7.175 1 8 1h7l6 6v10q0 .825-.587 1.413Q19.825 19 19 19ZM14 8V3H8v14h11V8ZM4 23q-.825 0-1.412-.587Q2 21.825 2 21V7h2v14h11v2ZM8 3v5-5 14V3Z" />
+					</svg>
+				</button>
 				<button id="openFileButton">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path
@@ -165,6 +172,7 @@
 	<hiddenpart></hiddenpart>
 	<script src="./js/editor.js"></script>
 	<script src="./js/script.js"></script>
+	<script src="./js/tiff.js"></script>
 </body>
 
 </html>

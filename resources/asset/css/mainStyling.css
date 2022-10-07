@@ -1,6 +1,7 @@
 html {
 	--panecolor: rgb(255,255,255);
 	--textcolor: rgb(0,0,0);
+	user-select: none;
 }
 body {
 	overflow: hidden
@@ -44,11 +45,6 @@ toolbar {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	user-select: none;
-}
-
-* {
-	user-select: none;
 }
 
 toolbar>input[type="color"] {

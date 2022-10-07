@@ -45,7 +45,7 @@ if (!gotTheLock) {
 	let locale = Intl.DateTimeFormat().resolvedOptions().locale;
 	const pathlib = require('path');
 	console.log("init allowed image types")
-	const allowedext = [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".ico", ".ıco", ".svg", ".webp", ".avif", ".avıf"];
+	const allowedext = [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".ico", ".ıco", ".svg", ".webp", ".avif", ".avıf", ".tif", ".tıf", ".apng"];
 	const args = process.argv;
 	console.log(args);
 	var tabID;
@@ -83,7 +83,7 @@ if (!gotTheLock) {
 				console.log(exep)
 				process.chdir(dpath)
 			}
-			var rawdata;
+			rawdata = "";
 			console.log(settingsdata["language"]);
 			if (settingsdata["language"] == "AUTO") {
 				if (fs.existsSync("resources/lang/" + locale + ".json")) {
@@ -97,16 +97,20 @@ if (!gotTheLock) {
 				rawdata = fs.readFileSync("resources/lang/" + settingsdata["language"] + ".json");
 			}
 			langdata = JSON.parse(rawdata);
+			delete rawdata;
 		} catch (err) {
 			console.error(err)
 		}
 		console.log("Init Open File Types")
 		flts = [{
 			name: langdata["images"],
-			extensions: ["png", "jpg", "jpeg", "bmp", "gif", "ico", "svg", "webp", "avif"]
+			extensions: ["png", "jpg", "jpeg", "bmp", "gif", "ico", "svg", "webp", "avif", "tif", "apng"]
 		}, {
 			name: langdata["typeImage"].replace("{TYPE}", "PNG"),
 			extensions: ['png']
+		}, {
+			name: langdata["typeImage"].replace("{TYPE}", "APNG"),
+			extensions: ['apng']
 		}, {
 			name: langdata["typeImage"].replace("{TYPE}", "JPG"),
 			extensions: ['jpg']
@@ -131,6 +135,9 @@ if (!gotTheLock) {
 		}, {
 			name: langdata["typeImage"].replace("{TYPE}", "AVIF"),
 			extensions: ['avif']
+		}, {
+			name: langdata["typeImage"].replace("{TYPE}", "TIFF"),
+			extensions: ['tif']
 		}];
 		console.log("creating window")
 		var windowinf = {
@@ -381,7 +388,8 @@ if (!gotTheLock) {
 			filelist: [],
 			filesizes: [],
 			fileID: null,
-			oldDirPath: null
+			oldDirPath: null,
+			filesInDIR: []
 		};
 		e.returnValue = "";
 	})
@@ -398,7 +406,7 @@ if (!gotTheLock) {
 	ipcMain.on("prvfile", (e, arg) => {
 		tabs[tabID].fileID -= 1
 		if (tabs[tabID].fileID < 0) {
-			tabs[tabID].fileID = 0;
+			tabs[tabID].fileID = tabs[tabID].filelist.length - 1;
 		}
 		openFil(tabs[tabID].filelist[tabs[tabID].fileID]);
 	});
@@ -441,7 +449,8 @@ if (!gotTheLock) {
 					filesize: stats.size,
 					stats: stats,
 					useDURL: true,
-					DURL: filedata
+					DURL: filedata,
+					fileID: tabs[tabID].fileID
 				});
 			} else {
 				app_window.webContents.send("filedata", {
@@ -458,19 +467,8 @@ if (!gotTheLock) {
 				tabs[tabID].filelist = [];
 				tabs[tabID].filesizes = [];
 				fs.readdir(dirpath, (err, files) => {
-					var cid = 0;
-					files.forEach((file) => {
-						if (allowedext.includes(pathlib.extname(file).toLowerCase())) {
-							//console.log(pathlib.resolve(pathlib.dirname(path), file));
-							var pathresolve = pathlib.resolve(dirpath, file);
-							tabs[tabID].filelist.push(pathresolve);
-							tabs[tabID].filesizes.push(getFilesizeInBytes(pathresolve));
-							if (pathresolve.toLowerCase() == path.toLowerCase()) {
-								tabs[tabID].fileID = cid;
-							}
-							cid++;
-						}
-					});
+					tabs[tabID].filesInDIR = files;
+					updateFileID(dirpath,path);
 					app_window.webContents.send("filelist", {
 						fileID: tabs[tabID].fileID,
 						list: tabs[tabID].filelist,
@@ -478,8 +476,31 @@ if (!gotTheLock) {
 					});
 				});
 				tabs[tabID].oldDirPath = dirpath;
+			}else {
+				updateFileID(dirpath,path);
+				app_window.webContents.send("filelist", {
+					fileID: tabs[tabID].fileID,
+					list: tabs[tabID].filelist,
+					filesizes: tabs[tabID].filesizes
+				});
 			}
 		}
+	}
+
+	function updateFileID(dirpath,path) {
+		var cid = 0;
+		tabs[tabID].filesInDIR.forEach((file) => {
+			if (allowedext.includes(pathlib.extname(file).toLowerCase())) {
+				//console.log(pathlib.resolve(pathlib.dirname(path), file));
+				var pathresolve = pathlib.resolve(dirpath, file);
+				tabs[tabID].filelist.push(pathresolve);
+				tabs[tabID].filesizes.push(getFilesizeInBytes(pathresolve));
+				if (pathresolve.toLowerCase() == path.toLowerCase()) {
+					tabs[tabID].fileID = cid;
+				}
+				cid++;
+			}
+		});
 	}
 
 	app.on('activate', () => {

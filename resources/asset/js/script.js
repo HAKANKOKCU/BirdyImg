@@ -1,4 +1,4 @@
-const { ipcRenderer, ipcMain } = require("electron");
+const { ipcRenderer } = require("electron");
 
 
 const RESIZE_BORDER_SIZE = 4;
@@ -22,6 +22,7 @@ let rotateRightButton = document.getElementById("rotateRightButton");
 //----
 let enterEditorButton = document.getElementById("enterEditorButton");
 //----
+let copyFileButton = document.getElementById("copyImageButton");
 let openFileButton = document.getElementById("openFileButton");
 
 // Add events to buttons:
@@ -37,6 +38,8 @@ fitScreenButton.addEventListener("click", fullimg);
 fitScreenButton.addEventListener("contextmenu", fullimagesize);
 enterEditorButton.addEventListener("click", enterEditor);
 enterEditorButton.addEventListener("click", loadFileInEditor);
+copyFileButton.addEventListener("click", copyCurrentImage);
+
 
 var dragging = false;
 var settingsdata;
@@ -167,7 +170,7 @@ function closeTab(id) {
 	} catch { }
 	delete tabs[id];
 	tabCount--;
-	ipcMain.send("closeTab", id);
+	ipcRenderer.send("closeTab", id);
 }
 
 newTab();
@@ -191,8 +194,9 @@ ipcRenderer.on("filedata", (event, data) => {
 	loadingText.style.display = "";
 	console.log(data);
 	if (data.useDURL == true) {
-		var tiff = new Tiff({ buffer: data.DURL });
-		var dataurl = tiff.toDataURL();
+		//TIFFParser();
+		var tiff = TIFFParser.prototype.parseTIFF(typedArrayToBuffer(data.DURL));
+		let dataurl = tiff.toDataURL("image/png", 1.0);
 		tabs[tabID].imgView.src = dataurl;
 		tabs[tabID].ghostImg.src = dataurl;
 	} else {
@@ -257,8 +261,27 @@ ipcRenderer.on("filedata", (event, data) => {
 		PKAbleSelect.value = selectedsval;
 		PKAbleUpdate.innerHTML = Math.max(filfo.filesize / PKAbleSelect.value, 0.1).toFixed(1).toString();
 	})
-	var fil = document.getElementsByClassName("fileListItem");
+	//var fil = document.getElementsByClassName("fileListItem");
+	//tabs[tabID].fileID = data.fileID;
+	//Array.prototype.forEach.call(fil, (item) => {
+	//	if (item.getAttribute("data-imageid") == tabs[tabID].fileID) {
+	//		item.style.backgroundColor = "lightgray";
+	//		item.parentElement.parentElement.scrollTop = item.offsetTop - (item.parentElement.parentElement.offsetHeight / 2) + (item.offsetHeight / 2);
+	//	} else {
+	//		item.style.backgroundColor = ""
+	//	}
+	//})
+});
+
+function typedArrayToBuffer(array) {
+    return array.buffer.slice(array.byteOffset, array.byteLength + array.byteOffset)
+}
+
+ipcRenderer.on("filelist", (event, data) => {
+	tabs[tabID].filelist = data.list;
+	tabs[tabID].filesizes = data.filesizes;
 	tabs[tabID].fileID = data.fileID;
+	var fil = document.getElementsByClassName("fileListItem");
 	Array.prototype.forEach.call(fil, (item) => {
 		if (item.getAttribute("data-imageid") == tabs[tabID].fileID) {
 			item.style.backgroundColor = "lightgray";
@@ -267,11 +290,6 @@ ipcRenderer.on("filedata", (event, data) => {
 			item.style.backgroundColor = ""
 		}
 	})
-});
-
-ipcRenderer.on("filelist", (event, data) => {
-	tabs[tabID].filelist = data.list;
-	tabs[tabID].filesizes = data.filesizes;
 });
 
 ipcRenderer.on("showfilelist", (event, data) => {
@@ -283,7 +301,7 @@ function showfList() {
 	tabs[tabID].filelist.forEach((item, index) => {
 		var extraCSSLI = "";
 		if (index == tabs[tabID].fileID) { extraCSSLI = "background-color:lightgray" }
-		HTMLs += "<div class='fileListItem' data-imageid='" + index + "' title='" + getFileName(item) + "&#010;" + langpack.fileSize + ": " + getReadableFileSizeString(tabs[tabID].filesizes[index])[0] + "' style='" + extraCSSLI + "'><center><img src='" + item + "' loading='lazy' class='limon darkshandow'></center></div>"
+		HTMLs += "<div class='fileListItem' data-imageid='" + index + "' title='" + getFileName(item) + "&#010;" + langpack.fileSize + ": " + getReadableFileSizeString(tabs[tabID].filesizes[index])[0] + "' style='" + extraCSSLI + "'><center>" + ( getFileExtension(item) == "tif" ? item : "<img src='" + item + "' loading='lazy' class='limon darkshandow'>" ) + "</center></div>"
 	});
 	var pane = openRightPane(HTMLs, "filelist");
 	var listelem = pane.getElementsByClassName("fileListItem")
@@ -671,13 +689,39 @@ function imageLoaded(id) {
 	//},1)
 }
 
-tabs[tabID].ghostImg.addEventListener("aa   load", function () {
-	tabs[tabID].imgW = tabs[tabID].ghostImg.clientWidth;
-	tabs[tabID].imgH = tabs[tabID].ghostImg.clientHeight;
-	console.log("set width", tabs[tabID].imgW, tabs[tabID].imgH);
+//tabs[tabID].ghostImg.addEventListener("aa   load", function () {
+//	tabs[tabID].imgW = tabs[tabID].ghostImg.clientWidth;
+//	tabs[tabID].imgH = tabs[tabID].ghostImg.clientHeight;
+//	console.log("set width", tabs[tabID].imgW, tabs[tabID].imgH);
+//
+//	posImg();
+//})
 
-	posImg();
-})
+function copyCurrentImage() {
+	//clipboard.writeImage(tabs[tabID].imgView.src.replace("file://",""));
+	document.documentElement.style.userSelect = "all"
+	setTimeout(() => {
+		var imageElem = tabs[tabID].imgView;  
+		var range = document.createRange();
+
+		range.selectNode(imageElem);
+		window.getSelection().removeAllRanges();
+		window.getSelection().addRange(range);  
+
+		try {
+			var successful = document.execCommand('copy');  
+			var msg = successful ? 'successful' : 'unsuccessful';  
+			console.log('Copy image: ' + msg); 
+		} catch(err) {  
+			console.log(':(', err);  
+		}  
+
+		// Remove the selections - NOTE: Should use
+		// removeRange(range) when it is supported  
+		window.getSelection().removeAllRanges(); 
+		document.documentElement.style.userSelect = "";
+	}, 100);
+}
 
 function recyleImg() {
 	ipcRenderer.send("recylefile", tabs[tabID].fileInf.path)
