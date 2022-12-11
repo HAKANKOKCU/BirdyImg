@@ -4,7 +4,8 @@ BirdyImg Image Viewer  <a href="https://drive.google.com/u/0/uc?id=1AtW-nxYYaj_j
 <!--![resim](https://user-images.githubusercontent.com/103432992/185777954-95c9db41-91af-4e6e-9b0a-f45470d2a6b3.png)-->
 <!--![resim](https://user-images.githubusercontent.com/103432992/189284081-a4f9760f-bf57-4d0a-84a6-61e0dc0afc3c.png)-->
 <!--![resim](https://user-images.githubusercontent.com/103432992/191976124-35317092-48ff-444f-96a2-64742d67c5f2.png)-->
-![resim](https://user-images.githubusercontent.com/103432992/193451899-e83bcb69-9b57-4415-a4fb-f9d0b9c2473d.png)
+<!--![resim](https://user-images.githubusercontent.com/103432992/193451899-e83bcb69-9b57-4415-a4fb-f9d0b9c2473d.png)-->
+![resim](https://user-images.githubusercontent.com/103432992/206913916-d70259c0-89c5-4525-8bcf-b4f8f35124d4.png)
 
 
 * Minimum Windows Version To Run: Windows 7 x86
