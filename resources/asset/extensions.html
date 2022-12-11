@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="./css/limonny.css">
+	<link rel="stylesheet" href="./css/mainStyling.css">
+	<meta http-equiv="Content-Security-Policy"
+		content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src data: file: *;script-src 'self' 'unsafe-inline'">
+	<meta name="color-scheme" content="light dark">
+</head>
+
+<body style="overflow:auto">
+	<div class="listWithImages">
+		<center><svg class="circular" viewBox="25 25 50 50" style="position: unset;"><circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2"stroke-miterlimit="20" /></svg></center>
+	</div>
+	<button style="width:100%" id="oef"></button>
+</body>
+<script>
+	const divList = document.getElementsByClassName("listWithImages")[0]
+	const { ipcRenderer } = require("electron");
+	ipcRenderer.on("extensions",function(event,data) {
+		divList.innerHTML = ""
+		data.forEach((item) => {
+			var cont = document.createElement("button")
+			var img = document.createElement("img")
+			img.classList.add("roundedImg")
+			img.src = item.Icon.replace(/_DIR_/g,item.CURRENTDIR)
+			cont.appendChild(img)
+			var infoCont = document.createElement("div")
+			infoCont.style.width = "100%"
+			var infoTitle = document.createElement("h3")
+			infoTitle.innerText = item.Name
+			infoCont.appendChild(infoTitle)
+			var infoDesc = document.createElement("p")
+			infoDesc.innerText = item.Description
+			infoCont.appendChild(infoDesc)
+			cont.appendChild(infoCont)
+			divList.appendChild(cont)
+		})
+	})
+	ipcRenderer.on("exfPath",function(event,data) {
+		window.exfpath = data
+	})
+	ipcRenderer.on("langpack",function(event,data) {
+		document.getElementById("oef").innerText = data.openExtensionsFile
+		document.getElementById("oef").addEventListener("click",function() {
+			ipcRenderer.send("launchpath", exfpath);
+		})
+	})
+</script>
+</html>

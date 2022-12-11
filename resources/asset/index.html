@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -7,6 +8,7 @@
 	<link rel="stylesheet" href="./css/mainStyling.css">
 	<meta http-equiv="Content-Security-Policy"
 		content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src data: file: *">
+	<meta name="color-scheme" content="light dark">
 </head>
 
 <body>
@@ -19,32 +21,29 @@
 				<nodisplay>
 					<p id="loadingText">Loading Image..</p>
 				</nodisplay>
-				<div class="loader" id="loading">
-					<svg class="circular" viewBox="25 25 50 50">
-						<circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2"
-							stroke-miterlimit="20" />
-					</svg>
-				</div>
+				<div id="zoominf" data-nohide="true"></div>
 			</div>
 			<toolbar>
-				<button id="prvFileButton">
-					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
+				<button id="prvFileButton" data-tooltipfromlang="previousImage">
+					<!--<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path d="M10 22 0 12 10 2l1.775 1.775L3.55 12l8.225 8.225Z" />
-					</svg>
+					</svg>-->
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M16 22 6 12 16 2l1.775 1.775L9.55 12l8.225 8.225Z"/></svg>
 				</button>
-				<button id="nextFileButton">
-					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
+				<button id="nextFileButton" data-tooltipfromlang="nextImage">
+					<!--<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path d="M8.025 22 6.25 20.225 14.475 12 6.25 3.775 8.025 2l10 10Z" />
-					</svg>
+					</svg>-->
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M8.025 22 6.25 20.225 14.475 12 6.25 3.775 8.025 2l10 10Z"/></svg>
 				</button>
 				<sep></sep>
-				<button id="zoomOutButton">
+				<button id="zoomOutButton" data-tooltipfromlang="zoomOut">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path
 							d="m19.6 21-6.3-6.3q-.75.6-1.725.95Q10.6 16 9.5 16q-2.725 0-4.612-1.887Q3 12.225 3 9.5q0-2.725 1.888-4.613Q6.775 3 9.5 3t4.613 1.887Q16 6.775 16 9.5q0 1.1-.35 2.075-.35.975-.95 1.725l6.3 6.3ZM9.5 14q1.875 0 3.188-1.312Q14 11.375 14 9.5q0-1.875-1.312-3.188Q11.375 5 9.5 5 7.625 5 6.312 6.312 5 7.625 5 9.5q0 1.875 1.312 3.188Q7.625 14 9.5 14ZM7 10.5v-2h5v2Z" />
 					</svg>
 				</button>
-				<button id="zoomInButton">
+				<button id="zoomInButton" data-tooltipfromlang="zoomIn">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path
 							d="m19.6 21-6.3-6.3q-.75.6-1.725.95Q10.6 16 9.5 16q-2.725 0-4.612-1.887Q3 12.225 3 9.5q0-2.725 1.888-4.613Q6.775 3 9.5 3t4.613 1.887Q16 6.775 16 9.5q0 1.1-.35 2.075-.35.975-.95 1.725l6.3 6.3ZM9.5 14q1.875 0 3.188-1.312Q14 11.375 14 9.5q0-1.875-1.312-3.188Q11.375 5 9.5 5 7.625 5 6.312 6.312 5 7.625 5 9.5q0 1.875 1.312 3.188Q7.625 14 9.5 14Zm-1-1.5v-2h-2v-2h2v-2h2v2h2v2h-2v2Z" />
@@ -58,13 +57,13 @@
 					</svg>
 				</button>
 				<sep></sep>
-				<button id="rotateLeftButton">
+				<button id="rotateLeftButton"  data-tooltipfromlang="rotateLeft">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path
 							d="M11 22q-1.25-.125-2.4-.613Q7.45 20.9 6.4 20.1l1.4-1.45q.725.525 1.538.85.812.325 1.662.45Zm2 0v-2.05q2.6-.375 4.3-2.337Q19 15.65 19 13.05q0-2.925-2.038-4.962Q14.925 6.05 12 6.05h-.2l1.6 1.6-1.4 1.4-4-4 4-4 1.4 1.45-1.55 1.55H12q1.875 0 3.513.712 1.637.713 2.85 1.925 1.212 1.213 1.925 2.85Q21 11.175 21 13.05q0 3.425-2.275 5.963Q16.45 21.55 13 22Zm-8.05-3.35q-.8-1.05-1.287-2.2-.488-1.15-.613-2.4H5.1q.125.85.45 1.662.325.813.85 1.538Zm-1.9-6.6q.15-1.275.625-2.45.475-1.175 1.275-2.15l1.45 1.4q-.525.725-.85 1.537-.325.813-.45 1.663Z" />
 					</svg>
 				</button>
-				<button id="rotateRightButton">
+				<button id="rotateRightButton" data-tooltipfromlang="rotateRight">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path
 							d="M13.05 22v-2.05q.85-.125 1.663-.45.812-.325 1.537-.85l1.4 1.45q-1.05.8-2.2 1.287-1.15.488-2.4.613Zm-2 0q-3.45-.45-5.725-2.987Q3.05 16.475 3.05 13.05q0-1.875.713-3.513.712-1.637 1.925-2.85Q6.9 5.475 8.538 4.762q1.637-.712 3.512-.712h.15L10.65 2.5l1.4-1.45 4 4-4 4-1.4-1.4 1.6-1.6h-.2q-2.925 0-4.962 2.038Q5.05 10.125 5.05 13.05q0 2.6 1.7 4.563 1.7 1.962 4.3 2.337Zm8.05-3.35-1.45-1.4q.525-.725.85-1.538.325-.812.45-1.662H21q-.125 1.25-.612 2.4-.488 1.15-1.288 2.2Zm1.9-6.6h-2.05q-.125-.85-.45-1.663-.325-.812-.85-1.537l1.45-1.4q.8.975 1.275 2.15.475 1.175.625 2.45Z" />
@@ -75,20 +74,23 @@
 							<img src="./bitmap/recycle.png"/>
 						</button>-->
 				<sep></sep>
-				<button id="enterEditorButton">
+				<button id="addToFavorites"> <!--data-tooltipfromlang="addToFavorites"-->
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="m8.85 17.825 3.15-1.9 3.15 1.925-.825-3.6 2.775-2.4-3.65-.325-1.45-3.4-1.45 3.375-3.65.325 2.775 2.425ZM5.825 22l1.625-7.025L2 10.25l7.2-.625L12 3l2.8 6.625 7.2.625-5.45 4.725L18.175 22 12 18.275ZM12 13.25Z"/></svg>
+				</button>
+				<button id="enterEditorButton"  data-tooltipfromlang="editImage">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path
 							d="M5 19h1.4l8.625-8.625-1.4-1.4L5 17.6ZM19.3 8.925l-4.25-4.2 1.4-1.4q.575-.575 1.413-.575.837 0 1.412.575l1.4 1.4q.575.575.6 1.388.025.812-.55 1.387ZM17.85 10.4 7.25 21H3v-4.25l10.6-10.6Zm-3.525-.725-.7-.7 1.4 1.4Z" />
 					</svg>
 				</button>
 				<sep></sep>
-				<button id="copyImageButton">
+				<button id="copyImageButton"  data-tooltipfromlang="copyImage">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path
 							d="M19 19H8q-.825 0-1.412-.587Q6 17.825 6 17V3q0-.825.588-1.413Q7.175 1 8 1h7l6 6v10q0 .825-.587 1.413Q19.825 19 19 19ZM14 8V3H8v14h11V8ZM4 23q-.825 0-1.412-.587Q2 21.825 2 21V7h2v14h11v2ZM8 3v5-5 14V3Z" />
 					</svg>
 				</button>
-				<button id="openFileButton">
+				<button id="openFileButton" data-tooltipfromlang="open">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path
 							d="M7 17q-.825 0-1.412-.587Q5 15.825 5 15V4q0-.825.588-1.413Q6.175 2 7 2h5l2 2h7q.825 0 1.413.588Q23 5.175 23 6v9q0 .825-.587 1.413Q21.825 17 21 17Zm0-2h14V6h-7.825l-2-2H7v11Zm13 6H3q-.825 0-1.412-.587Q1 19.825 1 19V6h2v13h17ZM9 13h10l-3.375-4.5L13 12l-1.625-2.175Zm-2 2V4v11Z" />
@@ -99,18 +101,15 @@
 	</main>
 	<main class="editorMainCont" style="display: none">
 		<editormain>
-			<editorImageScrollablePart>
-				<canvas id="editcanvas"></canvas>
-			</editorImageScrollablePart>
 			<toolbar>
-				<button id="exitEditorButton">
+				<button id="exitEditorButton" data-tooltipfromlang="exitEditor">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path
 							d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6Z" />
 					</svg>
 				</button>
 				<sep></sep>
-				<button id="editorUndoButton">
+				<button id="editorUndoButton" data-tooltipfromlang="undo">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path
 							d="M14.1 19H7v-2h7.1q1.575 0 2.737-1Q18 15 18 13.5T16.837 11q-1.162-1-2.737-1H7.8l2.6 2.6L9 14 4 9l5-5 1.4 1.4L7.8 8h6.3q2.425 0 4.163 1.575Q20 11.15 20 13.5q0 2.35-1.737 3.925Q16.525 19 14.1 19Z" />
@@ -123,7 +122,7 @@
 					</svg>
 				</button>
 				<sep></sep>
-				<button id="editorTools">
+				<button id="editorTools" data-tooltipfromlang="tools">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path
 							d="M5 19h1.4l8.625-8.625-1.4-1.4L5 17.6ZM19.3 8.925l-4.25-4.2 1.4-1.4q.575-.575 1.413-.575.837 0 1.412.575l1.4 1.4q.575.575.6 1.388.025.812-.55 1.387ZM17.85 10.4 7.25 21H3v-4.25l10.6-10.6Zm-3.525-.725-.7-.7 1.4 1.4Z" />
@@ -135,25 +134,35 @@
 				<input type="number" id="editorSizeNum"
 					style="background-color: var(--panecolor);color:var(--textcolor);height:30px;width:40px">
 				<marginAuto></marginAuto>
-				<button id="editorEffectsButton">
+				<sep></sep>
+				<button id="editorZoomOutButton" data-tooltipfromlang="zoomOut">
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
+						<path
+							d="m19.6 21-6.3-6.3q-.75.6-1.725.95Q10.6 16 9.5 16q-2.725 0-4.612-1.887Q3 12.225 3 9.5q0-2.725 1.888-4.613Q6.775 3 9.5 3t4.613 1.887Q16 6.775 16 9.5q0 1.1-.35 2.075-.35.975-.95 1.725l6.3 6.3ZM9.5 14q1.875 0 3.188-1.312Q14 11.375 14 9.5q0-1.875-1.312-3.188Q11.375 5 9.5 5 7.625 5 6.312 6.312 5 7.625 5 9.5q0 1.875 1.312 3.188Q7.625 14 9.5 14ZM7 10.5v-2h5v2Z" />
+					</svg>
+				</button>
+				<button id="editorZoomInButton" data-tooltipfromlang="zoomIn">
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
+						<path
+							d="m19.6 21-6.3-6.3q-.75.6-1.725.95Q10.6 16 9.5 16q-2.725 0-4.612-1.887Q3 12.225 3 9.5q0-2.725 1.888-4.613Q6.775 3 9.5 3t4.613 1.887Q16 6.775 16 9.5q0 1.1-.35 2.075-.35.975-.95 1.725l6.3 6.3ZM9.5 14q1.875 0 3.188-1.312Q14 11.375 14 9.5q0-1.875-1.312-3.188Q11.375 5 9.5 5 7.625 5 6.312 6.312 5 7.625 5 9.5q0 1.875 1.312 3.188Q7.625 14 9.5 14Zm-1-1.5v-2h-2v-2h2v-2h2v2h2v2h-2v2Z" />
+					</svg>
+				</button>
+				<sep></sep>
+				<button id="editorEffectsButton" data-tooltipfromlang="effects">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path
 							d="m3.975 19.8-.85-.35q-.775-.325-1.037-1.125-.263-.8.087-1.575l1.8-3.9Zm4 2.2q-.825 0-1.413-.587-.587-.588-.587-1.413v-6l2.65 7.35q.075.175.15.338.075.162.2.312Zm5.15-.1q-.8.3-1.55-.075t-1.05-1.175l-4.45-12.2q-.3-.8.05-1.563.35-.762 1.15-1.037l7.55-2.75q.8-.3 1.55.075t1.05 1.175l4.45 12.2q.3.8-.05 1.563-.35.762-1.15 1.037ZM10.975 10q.425 0 .713-.288.287-.287.287-.712t-.287-.713Q11.4 8 10.975 8t-.712.287q-.288.288-.288.713t.288.712q.287.288.712.288Zm1.45 10 7.55-2.75L15.525 5l-7.55 2.75ZM7.975 7.75 15.525 5Z" />
 					</svg>
 				</button>
-				<button id="editorSaveButton">
+				<button id="editorSaveButton" data-tooltipfromlang="export">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 						<path
 							d="M21 7v12q0 .825-.587 1.413Q19.825 21 19 21H5q-.825 0-1.413-.587Q3 19.825 3 19V5q0-.825.587-1.413Q4.175 3 5 3h12Zm-2 .85L16.15 5H5v14h14ZM12 18q1.25 0 2.125-.875T15 15q0-1.25-.875-2.125T12 12q-1.25 0-2.125.875T9 15q0 1.25.875 2.125T12 18Zm-6-8h9V6H6ZM5 7.85V19 5Z" />
 					</svg>
 				</button>
 			</toolbar>
-			<div style="position: absolute;bottom:30px;right:0;background-color: var(--panecolor);display:none"
-				id="editorEffectsMenu">
-				<button id="editorMakeDarker">Make Darker</button>
-				<button id="editorMakeLighter">Make Lighter</button>
-			</div>
-			<div style="position: absolute;bottom:30px;left:0;background-color: var(--panecolor);display:none"
+			<popuppane style="bottom:30px;right:0;" id="editorEffectsMenu"></popuppane>
+			<popuppane style="bottom:30px;left:0px;"
 				id="editorToolsMenu">
 				<button data-toolname="pen">
 					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
@@ -166,8 +175,29 @@
 						<path d="M6 18V6h12v12Z" />
 					</svg>
 				</button>
-			</div>
+				<button data-toolname="pickcolor">
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M3 21v-4.75l8.95-8.95-1.45-1.4 1.45-1.4 1.9 1.9 3.1-3.1q.275-.275.7-.275.425 0 .7.275l2.35 2.35q.275.275.275.7 0 .425-.275.7l-3.075 3.075 1.9 1.95L18.1 13.5l-1.4-1.45L7.75 21Zm2-2h1.95l8.3-8.35-1.9-1.9L5 17.05ZM16.175 8.75l2.4-2.4-.925-.925-2.4 2.4Zm0 0-.925-.925.925.925Z"/></svg>
+				</button>
+				<button data-toolname="liner">
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M5 13v-2h14v2Z"/></svg>
+				</button>
+				<button data-toolname="circle">
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M12 22q-2.075 0-3.9-.788-1.825-.787-3.175-2.137-1.35-1.35-2.137-3.175Q2 14.075 2 12t.788-3.9q.787-1.825 2.137-3.175 1.35-1.35 3.175-2.138Q9.925 2 12 2t3.9.787q1.825.788 3.175 2.138 1.35 1.35 2.137 3.175Q22 9.925 22 12t-.788 3.9q-.787 1.825-2.137 3.175-1.35 1.35-3.175 2.137Q14.075 22 12 22Zm0-2q3.35 0 5.675-2.325Q20 15.35 20 12q0-3.35-2.325-5.675Q15.35 4 12 4 8.65 4 6.325 6.325 4 8.65 4 12q0 3.35 2.325 5.675Q8.65 20 12 20Zm0-8Z"/></svg>
+				</button>
+				<button data-toolname="fcircle">
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M12 22q-2.075 0-3.9-.788-1.825-.787-3.175-2.137-1.35-1.35-2.137-3.175Q2 14.075 2 12t.788-3.9q.787-1.825 2.137-3.175 1.35-1.35 3.175-2.138Q9.925 2 12 2t3.9.787q1.825.788 3.175 2.138 1.35 1.35 2.137 3.175Q22 9.925 22 12t-.788 3.9q-.787 1.825-2.137 3.175-1.35 1.35-3.175 2.137Q14.075 22 12 22Z"/></svg>
+				</button>
+				<button data-toolname="rectangle">
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M2 20V4h20v16Zm2-2h16V6H4Zm0 0V6v12Z"/></svg>
+				</button>
+				<button data-toolname="frectangle">
+					<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M2 20V4h20v16Z"/></svg>
+				</button>
+			</popuppane>
 		</editormain>
+		<editorhome style="display:none">
+			
+		</editorhome>
 	</main>
 	<hiddenpart></hiddenpart>
 	<script src="./js/editor.js"></script>

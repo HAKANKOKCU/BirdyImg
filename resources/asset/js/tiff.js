@@ -293,7 +293,10 @@ TIFFParser.prototype = {
 		}
 
 		if (fieldTypeName === 'ASCII') {
-			fieldValues.forEach(function(e, i, a) { a[i] = String.fromCharCode(e); });
+			for (let i = 0; i < fieldValues.length;i++) {
+				fieldValues[i] = String.fromCharCode(fieldValues[i]);
+			}
+			//fieldValues.forEach(function(e, i, a) {  });
 		}
 
 		return fieldValues;
@@ -332,8 +335,6 @@ TIFFParser.prototype = {
 		}
 		
 		
-		//THIS LINE ISNT BY THE ORGINAL CREATOR, ITS MADE BY ME (HAKANKOKCU).
-		//This line basically fixes a issue:
 		if (this.fileDirectories == undefined) this.fileDirectories = [];
 		//If the filedirectiories isn't defined, just create an empty array.
 		
@@ -384,8 +385,9 @@ TIFFParser.prototype = {
 
 		var bitsPerPixel = 0;
 		var hasBytesPerPixel = false;
-
-		fileDirectory.BitsPerSample.values.forEach(function(bitsPerSample, i, bitsPerSampleValues) {
+		var bitsPerSampleValues = fileDirectory.BitsPerSample.values;
+		for (let i = 0; i < fileDirectory.BitsPerSample.values.length;i++) {
+			var bitsPerSample = fileDirectory.BitsPerSample.values[i];
 			sampleProperties[i] = {
 				'bitsPerSample': bitsPerSample,
 				'hasBytesPerSample': false,
@@ -398,7 +400,21 @@ TIFFParser.prototype = {
 			}
 
 			bitsPerPixel += bitsPerSample;
-		}, this);
+		}
+		//fileDirectory.BitsPerSample.values.forEach(function(bitsPerSample, i, bitsPerSampleValues) {
+		//	sampleProperties[i] = {
+		//		'bitsPerSample': bitsPerSample,
+		//		'hasBytesPerSample': false,
+		//		'bytesPerSample': undefined,
+		//	};
+//
+		//	if ((bitsPerSample % 8) === 0) {
+		//		sampleProperties[i].hasBytesPerSample = true;
+		//		sampleProperties[i].bytesPerSample = bitsPerSample / 8;
+		//	}
+//
+		//	bitsPerPixel += bitsPerSample;
+		//}, this);
 
 		if ((bitsPerPixel % 8) === 0) {
 			hasBytesPerPixel = true;
@@ -644,7 +660,10 @@ TIFFParser.prototype = {
 								}
 
 								// Invert samples.
-								pixelSamples.forEach(function(sample, index, samples) { samples[index] = invertValue - sample; });
+								for (let i = 0; i < pixelSamples.length;i++) {
+									pixelSamples[i] = invertValue - pixelSamples[i];
+								}
+								//pixelSamples.forEach(function(sample, index, samples) { samples[index] = invertValue - sample; });
 
 							// Bilevel or Grayscale
 							// BlackIsZero

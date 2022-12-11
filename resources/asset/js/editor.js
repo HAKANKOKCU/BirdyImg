@@ -1,26 +1,7 @@
-//const { ipcRenderer } = require("electron");
-
 const editorMain = document.querySelector("main.editorMainCont");
 const viewMain = document.querySelector("main.imgMainCont");
-const canvas = document.getElementById("editcanvas");
-const editorcolorselect = document.getElementById("editorColorSelect");
-const editorsizenum = document.getElementById("editorSizeNum");
-const effectsmenu = document.getElementById("editorEffectsMenu");
-const effectsbutton = document.getElementById("editorEffectsButton");
-const effects_darkerbutton = document.getElementById("editorMakeDarker");
-const effects_lighterbutton = document.getElementById("editorMakeLighter");
-const exiteditorbutton = document.getElementById("exitEditorButton");
-const editorsavebutton = document.getElementById("editorSaveButton");
-const editorundobutton = document.getElementById("editorUndoButton");
-const canvasscrollable = document.getElementsByTagName("editorImageScrollablePart")[0];
-const editorlockbutton = document.getElementById("editorLockButton");
-const editorTools = document.getElementById("editorTools");
-const editorToolsMenu = document.getElementById("editorToolsMenu");
-var editorlock = false;
 window.isInEditor = false;
 
-var ctx = canvas.getContext("2d");
-var tool = "pen";
 window.enterEditor = function enterEditor() {
     editorMain.style.display = "";
     viewMain.style.display = "none";
@@ -34,20 +15,292 @@ window.exitEditor = function exitEditor() {
     isInEditor = false;
     ipcRenderer.send("exitEditor", "");
 };
+window.loadFileInEditor = function loadFileInEditor() {
+	editorRotate = 0;
+	editorZoomPrct = 1;
+	drawing = [];
+	if (tabs[tabID].fileInf == null) {
+		ema.style.display = "none";
+		editorhome.style.display = "";
+		initHome()
+		
+	}else {
+		editorhome.style.display = "none";
+		ema.style.display = "";
+		canvas.width = tabs[tabID].imgW;
+		canvas.height = tabs[tabID].imgH;
+		editorApplyZoom();
+		ctx = canvas.getContext("2d");
+		ctx.drawImage(tabs[tabID].ghostImg, 0, 0);
+	}
+}
+function initHome() {
+	editorhome.innerHTML = "";
+	var flex = document.createElement("flex");
+	var exitbutton = document.createElement("button")
+	exitbutton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
+						<path
+							d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6Z" />
+					</svg>`;
+	exitbutton.style.width = exitbutton.style.height = "34px";
+	flex.appendChild(exitbutton)
+	exitbutton.addEventListener("click",exitEditor)
+	var title = document.createElement("h1");
+	title.setAttribute("data-fromlang","welcomeToBirdyImgEditor");
+	applyTranslationFor(title);
+	flex.appendChild(title);
+	editorhome.appendChild(flex);
+	var recentlySavedTitle = document.createElement("h3");
+	recentlySavedTitle.setAttribute("data-fromlang","recentlySaved");
+	applyTranslationFor(recentlySavedTitle);
+	editorhome.appendChild(recentlySavedTitle)
+	var flexlist = document.createElement("flex");
+	flexlist.classList.add("noshrink");
+	flexlist.style.overflow = "auto";
+	flexlist.style.width = "100%";
+	settingsdata.recentlySaved.forEach((item) => {
+		var cardItem = document.createElement("carditem");
+		var imgCard = document.createElement("img")
+		imgCard.src = item;
+		imgCard.style.height = "200px";
+		cardItem.appendChild(imgCard)
+		var nameCard = document.createElement("p")
+		nameCard.style.width = "100%";
+		nameCard.innerText = getFileName(item);
+		cardItem.appendChild(nameCard)
+		flexlist.appendChild(cardItem)
+		cardItem.addEventListener("click",function() {
+			ipcRenderer.send("openfilep", item);
+			setTimeout(function() {
+				enterEditor();
+				loadFileInEditor();
+			},500)
+		})
+	})
+	editorhome.appendChild(flexlist)
+}
 var isEditorInited = false;
 function initEditor() {
+	window.editorDefaultZoom = 0.1;
+	window.ema = document.getElementsByTagName("editormain")[0];
+	window.editorcolorselect = document.getElementById("editorColorSelect");
+	window.editorsizenum = document.getElementById("editorSizeNum");
+	window.effectsmenu = document.getElementById("editorEffectsMenu");
+	window.effectsbutton = document.getElementById("editorEffectsButton");
+	window.effects_darkerbutton = createElementWithContainerAndLangString("makeDarker", "button", effectsmenu);
+	window.effects_lighterbutton = createElementWithContainerAndLangString("makeLighter", "button", effectsmenu);
+	window.effects_reversebutton = createElementWithContainerAndLangString("reverseColors", "button", effectsmenu);
+	window.exiteditorbutton = document.getElementById("exitEditorButton");
+	window.editorsavebutton = document.getElementById("editorSaveButton");
+	window.editorundobutton = document.getElementById("editorUndoButton");
+	window.editorlockbutton = document.getElementById("editorLockButton");
+	window.editorTools = document.getElementById("editorTools");
+	window.editorToolsMenu = document.getElementById("editorToolsMenu");
+	window.editorZoomInButton = document.getElementById("editorZoomInButton");
+	window.editorZoomOutButton = document.getElementById("editorZoomOutButton");
+	window.editorlock = false;
+	window.editorRotate = 0;
+	window.editorZoomPrct = 1;
+	window.editorhome = document.getElementsByTagName("editorhome")[0];
     exiteditorbutton.onclick = exitEditor;
+	window.canvasscrollable = document.createElement("editorImageScrollablePart");
+	window.canvas = document.createElement("canvas")
+	window.ctx = canvas.getContext("2d");
+	window.editortool = "pen";
+	canvasscrollable.appendChild(canvas)
+	ema.insertBefore(canvasscrollable, ema.firstChild)
+	
+	window.lineW = 3;
+	window.drawing = [];
+	window.drawundos = [];
+	window.drawundocounter = 0;
+	
+	window.previewsvg = document.createElement("svg");
+	previewsvg.classList.add("previewsvg");
+	ema.appendChild(previewsvg);
+	window.previewLine = document.createElement("line")
+	previewsvg.appendChild(previewLine)
+	previewLine.style.display = "none";
+
+	window.drawlineat = function(x1, y1, x2, y2) {
+		ctx.fillStyle = currentcolor;
+		ctx.strokeStyle = currentcolor;
+		ctx.lineWidth = lineW;
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(x1, y1, lineW / 2, 0, 2 * Math.PI);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(x2, y2, lineW / 2, 0, 2 * Math.PI);
+		ctx.fill();
+		drawundocounter++;
+		drawing.push({ type: "line", x1: x1, y1: y1, x2: x2, y2: y2, lineW: lineW, currentColor: currentcolor });
+	}
+	
+	window.drawcircleat = function(x,y,radius,isFilled) {
+		ctx.fillStyle = currentcolor;
+		ctx.strokeStyle = currentcolor;
+		ctx.lineWidth = lineW;
+		ctx.beginPath();
+		ctx.arc(x, y, radius, 0, 2 * Math.PI);
+		if (isFilled) 
+			ctx.fill()
+		else
+			ctx.stroke(); 
+		drawundocounter++;
+		drawing.push({ type: (isFilled ? "f" : "") + "circle", x: x, y: y, radius:radius, lineW: lineW, currentColor: currentcolor });
+	}
+	
+	window.drawrectangleat = function(x,y,sizex,sizey,isFilled) {
+		ctx.fillStyle = currentcolor;
+		ctx.strokeStyle = currentcolor;
+		ctx.lineWidth = lineW;
+		ctx.beginPath();
+		ctx.rect(x, y, sizex,sizey);
+		if (isFilled) 
+			ctx.fill()
+		else
+			ctx.stroke(); 
+		drawundocounter++;
+		drawing.push({ type: (isFilled ? "f" : "") + "rectangle", x: x, y: y, sizex:sizex,sizey:sizey, lineW: lineW, currentColor: currentcolor });
+	}
+	
+	window.drawcircleattemp = function(x,y,radius,isFilled) {
+		ctx.beginPath();
+		ctx.arc(x, y, radius, 0, 2 * Math.PI);
+		if (isFilled) 
+			ctx.fill()
+		else
+			ctx.stroke(); 
+	}
+	
+	window.drawrectangleattemp = function(x,y,sizex,sizey,isFilled) {
+		ctx.beginPath();
+		ctx.rect(x, y, sizex,sizey);
+		if (isFilled) 
+			ctx.fill()
+		else
+			ctx.stroke(); 
+	}
+	
+	window.eraseXY = function(x, y) {
+		ctx.clearRect(x - (lineW / 2), y - (lineW / 2), lineW, lineW);
+		drawundocounter++;
+		drawing.push({ type: "eraser", x: x, y: y, lineW: lineW });
+	}
+
+	window.eraseXYtemp = function(x, y, lineW) {
+		ctx.clearRect(x - (lineW / 2), y - (lineW / 2), lineW, lineW);
+	}
+
+	window.drawlineattemp = function(x1, y1, x2, y2, lineW) {
+		ctx.beginPath();
+		ctx.moveTo(x1, y1);
+		ctx.lineTo(x2, y2);
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.arc(x1, y1, lineW / 2, 0, 2 * Math.PI);
+		ctx.fill();
+		ctx.beginPath();
+		ctx.arc(x2, y2, lineW / 2, 0, 2 * Math.PI);
+		ctx.fill();
+	}
+
+	window.redraw = function() {
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.save();
+		//ctx.translate(canvas.width/2,canvas.height/2);
+		ctx.rotate(editorRotate*Math.PI/180);
+		ctx.drawImage(tabs[tabID].ghostImg, 0, 0);
+		//ctx.translate(0,0);
+		ctx.rotate(0*Math.PI/180);
+		ctx.restore();
+		drawing.forEach(function (item) {
+			ctx.fillStyle = item.currentColor;
+			ctx.strokeStyle = item.currentColor;
+			ctx.lineWidth = item.lineW;
+			if (item.type == "line") drawlineattemp(item.x1, item.y1, item.x2, item.y2, item.lineW);
+			if (item.type == "darker") makeDarker();
+			if (item.type == "lighter") makeLighter();
+			if (item.type == "eraser") eraseXYtemp(item.x, item.y, item.lineW);
+			//if (item.type == "liner") drawlineattemp(item.x1, item.y1, item.x2, item.y2, item.lineW);
+			if (item.type == "circle") drawcircleattemp(item.x,item.y,item.radius,false)
+			if (item.type == "fcircle") drawcircleattemp(item.x,item.y,item.radius,true)
+			if (item.type == "frectangle") drawrectangleattemp(item.x,item.y,item.sizex,item.sizey,true)
+			if (item.type == "rectangle") drawrectangleattemp(item.x,item.y,item.sizex,item.sizey,false)
+			if (item.type == "reverse") reverse();
+		})
+	}
+
+	window.currentcolor = "#000000";
+	window.oldevent;
+	window.isdrawing = false;
+
+	window.makeDarker = function() {
+		ctx.fillStyle = "rgba(0,0,0,0.05)"
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+	}
+
+	window.makeLighter = function() {
+		ctx.fillStyle = "rgba(255,255,255,0.05)"
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+	}
+	
+	window.reverse = function() {
+		//var currentclor = ctx.fillStyle
+		for (let x = 0;x < canvas.width;x++) {
+			for (let y = 0;y < canvas.height;y++) {
+				const data = ctx.getImageData(x, y, 1, 1).data;
+				ctx.fillStyle = "rgba(" + (255 - data[0]) + "," + (255 - data[1]) + "," + (255 - data[2]) + "," + (data[3] / 255) + ")"
+				ctx.fillRect(x,y,1,1)
+			}
+		}
+		//ctx.fillStyle = currentclor;
+	}
+
+	
+	window.editorApplyZoom = function() {
+		if (editorZoomPrct <= 0) editorZoomPrct = editorDefaultZoom;
+		canvas.style.width = (tabs[tabID].imgW * editorZoomPrct) + "px";
+		canvas.style.height = (tabs[tabID].imgH * editorZoomPrct) + "px";
+		canvasscrollable.style.justifyContent = ((tabs[tabID].imgW * editorZoomPrct) < canvasscrollable.offsetWidth && !isTouch) ? "center" : ""
+		canvasscrollable.style.alignItems = ((tabs[tabID].imgH * editorZoomPrct) < canvasscrollable.offsetHeight && !isTouch) ? "center" : ""
+	}
+	
+	canvasscrollable.onwheel = function(e) {
+		if (e.ctrlKey) {
+			console.log("!!")
+			e.preventDefault();
+			if (e.deltaY < 0) {
+				editorZoomInButton.click();
+			}else if (e.deltaY > 0) {
+				editorZoomOutButton.click();
+			}
+		}
+	}
+	
+	editorZoomInButton.onclick = function() {editorZoomPrct += 0.1;editorApplyZoom()}
+	editorZoomOutButton.onclick = function() {editorZoomPrct -= 0.1;editorApplyZoom()}
+	ipcRenderer.on("ezoomin", (event, data) => { editorZoomInButton.click() });
+	ipcRenderer.on("ezoomout", (event, data) => { editorZoomOutButton.click() });
+	ipcRenderer.on("exitEditorA", (event,data) => {exitEditor()})
+	
     window.saveEditorImage = function save() {
-        var win = openFWindow("<h1>" + langpack.exportAs + "</h1><button data-export='image/png'>" + langpack.typeImage.replace("{TYPE}", "PNG") + "</button><button data-export='image/jpeg'>" + langpack.typeImage.replace("{TYPE}", "JPEG") + "</button><button data-export='image/webp'>" + langpack.typeImage.replace("{TYPE}", "WebP") + "</button>");
+        var win = openWindow("<h1>" + langpack.exportAs + "</h1><button data-export='image/png'>" + langpack.typeImage.replace("{TYPE}", "PNG") + "</button><button data-export='image/jpeg'>" + langpack.typeImage.replace("{TYPE}", "JPEG") + "</button><button data-export='image/webp'>" + langpack.typeImage.replace("{TYPE}", "WebP") + "</button>");
         Array.prototype.forEach.call(win.querySelectorAll("button[data-export]"), (item) => {
             item.onclick = function () {
                 let canvasUrl = canvas.toDataURL(item.getAttribute("data-export"), 1.0);
                 console.log(canvasUrl);
-                const createEl = document.createElement('a');
-                createEl.href = canvasUrl;
-                createEl.download = "Editor Save";
-                createEl.click();
-                createEl.remove();
+                // const createEl = document.createElement('a');
+                // createEl.href = canvasUrl;
+                // createEl.download = "Editor Save";
+                // createEl.click();
+                // createEl.remove();
+				const base64Data = canvasUrl.replace(/^data:image\/png;base64,/, "");
+				ipcRenderer.send("saveFile",base64Data)
             }
         });
     }
@@ -61,26 +314,93 @@ function initEditor() {
     canvas.onmousemove = function (event) {
         if (!isdrawing) return;
         try {
-            if (tool == "pen") drawlineat(event.offsetX, event.offsetY, oldevent.offsetX, oldevent.offsetY);
-            if (tool == "eraser") eraseXY(event.offsetX, event.offsetY);
+            if (editortool == "pen") drawlineat(event.offsetX / editorZoomPrct, event.offsetY / editorZoomPrct, oldevent.offsetX / editorZoomPrct, oldevent.offsetY / editorZoomPrct);
+            if (editortool == "eraser") eraseXY(event.offsetX, event.offsetY);
+			if (editortool == "liner") {
+				previewLine.setAttribute("x2",event.clientX + "px"); previewLine.setAttribute("y2",event.clientY + "px");
+			}
         } catch { }
         oldevent = event;
     }
 
-    canvas.ontouchmove = function (event) {
+    canvas.addEventListener("touchmove",function (event) {
         if (!isdrawing) return;
         //console.log(event)
         try {
-            if (tool == "pen") drawlineat(event.touches[0].clientX + canvasscrollable.scrollLeft, event.touches[0].clientY + canvasscrollable.scrollTop, oldevent.touches[0].clientX + canvasscrollable.scrollLeft, oldevent.touches[0].clientY + canvasscrollable.scrollTop);
-            if (tool == "eraser") eraseXY(event.touches[0].clientX + canvasscrollable.scrollLeft, event.touches[0].clientY + canvasscrollable.scrollTop);
+            if (editortool == "pen") drawlineat((event.touches[0].clientX + canvasscrollable.scrollLeft) / editorZoomPrct, (event.touches[0].clientY + canvasscrollable.scrollTop) / editorZoomPrct, (oldevent.touches[0].clientX + canvasscrollable.scrollLeft) / editorZoomPrct, (oldevent.touches[0].clientY + canvasscrollable.scrollTop) / editorZoomPrct);
+            if (editortool == "eraser") eraseXY(event.touches[0].clientX + canvasscrollable.scrollLeft, event.touches[0].clientY + canvasscrollable.scrollTop);
+			if (editortool == "liner") {
+				previewLine.setAttribute("x2",event.touches[0].clientX + "px"); previewLine.setAttribute("y2",event.touches[0].clientY + "px");
+			}
         } catch { }
         oldevent = event;
         event.preventDefault();
-    }
+		return false;
+    })
 
-    canvas.onmousedown = canvas.ontouchstart = function () { if (!editorlock) isdrawing = true }
+    canvas.onmousedown = canvas.ontouchstart = function (e) { 
+		if (!editorlock) isdrawing = true; e.preventDefault(); 
+		var x = e.offsetX ? e.offsetX : event.touches[0].clientX + canvasscrollable.scrollLeft - canvas.offsetLeft; 
+		var y = e.offsetY ? e.offsetY : event.touches[0].clientY + canvasscrollable.scrollTop - canvas.offsetTop; 
+		x = x / editorZoomPrct;
+		y = y / editorZoomPrct;
+		if (editortool == "liner") {
+			previewLine.style.display = "";previewLine.setAttribute("x1",x + "px");previewLine.setAttribute("y1",y + "px");
+			previewLine.style.stroke = currentcolor;
+			previewLine.style.strokeWidth = lineW + "px";
+		} 
+		window.editordrawstartpos = {x:x,y:y}
+	}
 
-    canvas.onmouseup = canvas.ontouchend = function () { isdrawing = false; oldevent = undefined; drawundos.push(drawundocounter); drawundocounter = 0 }
+	function rgbToHex(r, g, b) {
+		if (r > 255 || g > 255 || b > 255)
+			throw "Invalid color values";
+		return ((r << 16) | (g << 8) | b).toString(16);
+	}
+
+    canvas.onmouseup = canvas.ontouchend = function (e) {
+		var x = e.offsetX ? e.offsetX : event.touches[0].clientX + canvasscrollable.scrollLeft - canvas.offsetLeft; 
+		var y = e.offsetY ? e.offsetY : event.touches[0].clientY + canvasscrollable.scrollTop - canvas.offsetTop; 
+		x = x / editorZoomPrct;
+		y = y / editorZoomPrct;
+		if (editortool == "pickcolor") {
+			const data = ctx.getImageData(x, y, 1, 1).data;
+
+			// RED   = data[0]
+			// GREEN = data[1]
+			// BLUE  = data[2]
+			// ALPHA = data[3]
+			
+			//console.log(data);
+
+			currentcolor = `rgba(${data[0]},${data[1]},${data[2]},${data[3]})`
+			editorColorSelect.value = "#" + rgbToHex(data[0],data[1],data[2]);
+		}
+		if (editortool == "liner") {
+			drawlineat(parseInt(previewLine.getAttribute("x1"), 10), parseInt(previewLine.getAttribute("y1"), 10), x, y, lineW);
+			previewLine.style.display = "none";
+		}
+		if (editortool == "circle") {
+			var radius = (Math.abs((x - editordrawstartpos.x) + (y - editordrawstartpos.y)) / 2)// * editorZoomPrct
+			drawcircleat(editordrawstartpos.x,editordrawstartpos.y,radius,false)
+		}
+		if (editortool == "fcircle") {
+			var radius = (Math.abs((x - editordrawstartpos.x) + (y - editordrawstartpos.y)) / 2)// * editorZoomPrct
+			drawcircleat(editordrawstartpos.x,editordrawstartpos.y,radius,true)
+		}
+		if (editortool == "rectangle") {
+			var sizex = x - editordrawstartpos.x
+			var sizey = y - editordrawstartpos.y
+			drawrectangleat(editordrawstartpos.x,editordrawstartpos.y,sizex,sizey,false)
+		}
+		if (editortool == "frectangle") {
+			var sizex = x - editordrawstartpos.x
+			var sizey = y - editordrawstartpos.y
+			drawrectangleat(editordrawstartpos.x,editordrawstartpos.y,sizex,sizey,true)
+		}
+		isdrawing = false; oldevent = undefined; drawundos.push(drawundocounter); drawundocounter = 0; 
+		e.preventDefault()
+	}
 
     editorcolorselect.onchange = function () {
         currentcolor = editorcolorselect.value;
@@ -91,24 +411,17 @@ function initEditor() {
     }
 
     effectsbutton.onclick = function () {
-        if (effectsmenu.style.display == "none") {
-            effectsmenu.style.display = ""
-        } else {
-            effectsmenu.style.display = "none"
-        }
+        showhideelem(effectsmenu)
     }
 
     editorTools.onclick = function () {
-        if (editorToolsMenu.style.display == "none") {
-            editorToolsMenu.style.display = ""
-        } else {
-            editorToolsMenu.style.display = "none"
-        }
+        showhideelem(editorToolsMenu)
     }
 
     Array.prototype.forEach.call(editorToolsMenu.querySelectorAll("button"), (item) => {
         item.onclick = function () {
-            tool = item.getAttribute("data-toolname");
+            editortool = item.getAttribute("data-toolname");
+			editorTools.innerHTML = item.innerHTML;
         }
     });
 
@@ -119,8 +432,9 @@ function initEditor() {
 
     effects_darkerbutton.onclick = function () { makeDarker(); drawing.push({ type: "darker" }); drawundos.push(1) };
 
-
     effects_lighterbutton.onclick = function () { makeLighter(); drawing.push({ type: "lighter" }); drawundos.push(1) };
+	
+	effects_reversebutton.onclick = function () { reverse(); drawing.push({ type: "reverse" }); drawundos.push(1) }
 
     editorlockbutton.onclick = function () {
         editorlock = !editorlock;
@@ -135,88 +449,4 @@ function initEditor() {
     editorsavebutton.onclick = saveEditorImage;
     ipcRenderer.on("exportImg", (event, dt) => editorsavebutton.click());
     isEditorInited = true;
-}
-
-window.loadFileInEditor = function loadFileInEditor() {
-    drawing = [];
-    canvas.width = tabs[tabID].imgW;
-    canvas.height = tabs[tabID].imgH;
-    canvas.style.width = tabs[tabID].imgW;
-    canvas.style.height = tabs[tabID].imgH;
-    ctx = canvas.getContext("2d");
-    ctx.drawImage(tabs[tabID].ghostImg, 0, 0);
-}
-
-var lineW = 3;
-var drawing = [];
-var drawundos = [];
-var drawundocounter = 0;
-
-function drawlineat(x1, y1, x2, y2) {
-    ctx.fillStyle = currentcolor;
-    ctx.strokeStyle = currentcolor;
-    ctx.lineWidth = lineW;
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x1, y1, lineW / 2, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(x2, y2, lineW / 2, 0, 2 * Math.PI);
-    ctx.fill();
-    drawundocounter++;
-    drawing.push({ type: "line", x1: x1, y1: y1, x2: x2, y2: y2, lineW: lineW, currentColor: currentcolor });
-}
-
-function eraseXY(x, y) {
-    ctx.clearRect(x - (lineW / 2), y - (lineW / 2), lineW, lineW);
-    drawundocounter++;
-    drawing.push({ type: "eraser", x: x, y: y, lineW: lineW });
-}
-
-function eraseXYtemp(x, y, lineW) {
-    ctx.clearRect(x - (lineW / 2), y - (lineW / 2), lineW, lineW);
-}
-
-function drawlineattemp(x1, y1, x2, y2, lineW) {
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(x1, y1, lineW / 2, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(x2, y2, lineW / 2, 0, 2 * Math.PI);
-    ctx.fill();
-}
-
-function redraw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.drawImage(tabs[tabID].ghostImg, 0, 0);
-    drawing.forEach(function (item) {
-        ctx.fillStyle = item.currentColor;
-        ctx.strokeStyle = item.currentColor;
-        ctx.lineWidth = item.lineW;
-        if (item.type == "line") drawlineattemp(item.x1, item.y1, item.x2, item.y2, item.lineW);
-        if (item.type == "darker") makeDarker();
-        if (item.type == "lighter") makeLighter();
-        if (item.type == "eraser") eraseXYtemp(item.x, item.y, item.lineW);
-    })
-}
-
-var currentcolor = "#000000";
-var oldevent;
-var isdrawing = false;
-
-function makeDarker() {
-    ctx.fillStyle = "rgba(0,0,0,0.05)"
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-
-function makeLighter() {
-    ctx.fillStyle = "rgba(255,255,255,0.05)"
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
 }

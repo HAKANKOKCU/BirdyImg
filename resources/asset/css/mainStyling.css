@@ -2,6 +2,7 @@ html {
 	--panecolor: rgb(255,255,255);
 	--textcolor: rgb(0,0,0);
 	user-select: none;
+	height:100%;
 }
 body {
 	overflow: hidden
@@ -24,7 +25,13 @@ b {
 	object-fit: cover;
 }
 
-#imgView>img {
+.tabdiv {
+	width:100%;
+	height:100%;
+	position:relative
+}
+
+.tabdiv>img {
 	position: absolute;
 	-webkit-user-drag: none;
 	-khtml-user-drag: none;
@@ -34,7 +41,7 @@ b {
 	transition: width 0.2s, height 0.2s, transform 0.2s;
 }
 
-#imgView>img.aniLR {
+.tabdiv>img.aniLR {
 	transition: width 0.2s, height 0.2s, top 0.2s, left 0.2s, transform 0.2s;
 }
 
@@ -92,6 +99,7 @@ imgmain {
 	height: 100%;
 	min-width: 0;
 	min-height: 0;
+	overflow:hidden;
 }
 
 main {
@@ -131,7 +139,24 @@ main {
 	transition: top 0.6s;
 }
 
+.popupWindow {
+	background: white;
+	width: 80%;
+	height: 80%;
+	position: fixed;
+	z-index: 100;
+	left: 10%;
+	top: 100%;
+	transition: top 0.6s, opacity 0.6s;
+	opacity:0;
+	/*resize:both;*/
+}
+
 .fullscreenWindowContent {
+	width: 100%;
+}
+
+.popupWindowContent {
 	width: 100%;
 }
 
@@ -140,6 +165,13 @@ main {
 	content: '\00D7';
 	font-size: 20px;
 }
+
+.popupWindowClose {
+	float: right;
+	content: '\00D7';
+	font-size: 20px;
+}
+
 
 input {border:none}
 
@@ -182,9 +214,18 @@ input {border:none}
 		background: rgb(10, 10, 10);
 		color: white
 	}
+	
+	.popupWindow {
+		background: rgb(10, 10, 10);
+		color: white
+	}
 
 	#tabSwitcher>div {
 		color: white
+	}
+	
+	#tabSwitcher>div:hover {
+		background-color: rgba(255, 255, 255, 0.1)
 	}
 
 	#tabSwitcher>div.active {
@@ -253,9 +294,18 @@ input {border:none}
 		background: white;
 		color: black
 	}
+	
+	.popupWindow {
+		background: white;
+		color: black
+	}
 
 	#tabSwitcher>div {
 		color: black
+	}
+	
+	#tabSwitcher>div:hover {
+		background-color: rgba(0, 0, 0, 0.1)
 	}
 
 	#tabSwitcher>div.active {
@@ -351,6 +401,7 @@ nodisplay {
 	overflow-y: hidden;
 	white-space: nowrap;
 	min-height: 26px;
+	flex-shrink: 0;
 }
 
 .clickable {
@@ -369,6 +420,11 @@ nodisplay {
 	padding: 3px;
 	align-items: center;
 	transition: 0.2s;
+	cursor: pointer;
+}
+
+#tabSwitcher>div.active {
+	cursor:auto;
 }
 
 .tabClose {
@@ -404,7 +460,7 @@ hiddenpart {
 }
 
 editorImageScrollablePart {
-	display: block;
+	display: flex;
 	overflow: auto;
 	width: 100%;
 	height: 100%;
@@ -421,3 +477,149 @@ marginAuto {
 	margin: auto;
 }
 button {border:0;background-color: transparent;}
+
+#zoominf {
+	background: rgba(0,0,0,0.4);
+	color: white;
+	position: absolute;
+	bottom: 10px;
+	right: 10px;
+	pointer-events: none;
+	transition: opacity 200ms;
+	opacity: 0;
+	padding: 2px;
+	z-index: 10;
+}
+
+img, svg {vertical-align:middle;display: block;}
+
+popuppane {
+	position: absolute;
+	display: none;
+	background-color: var(--panecolor);
+	display:none;
+	opacity:0;
+	transition: opacity 0.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	toolbar>button {
+		transition: none;
+	}
+	#tabSwitcher>div {
+		transition: none;
+	}
+	.tabClose {
+		transition: none;
+	}
+	.fullscreenWindow {
+		transition: none;
+	}
+	popuppane {
+		transition: none;
+	}
+	.tabdiv>img {
+		transition:none;
+	}
+	.tabdiv>img.aniLR {
+		transition:none;
+	}
+	#zoominf {
+		transition: none;
+	}
+	.overlay {
+		transition: none;
+	}
+	.popupWindow {
+		transition: none;
+	}
+}
+.pane:focus {
+	outline: none;
+	background: rgba(0,0,0,0.1)
+}
+
+.fullscreenWindow:focus {
+	outline: none;
+}
+
+.popupWindow:focus {
+	outline: none;
+}
+
+.sticky {position:sticky;top:0;background: var(--panecolor)}
+
+.th {font-weight: bold !important;}
+
+.dangerousbtnicon {
+	fill:red;
+}
+
+.dangerousbtnicon:hover {
+	fill:darkred;
+}
+
+.overlay {
+	width:100%;
+	height:100%;
+	top:0;
+	left:0;
+	z-index:100;
+	position:fixed;
+	background: rgba(0,0,0,0.3);
+	transition: opacity 0.6s;
+	opacity:0;
+}
+
+.previewsvg {
+	position:fixed;
+	top:0;
+	left:0;
+	width:100%;
+	height:100%;
+	pointer-events:none;
+}
+
+.listWithImages {
+	width:100%;
+}
+.listWithImages > button {
+	display:flex;
+	width:100%;
+	min-height:40px;
+	align-items:center;
+	text-align:left;
+}
+.roundedImg {
+	border-radius:100%;
+	width:40px;
+	height:40px;
+	flex-shrink:0;
+}
+
+editorhome {
+	display:block;
+	width:100%;
+	height:100%;
+	overflow:auto;
+}
+
+flex {display:flex;align-items:center}
+
+h3 {margin:4px}
+
+.noshrink > * {flex-shrink:0}
+carditem {
+	display:block;
+	border-radius:4px;
+	box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+	cursor:pointer;
+}
+carditem > img {
+	object-fit: cover;
+	width:100%;
+	-webkit-user-drag: none;
+	-khtml-user-drag: none;
+	-moz-user-drag: none;
+	-o-user-drag: none;
+}
