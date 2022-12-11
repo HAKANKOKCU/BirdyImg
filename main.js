@@ -239,6 +239,8 @@ if (!gotTheLock) {
 		app_window.webContents.on('dom-ready', function () {
 			console.log("dom is ready")
 			if (isfirstopen) {
+app_window.webContents.executeJavaScript("newTab()");
+setTimeout(function() {
 				if (args.length > 1) {
 					if (args[1].toString() != ".") {
 						console.log(typeof args[1]);
@@ -247,7 +249,7 @@ if (!gotTheLock) {
 						//	app_window.openDevTools();
 					}
 				}
-				app_window.webContents.executeJavaScript("newTab()");
+				},200)
 				isfirstopen = false
 			}
 			app_window.webContents.send("langpack", langdata);
