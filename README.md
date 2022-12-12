@@ -1,5 +1,5 @@
 # BirdyImg
-BirdyImg Image Viewer Version 1.0 Beta 1  <a href="https://drive.google.com/u/0/uc?id=1AtW-nxYYaj_jhO8vNVua_cGOdqlJBbUo&export=download">Download For Windows 64Bit</a> <a href="https://drive.google.com/uc?export=download&id=11KEGL1mm7Y3AGrSwQiFOECoolPVaHr8r">Download For Windows 32Bit</a> <a href="https://drive.google.com/uc?export=download&id=19CG_p8secNYt2dVz1P7IyOWHhJAMwUWQ">Download For Linux (Zip)</a> (From Google Drive)
+BirdyImg Image Viewer Version 1.0 Beta 2  <a href="https://drive.google.com/u/0/uc?id=1AtW-nxYYaj_jhO8vNVua_cGOdqlJBbUo&export=download">Download For Windows 64Bit</a> <a href="https://drive.google.com/uc?export=download&id=11KEGL1mm7Y3AGrSwQiFOECoolPVaHr8r">Download For Windows 32Bit</a> <a href="https://drive.google.com/uc?export=download&id=19CG_p8secNYt2dVz1P7IyOWHhJAMwUWQ">Download For Linux (Zip)</a> (From Google Drive)
 
 <!--![resim](https://user-images.githubusercontent.com/103432992/185777954-95c9db41-91af-4e6e-9b0a-f45470d2a6b3.png)-->
 <!--![resim](https://user-images.githubusercontent.com/103432992/189284081-a4f9760f-bf57-4d0a-84a6-61e0dc0afc3c.png)-->
