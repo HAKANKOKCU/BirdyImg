@@ -851,6 +851,7 @@ function openFWindow(html) {
 	closeBtn.addEventListener("click", function () {
 		win.style.top = "";
 		setTimeout(function () {
+			win.innerHTML = ""
 			document.body.removeChild(win);
 		}, 600)
 	});
@@ -895,6 +896,7 @@ function openPopupWindow(html) {
 		win.style.opacity = "";
 		overlay.style.opacity = "";
 		setTimeout(function () {
+			win.innerHTML = ""
 			document.body.removeChild(win);
 			document.body.removeChild(overlay);
 		}, 600)

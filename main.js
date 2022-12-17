@@ -239,16 +239,16 @@ if (!gotTheLock) {
 		app_window.webContents.on('dom-ready', function () {
 			console.log("dom is ready")
 			if (isfirstopen) {
-app_window.webContents.executeJavaScript("newTab()");
-setTimeout(function() {
-				if (args.length > 1) {
-					if (args[1].toString() != ".") {
-						console.log(typeof args[1]);
-						openFil(args[1].toString());
-						//}else {
-						//	app_window.openDevTools();
+				app_window.webContents.executeJavaScript("newTab()");
+				setTimeout(function() {
+					if (args.length > 1) {
+						if (args[1].toString() != ".") {
+							console.log(typeof args[1]);
+							openFil(args[1].toString());
+							//}else {
+							//	app_window.openDevTools();
+						}
 					}
-				}
 				},200)
 				isfirstopen = false
 			}
@@ -360,7 +360,7 @@ setTimeout(function() {
 	ipcMain.on("nextfile", (e, arg) => {
 		tabs[tabID].fileID += 1
 		if (tabs[tabID].fileID > tabs[tabID].filelist.length - 1) {
-			tabs[tabID].fileID = tabs[tabID].filelist.length - 1;
+			tabs[tabID].fileID = 0;
 		}
 		openFil(tabs[tabID].filelist[tabs[tabID].fileID]);
 	});
@@ -462,6 +462,7 @@ setTimeout(function() {
 					tabs[tabID].filesizes = [];
 					fs.readdir(dirpath, (err, files) => {
 						tabs[tabID].filesInDIR = files;
+						isFirstFolderLoad = true
 						updateFileID(dirpath,path);
 						app_window.webContents.send("filelist", {
 							fileID: tabs[tabID].fileID,
@@ -483,21 +484,29 @@ setTimeout(function() {
 			dialog.showErrorBox("Error!", e.toString())
 		}
 	}
-
+	global.isFirstFolderLoad = true
 	function updateFileID(dirpath,path) {
 		var cid = 0;
-		tabs[tabID].filesInDIR.forEach((file) => {
+		//tabs[tabID].filelist = []
+		//tabs[tabID].filesizes = []
+		for (let i = 0; i < tabs[tabID].filesInDIR.length; i++) { 
+			var file = tabs[tabID].filesInDIR[i];
+		//tabs[tabID].filesInDIR.forEach((file) => {
 			if (allowedext.includes(pathlib.extname(file).toLowerCase())) {
 				//console.log(pathlib.resolve(pathlib.dirname(path), file));
 				var pathresolve = pathlib.resolve(dirpath, file);
-				tabs[tabID].filelist.push(pathresolve);
-				tabs[tabID].filesizes.push(getFilesizeInBytes(pathresolve));
+				if (isFirstFolderLoad) {
+					tabs[tabID].filelist.push(pathresolve);
+					tabs[tabID].filesizes.push(getFilesizeInBytes(pathresolve));
+				}
 				if (pathresolve.toLowerCase() == path.toLowerCase()) {
 					tabs[tabID].fileID = cid;
 				}
 				cid++;
 			}
-		});
+		//});
+		}
+		isFirstFolderLoad = false
 	}
 
 	app.on('activate', () => {
