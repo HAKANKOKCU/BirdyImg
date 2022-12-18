@@ -112,7 +112,9 @@ if (!gotTheLock) {
 							if (!item.startsWith("--")) {
 								console.log(item);
 								app_window.webContents.send("createnewtab", "");
-								openFil(item);
+								setTimeout(function() {
+									openFil(item);
+								},200)
 								newtabcreate = false
 							}
 						}
@@ -126,9 +128,14 @@ if (!gotTheLock) {
 		},100)
 		
 	})
-	app.on("ready", bulidapp);
+	var launchApp = true
+	if (args.includes("--background-task")) {
+		launchApp = false
+	}
+	if (launchApp) app.on("ready", bulidapp);
 	var extensions = []
 	function bulidapp() {
+		//isFirstFolderLoad = true
 		iswindowloaded = false
 		console.log("Ready!")
 		try {
@@ -212,7 +219,6 @@ if (!gotTheLock) {
 		}
 		app_window = new BrowserWindow(windowinf);
 		app_window.loadFile("resources/asset/index.html");
-		//app_window.openDevTools();
 		console.log("generating menu list")
 		extensions = []
 		try {
@@ -239,12 +245,18 @@ if (!gotTheLock) {
 		app_window.webContents.on('dom-ready', function () {
 			console.log("dom is ready")
 			if (isfirstopen) {
-				app_window.webContents.executeJavaScript("newTab()");
+				try {
+					if (!args[1].startsWith("--")) app_window.webContents.executeJavaScript("newTab()");
+				}catch {app_window.webContents.executeJavaScript("newTab()");}
 				setTimeout(function() {
 					if (args.length > 1) {
 						if (args[1].toString() != ".") {
-							console.log(typeof args[1]);
-							openFil(args[1].toString());
+							var da = true;
+							try {da = !args[1].startsWith("--");}catch{}
+							if (da) {
+								console.log(typeof args[1]);
+								openFil(args[1].toString());
+							}
 							//}else {
 							//	app_window.openDevTools();
 						}
@@ -271,6 +283,7 @@ if (!gotTheLock) {
 		app_window.on("close", function () {
 			settingsdata.bounds = app_window.getBounds();
 			fs.writeFileSync(os.homedir() + "/BirdyImg/settings.json", JSON.stringify(settingsdata));
+			tabs = {}
 		})
 		app_window.on("maximize", function () {
 			settingsdata.isMaximized = true;
@@ -324,7 +337,8 @@ if (!gotTheLock) {
 			filesizes: [],
 			fileID: null,
 			oldDirPath: null,
-			filesInDIR: []
+			filesInDIR: [],
+			isFirstFolderLoad: true
 		};
 		e.returnValue = "";
 	})
@@ -346,8 +360,10 @@ if (!gotTheLock) {
 	});
 
 	ipcMain.on("prvfile", (e, arg) => {
+		console.log("Back!")
 		tabs[tabID].fileID -= 1
 		if (tabs[tabID].fileID < 0) {
+			console.log("Reset To End")
 			tabs[tabID].fileID = tabs[tabID].filelist.length - 1;
 		}
 		openFil(tabs[tabID].filelist[tabs[tabID].fileID]);
@@ -358,8 +374,10 @@ if (!gotTheLock) {
 		e.returnValue = "";
 	})
 	ipcMain.on("nextfile", (e, arg) => {
+		console.log("Next!")
 		tabs[tabID].fileID += 1
 		if (tabs[tabID].fileID > tabs[tabID].filelist.length - 1) {
+			console.log("Reset to 0")
 			tabs[tabID].fileID = 0;
 		}
 		openFil(tabs[tabID].filelist[tabs[tabID].fileID]);
@@ -422,7 +440,7 @@ if (!gotTheLock) {
 			]
 			const menu = Menu.buildFromTemplate(template)
 			menu.popup(BrowserWindow.fromWebContents(event.sender))
-		}catch (e) {}
+		}catch (e) {console.error(e)}
 	})
 
 	function openFil(path) {
@@ -461,8 +479,9 @@ if (!gotTheLock) {
 					tabs[tabID].filelist = [];
 					tabs[tabID].filesizes = [];
 					fs.readdir(dirpath, (err, files) => {
+						console.log("Loading Folder! - Found " + files.length + " files in directory.")
 						tabs[tabID].filesInDIR = files;
-						isFirstFolderLoad = true
+						tabs[tabID].isFirstFolderLoad = true
 						updateFileID(dirpath,path);
 						app_window.webContents.send("filelist", {
 							fileID: tabs[tabID].fileID,
@@ -495,18 +514,22 @@ if (!gotTheLock) {
 			if (allowedext.includes(pathlib.extname(file).toLowerCase())) {
 				//console.log(pathlib.resolve(pathlib.dirname(path), file));
 				var pathresolve = pathlib.resolve(dirpath, file);
-				if (isFirstFolderLoad) {
+				if (tabs[tabID].isFirstFolderLoad) {
 					tabs[tabID].filelist.push(pathresolve);
 					tabs[tabID].filesizes.push(getFilesizeInBytes(pathresolve));
+					console.log("Added " + pathresolve + " to list.")
 				}
-				if (pathresolve.toLowerCase() == path.toLowerCase()) {
+				if (pathresolve == path) {
 					tabs[tabID].fileID = cid;
+					console.log("Found " + pathresolve + " changed file ID to " + cid + "!")
+				}else {
+					console.log("Found " + pathresolve + " it's not at same path.")
 				}
 				cid++;
 			}
 		//});
 		}
-		isFirstFolderLoad = false
+		tabs[tabID].isFirstFolderLoad = false
 	}
 
 	app.on('activate', () => {
