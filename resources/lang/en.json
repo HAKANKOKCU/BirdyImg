@@ -70,5 +70,21 @@
 	"openExtensionsFile":"Open extensions file",
 	"welcomeToBirdyImgEditor":"Welcome to BirdyImg editor!",
 	"recentlySaved":"Recently Saved",
-	"recentlyOpened":"Recently Opened"
+	"recentlyOpened":"Recently Opened",
+	"search":"Search",
+	"galleryView":"Gallery View",
+	"gvasA":"Gallery view at",
+	"gvasB":"side of window",
+	"none":"None",
+	"description":"Description",
+	"subject":"Subject",
+	"author":"Author",
+	"rating":"Rating",
+	"title":"Title",
+	"tags":"Tags",
+	"autoHideTabs":"Auto hide tabs",
+	"enableOffImageRendering":"Enable off-image rendering",
+	"transparentPanes":"Transparent Panes",
+	"classicToolbar":"Classic Toolbar",
+	"toolbarSizeScale":"Toolbar Size Scale"
 }

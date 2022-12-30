@@ -17,6 +17,7 @@
     "electron-packager": "^15.5.1"
   },
   "dependencies": {
+    "exif-parser": "^0.1.12",
     "fs-extra": "^10.1.0",
     "image-size": "^1.0.2"
   }

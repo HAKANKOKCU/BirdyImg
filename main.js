@@ -36,6 +36,11 @@ var njs = {
 	"favorites": [],
 	"showPositionAndSizeInfo": false, 
 	"blurOverlays": false, 
+	"autoHideTabs": false, 
+	"enableOffImageRendering":true,
+	//"transparentPanes":true,
+	"classicToolbar":false,
+	"toolbarSizeScale":1,
 	"colors": {
 		"enableCustomColors": false,
 		"accentColor": {
@@ -242,6 +247,13 @@ if (!gotTheLock) {
 			app_window.maximize();
 		}
 		app_window.show();
+		app_window.on("enter-full-screen",function() {
+			app_window.setAutoHideMenuBar(true)
+		})
+		app_window.on("leave-full-screen",function() {
+			app_window.setAutoHideMenuBar(false)
+			app_window.setMenuBarVisibility(true)
+		})
 		app_window.webContents.on('dom-ready', function () {
 			console.log("dom is ready")
 			if (isfirstopen) {
@@ -442,7 +454,9 @@ if (!gotTheLock) {
 			menu.popup(BrowserWindow.fromWebContents(event.sender))
 		}catch (e) {console.error(e)}
 	})
-
+	function typedArrayToBuffer(array) {
+		return array.buffer.slice(array.byteOffset, array.byteLength + array.byteOffset)
+	}
 	function openFil(path) {
 		try {
 			if (path != undefined) {
@@ -455,15 +469,49 @@ if (!gotTheLock) {
 				} catch {
 					dimensions = { width: 0, height: 0 }
 				}
-				if (pathlib.extname(path).toLowerCase() == ".tif") {
+				var extension = pathlib.extname(path).toLowerCase();
+				var exif = {}
+				var fileData;
+				try {
+					if (extension == ".svg") {
+						//if file is svg, send file data to renderer to read birdy-image-info etc.
+						fileData = fs.readFileSync(path,"utf-8");
+						
+					}
+				}catch (e) {
+					console.error(e);
+				}
+				try {
+					if (extension == ".jpg" || extension == ".jpeg" || extension == ".jpe" || extension == ".jfif") {
+						var filedata = fs.readFileSync(path);
+						var parser = require('exif-parser').create(typedArrayToBuffer(filedata)); //typedArrayToBuffer(filedata)
+						parser.enableBinaryFields(true);
+						parser.enableTagNames(true);
+						parser.enableReturnTags(true);
+						exif = parser.parse().tags;
+					}
+				}catch (e) {
+					console.error(e);
+				}
+				if (extension == ".tif" || extension == ".tiff") {
 					var filedata = fs.readFileSync(path);
+					try {
+						var parser = require('exif-parser').create(typedArrayToBuffer(filedata));
+						//parser.enableBinaryFields(true);
+						//parser.enableTagNames(true);
+						//parser.enableReturnTags(true);
+						exif = parser.parse().tags;
+					}catch (e) {
+						console.error(e);
+					}
 					app_window.webContents.send("filedata", {
 						path: path,
 						size: dimensions,
 						stats: stats,
 						useDURL: true,
 						DURL: filedata,
-						fileID: tabs[tabID].fileID
+						fileID: tabs[tabID].fileID,
+						exif:exif
 					});
 				} else {
 					app_window.webContents.send("filedata", {
@@ -471,7 +519,9 @@ if (!gotTheLock) {
 						size: dimensions,
 						stats: stats,
 						useDURL: false,
-						fileID: tabs[tabID].fileID
+						fileID: tabs[tabID].fileID,
+						exif:exif,
+						filedata:fileData
 					});
 				}
 				var dirpath = pathlib.dirname(path);
@@ -601,6 +651,13 @@ if (!gotTheLock) {
 						accelerator: 'CmdOrCtrl+L',
 						click: function () {
 							app_window.webContents.send("showfilelist", "");
+						}
+					},
+					{
+						label: langdata.galleryView,
+						accelerator: 'CmdOrCtrl+G',
+						click: function () {
+							app_window.webContents.send("showGalleryViewFullScreen", "");
 						}
 					},
 					{ type: "separator" },

@@ -1,3 +1,5 @@
+const versionstring = "1.0 Beta 5"
+
 const { ipcRenderer } = require("electron");
 
 const starOutlined = `<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="m8.85 17.825 3.15-1.9 3.15 1.925-.825-3.6 2.775-2.4-3.65-.325-1.45-3.4-1.45 3.375-3.65.325 2.775 2.425ZM5.825 22l1.625-7.025L2 10.25l7.2-.625L12 3l2.8 6.625 7.2.625-5.45 4.725L18.175 22 12 18.275ZM12 13.25Z"/></svg>`
@@ -49,6 +51,8 @@ let fitScreenButton = document.getElementById("fitScreenButton");
 let rotateLeftButton = document.getElementById("rotateLeftButton");
 let rotateRightButton = document.getElementById("rotateRightButton");
 //----
+let showGalleryViewButton = document.getElementById("showGalleryView");
+//----
 let addToFavorites = document.getElementById("addToFavorites");
 let enterEditorButton = document.getElementById("enterEditorButton");
 //----
@@ -70,6 +74,7 @@ enterEditorButton.addEventListener("click", enterEditor);
 enterEditorButton.addEventListener("click", loadFileInEditor);
 copyFileButton.addEventListener("click", copyCurrentImage);
 addToFavorites.addEventListener("click", addIMGToFavorites)
+showGalleryViewButton.addEventListener("click",showGalleryViewFullScreen)
 
 //editor
 ipcRenderer.on("editIMG",(event,data) => {
@@ -158,6 +163,7 @@ function newTab() {
 	ipcRenderer.sendSync("newtab", newtabid);
 	newtabid++;
 	tabCount++;
+	autoHideTabs()
 	switchTab(ndi);
 }
 var currentTabItemHeader;
@@ -226,6 +232,7 @@ function closeTab(id) {
 	delete tabs[id];
 	tabCount--;
 	ipcRenderer.send("closeTab", id);
+	autoHideTabs()
 }
 
 //newTab(); will be sent by main
@@ -240,15 +247,30 @@ ipcRenderer.on("settingsdata", (event, data) => {
 ipcRenderer.on("langs", (event, data) => {
 	langs = data;
 });
-
+window.parser = new DOMParser();
 ipcRenderer.on("filedata", (event, data) => {
 	if (tabCount == 0) newTab()
+	if (data.filedata != undefined) {
+		var xmlDoc = parser.parseFromString(data.filedata,"text/xml");
+		console.log(xmlDoc)
+		var bii = xmlDoc.getElementsByTagName("svg")[0].getElementsByTagName("birdy-image-info")[0];
+		//console.log(bii.getElementsByTagName("title")[0].textContent)
+		data.exif = {
+			ImageDescription: bii.getElementsByTagName("title")[0].textContent,
+			Artist: bii.getElementsByTagName("author")[0].textContent,
+			XPComment: bii.getElementsByTagName("description")[0].textContent,
+			XPSubject: bii.getElementsByTagName("subject")[0].textContent,
+			XPKeywords: bii.getElementsByTagName("tags")[0].textContent,
+			Rating: bii.getElementsByTagName("rating")[0].textContent,
+		}
+	}
 	hiddenpart.appendChild(tabs[tabID].ghostImg);
 	document.title = "BirdyImg - " + getFileName(data.path);
 	tabs[tabID].loadingCir.style.display = "";
 	console.log(data);
 	if (data.useDURL == true) {
 		//TIFFParser();
+		TIFFParser.prototype.reset()
 		var tiff = TIFFParser.prototype.parseTIFF(typedArrayToBuffer(data.DURL));
 		let dataurl = tiff.toDataURL("image/png", 1.0);
 		tabs[tabID].imgView.src = dataurl;
@@ -335,11 +357,38 @@ ipcRenderer.on("filedata", (event, data) => {
 	addToFavorites.title = settingsdata.favorites.includes(filfo.path) ? langpack.removeFromFavorites : langpack.addToFavorites;
 });
 
+function autoHideTabs() {
+	if (settingsdata["autoHideTabs"]) {
+		if (settingsdata["enableTabs"]) {
+			tabSwitcher.style.display = Object.keys(tabs).length < 2 ? "none" : "";
+		}
+	}
+}
+
 let extraStyling = document.createElement("style")
 document.documentElement.appendChild(extraStyling)
 
 function applySettings() {
 	tabSwitcher.style.display = settingsdata["enableTabs"] == true ? "" : "none";
+	imgViewCnt.style.overflow = settingsdata["enableOffImageRendering"] == true ? "visible" : "";
+	Array.prototype.forEach.call(document.querySelectorAll("toolbar.newsupported"),(item)=> {
+		item.style.borderRadius = settingsdata["classicToolbar"] == false ? "10px 10px 0 0" : "";
+		item.style.backdropFilter = settingsdata["blurOverlays"] == true ? "blur(5px)" : "";
+		item.style.position = "relative";
+		item.style.transform = "translate(-50%, 0)";
+		item.style.left = "50%";
+	})
+	Array.prototype.forEach.call(document.querySelectorAll("toolbar"),(item)=> {
+		if (item.getAttribute("data-width") != null) {
+			item.style.width = settingsdata["classicToolbar"] == true ? "100%" : (item.getAttribute("data-width") * settingsdata["toolbarSizeScale"]) + "px"
+		}else {
+			item.style.width = "100%"
+		}
+		item.style.height = (30 * settingsdata["toolbarSizeScale"]) + "px"
+	})
+	Array.prototype.forEach.call(document.querySelectorAll(".bottomtoolbarsize"),(item)=> {
+		item.style.bottom = (30 * settingsdata["toolbarSizeScale"]) + "px"
+	})
 	if (settingsdata["colors"]["enableCustomColors"] == true) {
 		document.body.style.accentColor = settingsdata["colors"]["accentColor"]["value"]
 		if (settingsdata["colors"]["accentColor"]["applyToToolbarButtons"] == true) {
@@ -347,10 +396,12 @@ function applySettings() {
 		}else {
 			extraStyling.innerHTML = ""
 		}
+		extraStyling.innerHTML += "toolbar>button>svg {transform: scale(" + settingsdata["toolbarSizeScale"] + ");} toolbar>button {width: " + (30 * settingsdata["toolbarSizeScale"]) + "px;height: " + (30 * settingsdata["toolbarSizeScale"]) + "px} #imgView {max-height: calc(100% - " + (30 * settingsdata["toolbarSizeScale"]) + "px)}"
 	}else {
 		document.body.style.accentColor = ""
 		extraStyling.innerHTML = ""
 	}
+	autoHideTabs()
 }
 
 function typedArrayToBuffer(array) {
@@ -377,18 +428,33 @@ ipcRenderer.on("showfilelist", (event, data) => {
 })
 
 function showfList() {
-	var HTMLs = "<h1>" + langpack.fileList + "</h1>"
+	var HTMLs = "<h1>" + langpack.fileList + "</h1><input class='linedelem search sticky' placeholder='" + langpack.search + "'></input>"
 	tabs[tabID].filelist.forEach((item, index) => {
 		var extraCSSLI = "";
 		if (index == tabs[tabID].fileID) { extraCSSLI = "background-color:lightgray" }
-		HTMLs += "<div class='fileListItem' data-imageid='" + index + "' title='" + getFileName(item) + "&#010;" + langpack.fileSize + ": " + getReadableFileSizeString(tabs[tabID].filesizes[index])[0] + "' style='" + extraCSSLI + "'><center>" + ( getFileExtension(item) == "tif" ? item : "<img alt='" + item.replace(/\"/g,"&quot;") + "' src='" + item.replace(/\"/g,"&quot;") + "' loading='lazy' class='limon darkshandow'>" ) + "</center></div>"
+		HTMLs += "<div class='fileListItem' data-imageid='" + index + "' style='" + extraCSSLI + "'><center>" + ( getFileExtension(item) == "tif" ? item : "<img loading='lazy' class='limon darkshandow'>" ) + "</center></div>"
 	});
 	var pane = openPane(HTMLs, "filelist");
 	var listelem = pane.getElementsByClassName("fileListItem")
 	Array.prototype.forEach.call(listelem, (item) => {
-		var fitem = tabs[tabID].filelist[item.getAttribute("data-imageid")];
+		var id = item.getAttribute("data-imageid");
+		var fitem = tabs[tabID].filelist[id];
+		item.title = getFileName(fitem) + "\n" + langpack.fileSize + ": " + getReadableFileSizeString(tabs[tabID].filesizes[id])[0];
+		var img = item.getElementsByTagName("img")[0]
+		if (img != undefined) {
+			img.alt = fitem
+			img.src = fitem
+		}
 		item.addEventListener("click", function () {
 			ipcRenderer.send("openfilep", fitem)
+		})
+	})
+	var searchbox = pane.getElementsByClassName("search")[0]
+	searchbox.addEventListener("change",function() {
+		var query = searchbox.value;
+		Array.prototype.forEach.call(listelem, (item) => {
+			var fitem = tabs[tabID].filelist[item.getAttribute("data-imageid")];
+			item.style.display = fitem.includes(query) ? "" : "none"
 		})
 	})
 }
@@ -418,21 +484,52 @@ function openFileInfo() {
 
 function generateFileInfoContent() {
 	var filfo = tabs[tabID].fileInf;
-	var namestr = getFileName(filfo.path);
+	var namestr = getFileName(filfo.path).replace(/</g,"&lt;").replace(/>/g,"&gt;");
 	//var fnstr;
 	//if (namestr.length > 24) {
 	//	fnstr = "<marquee>" + namestr + "</marquee>"
 	//}else {
 	//	fnstr = namestr
 	//}
-	var pathstr = filfo.path;
+	var pathstr = filfo.path.replace(/</g,"&lt;").replace(/>/g,"&gt;");
 	var pstr;
 	if (pathstr.length > 24) {
 		pstr = "<marquee title='" + pathstr + "'>" + pathstr + "</marquee>"
 	} else {
 		pstr = pathstr
 	}
-	return "<h1>" + langpack.imageInfo + "</h1><p></p><p class='ilitem'><b>" + langpack.name + "</b>: <span>" + namestr + "</span></p><p class='ilitem'><b>" + langpack.type + ": </b>" + getFileExtension(filfo.path) + "</p><p class='ilitem'><b>" + langpack.width + ": </b>" + tabs[tabID].imgW.toString() + " (" + filfo.size.width + ")" + "</p><p class='ilitem'><b>" + langpack.height + ": </b>" + tabs[tabID].imgH.toString() + " (" + filfo.size.height + ")" + "</p><p class='ilitem'><b>" + langpack.fileSize + ": </b><span class='PKAbleSizeUpdateSpan'>" + Math.max(filfo.stats.size / 1024, 0.1).toFixed(1).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p><p class='ilitem'><b>" + langpack.creationDate + ": </b><span>" + DateToString(filfo.stats.ctime) + "</span></p><p class='ilitem'><b>" + langpack.lastModifiedDate + ": </b><span>" + DateToString(filfo.stats.mtime) + "</span></p><p class='ilitem'><b>" + langpack.lastAccessDate + ": </b><span>" + DateToString(filfo.stats.atime) + "</span> </p><p class='ilitem'><b>" + langpack.folder + ": </b><span class='opendir clickable'>" + getFolderName(filfo.path) + "</span></p><p class='ilitem'><b>" + langpack.path + ": </b>" + pstr + "</p>"
+	var desc = filfo.exif.XPComment
+	//console.log(parseArrayToString(desc));
+	if (desc == undefined) {desc = "???"} else {desc = parseArrayToString(desc).replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+	var sub = filfo.exif.XPSubject
+	//console.log(parseArrayToString(sub));
+	if (sub == undefined) {sub = "???"} else {sub = parseArrayToString(sub).replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+	var aut = filfo.exif.Artist;
+	if (aut == undefined) {aut = "???"}
+	var rat = filfo.exif.Rating;
+	if (rat == undefined) {rat = "???"}
+	var tit = filfo.exif.ImageDescription;
+	if (tit == undefined) {tit = "???"}
+	var tags = filfo.exif.XPKeywords
+	//console.log(parseArrayToString(sub));
+	if (tags == undefined) {tags = "???"} else {tags = parseArrayToString(tags).replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+	return "<h1>" + langpack.imageInfo + "</h1><p></p><p class='ilitem'><b>" + langpack.name + "</b>: <span>" + namestr + "</span></p><p class='ilitem'><b>" + langpack.type + ": </b>" + getFileExtension(filfo.path) + "</p><p class='ilitem'><b>" + langpack.width + ": </b>" + tabs[tabID].imgW.toString() + " (" + filfo.size.width + ")" + "</p><p class='ilitem'><b>" + langpack.height + ": </b>" + tabs[tabID].imgH.toString() + " (" + filfo.size.height + ")" + "</p><p class='ilitem'><b>" + langpack.fileSize + ": </b><span class='PKAbleSizeUpdateSpan'>" + Math.max(filfo.stats.size / 1024, 0.1).toFixed(1).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p><p class='ilitem'><b>" + langpack.creationDate + ": </b><span>" + DateToString(filfo.stats.ctime) + "</span></p><p class='ilitem'><b>" + langpack.lastModifiedDate + ": </b><span>" + DateToString(filfo.stats.mtime) + "</span></p><p class='ilitem'><b>" + langpack.lastAccessDate + ": </b><span>" + DateToString(filfo.stats.atime) + "</span> </p><p class='ilitem'><b>" + langpack.folder + ": </b><span class='opendir clickable'>" + getFolderName(filfo.path) + "</span></p><p class='ilitem'><b>" + langpack.path + ": </b>" + pstr + "</p><p class='ilitem'><b>" + langpack.title + ": </b>" + tit + "</p><p class='ilitem'><b>" + langpack.description + ": </b>" + desc + "</p><p class='ilitem'><b>" + langpack.subject + ": </b>" + sub + "</p><p class='ilitem'><b>" + langpack.author + ": </b>" + aut + "</p><p class='ilitem'><b>" + langpack.rating + ": </b>" + rat + " / 5</p><p class='ilitem'><b>" + langpack.tags + ": </b>" + tags + "</p>"
+}
+
+function parseArrayToString(array) {
+	if (typeof array != "string") {
+		var read = true
+		var str = ""
+		array.forEach(function(item) {
+			if (read) {
+				str += String.fromCharCode(item)
+			}
+			read = !read
+		})
+		return str
+	}else {
+		return array
+	}
 }
 
 function DateToString(date) {
@@ -602,63 +699,69 @@ imgViewCnt.addEventListener("mouseup", function () { dragging = false })
 imgViewCnt.addEventListener("touchstart", function (evt) { dragging = true; oldpos = { "x": evt.touches[0].clientX, "y": evt.touches[0].clientY } })
 imgViewCnt.addEventListener("touchend", function () { dragging = false })
 imgViewCnt.addEventListener("mousemove", function (evt) {
-	if (dragging) {
-		tabs[tabID].imgX += evt.clientX - oldpos.x;
-		tabs[tabID].imgY += evt.clientY - oldpos.y;
-		retimgIfOut();
-		//console.log(tabs[tabID].imgX,tabs[tabID].imgY);
-		posImg();
-		showXYInfo();
-	}
-	oldpos = { "x": evt.clientX, "y": evt.clientY }
-})
-imgViewCnt.addEventListener("touchmove", function (evt) {
-	if (evt.touches.length == 1) {
+	if (currentGalleryView == null) {
 		if (dragging) {
-			tabs[tabID].imgX += evt.touches[0].clientX - oldpos.x;
-			tabs[tabID].imgY += evt.touches[0].clientY - oldpos.y;
+			tabs[tabID].imgX += evt.clientX - oldpos.x;
+			tabs[tabID].imgY += evt.clientY - oldpos.y;
 			retimgIfOut();
 			//console.log(tabs[tabID].imgX,tabs[tabID].imgY);
 			posImg();
 			showXYInfo();
 		}
-		oldpos = { "x": evt.touches[0].clientX, "y": evt.touches[0].clientY }
+	}
+	oldpos = { "x": evt.clientX, "y": evt.clientY }
+})
+imgViewCnt.addEventListener("touchmove", function (evt) {
+	if (currentGalleryView == null) {
+		if (evt.touches.length == 1) {
+			if (dragging) {
+				tabs[tabID].imgX += evt.touches[0].clientX - oldpos.x;
+				tabs[tabID].imgY += evt.touches[0].clientY - oldpos.y;
+				retimgIfOut();
+				//console.log(tabs[tabID].imgX,tabs[tabID].imgY);
+				posImg();
+				showXYInfo();
+			}
+			oldpos = { "x": evt.touches[0].clientX, "y": evt.touches[0].clientY }
+		}
 	}
 })
 imgViewCnt.addEventListener("wheel", function (evt) {
-	var oldsizeW = tabs[tabID].imgW * tabs[tabID].zoomPrct;
-	var oldsizeH = tabs[tabID].imgH * tabs[tabID].zoomPrct;
-	if (evt.deltaY != 0) {
-		if (evt.deltaY < 0) {
-			zoomIn();
-			var sizeW = tabs[tabID].imgW * tabs[tabID].zoomPrct;
-			var sizeH = tabs[tabID].imgH * tabs[tabID].zoomPrct;
-			if (tabs[tabID].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
-				tabs[tabID].imgX -= ((mouseX - (imgViewCnt.offsetWidth / 2)) / 2) - (oldsizeW - sizeW);
-				retimgIfOut();
-				animateZoomPos();
+	if (currentGalleryView == null) {
+		var oldsizeW = tabs[tabID].imgW * tabs[tabID].zoomPrct;
+		var oldsizeH = tabs[tabID].imgH * tabs[tabID].zoomPrct;
+		if (evt.deltaY != 0) {
+			if (evt.deltaY < 0) {
+				zoomIn();
+				var sizeW = tabs[tabID].imgW * tabs[tabID].zoomPrct;
+				var sizeH = tabs[tabID].imgH * tabs[tabID].zoomPrct;
+				if (tabs[tabID].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
+					tabs[tabID].imgX -= ((mouseX - (imgViewCnt.offsetWidth / 2)) / 2) - (oldsizeW - sizeW);
+					retimgIfOut();
+					animateZoomPos();
+				}
+				if (tabs[tabID].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
+					tabs[tabID].imgY -= ((mouseY - (imgViewCnt.offsetHeight / 2)) / 2) - (oldsizeH - sizeH);
+					retimgIfOut();
+					animateZoomPos();
+				}
+			} else {
+				zoomOut();
+				var sizeW = tabs[tabID].imgW * tabs[tabID].zoomPrct;
+				var sizeH = tabs[tabID].imgH * tabs[tabID].zoomPrct;
+				if (tabs[tabID].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
+					tabs[tabID].imgX += ((mouseX - (imgViewCnt.offsetWidth / 2)) / 2) + (oldsizeW - sizeW);
+					retimgIfOut();
+					animateZoomPos();
+				}
+				if (tabs[tabID].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
+					tabs[tabID].imgY += ((mouseY - (imgViewCnt.offsetHeight / 2)) / 2) + (oldsizeH - sizeH);
+					retimgIfOut();
+					animateZoomPos();
+				}
 			}
-			if (tabs[tabID].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
-				tabs[tabID].imgY -= ((mouseY - (imgViewCnt.offsetHeight / 2)) / 2) - (oldsizeH - sizeH);
-				retimgIfOut();
-				animateZoomPos();
-			}
-		} else {
-			zoomOut();
-			var sizeW = tabs[tabID].imgW * tabs[tabID].zoomPrct;
-			var sizeH = tabs[tabID].imgH * tabs[tabID].zoomPrct;
-			if (tabs[tabID].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
-				tabs[tabID].imgX += ((mouseX - (imgViewCnt.offsetWidth / 2)) / 2) + (oldsizeW - sizeW);
-				retimgIfOut();
-				animateZoomPos();
-			}
-			if (tabs[tabID].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
-				tabs[tabID].imgY += ((mouseY - (imgViewCnt.offsetHeight / 2)) / 2) + (oldsizeH - sizeH);
-				retimgIfOut();
-				animateZoomPos();
-			}
+			posImg();
 		}
-		posImg();
 	}
 })
 
@@ -666,6 +769,58 @@ imgViewCnt.addEventListener("wheel", function (evt) {
 //	tabs[tabID].imgView.style.height = tabs[tabID].imgW * tabs[tabID].zoomPrct;
 //	tabs[tabID].imgView.style.width = tabs[tabID].imgH * tabs[tabID].zoomPrct;
 //}
+
+function createGalleryView() {
+	var cnt = document.createElement("div")
+	cnt.classList.add("fillcontainer")
+	cnt.style.backgroundColor = "var(--panecolor)"
+	cnt.style.display = "grid"
+	cnt.style.gap = "10px"
+	cnt.style.gridTemplateColumns = "repeat(8, 1fr)"
+	cnt.style.overflow = "auto"
+	cnt.style.alignItems = "center";
+	cnt.style.justifyContent = "center";
+	cnt.style.height = "100%"
+	cnt.style.width = "100%"
+	for (let i = 0; i < tabs[tabID].filelist.length;i++) {
+		var image = document.createElement("img");
+		//image.style.display = "inline-block"
+		image.src = tabs[tabID].filelist[i]
+		image.style.maxHeight = "100px";
+		image.style.maxWidth = "100%";
+		//image.setAttribute("tabindex",0)
+		//image.style.margin = "10px"
+		image.classList.add("limon","darkshandow")
+		image.title = getFileName(tabs[tabID].filelist[i]);
+		image.addEventListener("click",function() {
+			closeGalleryView();
+			ipcRenderer.send("openfilep",tabs[tabID].filelist[i])
+		})
+		cnt.appendChild(image)
+	}
+	return cnt
+}
+window.currentGalleryView = null;
+function showGalleryViewFullScreen() {
+	if (currentGalleryView == null) {
+		var view = createGalleryView()
+		imgViewCnt.appendChild(view)
+		currentGalleryView = view
+		tabs[tabID].tabdiv.style.display = "none"
+		tabSwitcher.style.display = "none"
+		document.title = "BirdyImg - " + langpack.galleryView;
+	}else {closeGalleryView()}
+}
+function closeGalleryView() {
+	imgViewCnt.removeChild(currentGalleryView)
+	currentGalleryView.innerHTML = ""
+	currentGalleryView = null
+	tabs[tabID].tabdiv.style.display = ""
+	tabSwitcher.style.display = ""
+	document.title = "BirdyImg - " + getFileName(tabs[tabID].fileInf.path) + " (" + tabs[tabID].imgW + "x" + tabs[tabID].imgH + ")";
+	autoHideTabs()
+	applySettings()
+}
 
 function posImg() {
 	tabs[tabID].imgView.style.top = tabs[tabID].imgY + "px";
@@ -682,11 +837,11 @@ function posImg() {
 	tabs[tabID].imgView.style.width = (tabs[tabID].imgW * tabs[tabID].zoomPrct) + "px";
 	tabs[tabID].imgView.style.height = (tabs[tabID].imgH * tabs[tabID].zoomPrct) + "px";
 	//}
-	var extStr = "";
+	//var extStr = "";
 	//if (isRoted) {
 	//	extStr = " translate(" + (25 * tabs[tabID].zoomPrct) + "% , -" + (25 * tabs[tabID].zoomPrct) + "%)"
 	//}
-	tabs[tabID].imgView.style.transform = "rotate(" + tabs[tabID].rot + "deg)" + extStr;
+	tabs[tabID].imgView.style.transform = "rotate(" + tabs[tabID].rot + "deg)";
 }
 
 var remfunc = null;
@@ -834,6 +989,11 @@ function openFWindow(html) {
 	win.style.overflow = "auto";
 	win.setAttribute("tabindex",0)
 	var closeBtn = document.createElement("button");
+	closeBtn.style.position = "sticky";
+	closeBtn.style.right = "0";
+	closeBtn.style.left = "100%";
+	closeBtn.style.top = "0";
+	closeBtn.style.zIndex = "1";
 	closeBtn.classList.add("fullscreenWindowClose");
 	closeBtn.classList.add("windowClose");
 	closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6Z"/></svg>';
@@ -875,6 +1035,11 @@ function openPopupWindow(html) {
 	win.style.overflow = "auto";
 	win.setAttribute("tabindex",0)
 	var closeBtn = document.createElement("button");
+	closeBtn.style.position = "sticky";
+	closeBtn.style.right = "0";
+	closeBtn.style.left = "100%";
+	closeBtn.style.top = "0";
+	closeBtn.style.zIndex = "1";
 	closeBtn.classList.add("popupWindowClose");
 	closeBtn.classList.add("windowClose");
 	closeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6Z"/></svg>';
@@ -934,7 +1099,7 @@ function showSettings() {
 	langs.forEach((lang) => {
 		optSelectHTML += "<option value='" + lang + "'>" + lang + "</option>"
 	});
-	var sets = openWindow("<h1>" + langpack.settings + "</h1><h3>" + langpack.general + "</h3><input type='checkbox' name='cbEnableTabs' id='cbEnableTabs' class='enabletab'/><label for='cbEnableTabs'>" + langpack.enableTabs + "</label><br><input type='checkbox' name='cbBO' id='cbBO' class='blurOverlays'/><label for='cbBO'>" + langpack.blurOverlays + "</label><br><input type='checkbox' name='showxy' id='showxy' class='showxy'/><label for='showxy'>" + langpack.showPositionAndSizeInfo + "</label><br><label>" + langpack.defaultPanelSide + "</label>&nbsp;<select class='paneSide'><option value='Right'>" + langpack.right + "</option><option value='Left'>" + langpack.left + "</option></select><h3>" + langpack["colors"] + "</h3><input type='checkbox' class='enablecolors' id='enablecolors' name='enablecolors'/><label for='enablecolors'>" + langpack.enableCustomColors + "</label><h4>" + langpack.accentColor + "</h4><input type='color' class='accentPick'/><input type='checkbox' class='applytoolbar' id='applytoolbar' name='applytoolbar'/><label for='applytoolbar'>" + langpack.applyToToolbarButtons + "</label><h3>Language</h3><select value='" + settingsdata["language"] + "' class='langsb'>" + optSelectHTML + "</select><br><br><button class='openhistory'>" + langpack.history + "</button><button class='openfavorites'>" + langpack.favorites + "</button>");
+	var sets = openWindow("<h1>" + langpack.settings + "</h1><h3>" + langpack.general + "</h3><input type='checkbox' name='cbEnableTabs' id='cbEnableTabs' class='enabletab'/><label for='cbEnableTabs'>" + langpack.enableTabs + "</label><br><input type='checkbox' name='cbBO' id='cbBO' class='blurOverlays'/><label for='cbBO'>" + langpack.blurOverlays + "</label><br><input type='checkbox' name='showxy' id='showxy' class='showxy'/><label for='showxy'>" + langpack.showPositionAndSizeInfo + "</label><br><input type='checkbox' name='aht' id='aht' class='aht'/><label for='aht'>" + langpack.autoHideTabs + "</label><br><input type='checkbox' name='ct' id='ct' class='ct'/><label for='ct'>" + langpack.classicToolbar + "</label><br><input type='checkbox' name='eoir' id='eoir' class='eoir'/><label for='eoir'>" + langpack.enableOffImageRendering + "</label><br><label>" + langpack.defaultPanelSide + "</label>&nbsp;<select class='paneSide'><option value='Right'>" + langpack.right + "</option><option value='Left'>" + langpack.left + "</option></select><br><label>" + langpack.toolbarSizeScale + "</label><input type='number' class='tsc'/><h3>" + langpack["colors"] + "</h3><input type='checkbox' class='enablecolors' id='enablecolors' name='enablecolors'/><label for='enablecolors'>" + langpack.enableCustomColors + "</label><h4>" + langpack.accentColor + "</h4><input type='color' class='accentPick'/><input type='checkbox' class='applytoolbar' id='applytoolbar' name='applytoolbar'/><label for='applytoolbar'>" + langpack.applyToToolbarButtons + "</label><h3>Language</h3><select value='" + settingsdata["language"] + "' class='langsb'>" + optSelectHTML + "</select><br><br><button class='openhistory'>" + langpack.history + "</button><button class='openfavorites'>" + langpack.favorites + "</button><br><br><p class='smallo'>BirdyImg " + versionstring + "</p>");
 	sets.querySelector(".openhistory").addEventListener("click", function () {
 		showHistory()
 	})
@@ -955,16 +1120,40 @@ function showSettings() {
 		ipcRenderer.send('savesettings', settingsdata);
 		applySettings()
 	});
+	sets.querySelector(".tsc").addEventListener("change", function () {
+		settingsdata["toolbarSizeScale"] = sets.querySelector(".tsc").value;
+		ipcRenderer.send('savesettings', settingsdata);
+		applySettings()
+	});
+	sets.querySelector(".tsc").value = settingsdata["toolbarSizeScale"]
 	sets.querySelector(".langsb").value = settingsdata["language"];
 	sets.querySelector(".paneSide").value = settingsdata["defaultPanelSide"];
 	sets.querySelector(".enabletab").checked = settingsdata["enableTabs"];
 	sets.querySelector(".showxy").checked = settingsdata["showPositionAndSizeInfo"];
+	sets.querySelector(".aht").checked = settingsdata["autoHideTabs"];
+	sets.querySelector(".ct").checked = settingsdata["classicToolbar"];
+	sets.querySelector(".eoir").checked = settingsdata["enableOffImageRendering"];
 	sets.querySelector(".applytoolbar").checked = settingsdata["colors"]["accentColor"]["applyToToolbarButtons"];
 	sets.querySelector(".accentPick").value = settingsdata["colors"]["accentColor"]["value"]
 	sets.querySelector(".enablecolors").checked = settingsdata["colors"]["enableCustomColors"]
 	sets.querySelector(".blurOverlays").checked = settingsdata["blurOverlays"]
 	sets.querySelector(".enabletab").addEventListener("click", function () {
 		settingsdata["enableTabs"] = sets.querySelector(".enabletab").checked;
+		ipcRenderer.send('savesettings', settingsdata);
+		applySettings()
+	});
+	sets.querySelector(".eoir").addEventListener("click", function () {
+		settingsdata["enableOffImageRendering"] = sets.querySelector(".eoir").checked;
+		ipcRenderer.send('savesettings', settingsdata);
+		applySettings()
+	});
+	sets.querySelector(".aht").addEventListener("click", function () {
+		settingsdata["autoHideTabs"] = sets.querySelector(".aht").checked;
+		ipcRenderer.send('savesettings', settingsdata);
+		applySettings()
+	});
+	sets.querySelector(".ct").addEventListener("click", function () {
+		settingsdata["classicToolbar"] = sets.querySelector(".ct").checked;
 		ipcRenderer.send('savesettings', settingsdata);
 		applySettings()
 	});
@@ -1429,3 +1618,4 @@ ipcRenderer.on("rotateright", (event, data) => { rotR() });
 ipcRenderer.on("zoomin", (event, data) => { zoomIn() });
 ipcRenderer.on("zoomout", (event, data) => { zoomOut() });
 ipcRenderer.on("addToFavorites", (event, data) => { addIMGToFavorites() });
+ipcRenderer.on("showGalleryViewFullScreen", (event, data) => { showGalleryViewFullScreen() });

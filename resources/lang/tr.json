@@ -70,5 +70,21 @@
 	"openExtensionsFile":"Eklentiler dosyasını aç",
 	"welcomeToBirdyImgEditor":"BirdyImg editörüne hoşgeldiniz!",
 	"recentlySaved":"Son Kaydedilenler",
-	"recentlyOpened":"Son Açılanlar"
+	"recentlyOpened":"Son Açılanlar",
+	"search":"Ara",
+	"galleryView":"Galeri Görünümü",
+	"gvasA":"Galeri görünümünü ekranın",
+	"gvasB":"tarafında göster",
+	"none":"Hiçbiri",
+	"description":"Açıklama",
+	"subject":"Konu",
+	"author":"Yazar",
+	"rating":"Puanlama",
+	"title":"Başlık",
+	"tags":"Etiketler",
+	"autoHideTabs":"Sekmeleri otomatik gizle",
+	"enableOffImageRendering":"Görüntü dışı resim çizilimini etkinleştir",
+	"transparentPanes":"Saydam Paneller",
+	"classicToolbar":"Klasik Araç Çubuğu",
+	"toolbarSizeScale":"Araç Çubuğu boyut ölçeği"
 }

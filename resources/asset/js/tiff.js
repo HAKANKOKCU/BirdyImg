@@ -3,13 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-
 function TIFFParser() {
 	this.tiffDataView = undefined;
 	this.littleEndian = undefined;
 	this.fileDirectories = [];
-};
-
+}
 TIFFParser.prototype = {
 	isLittleEndian: function () {
 		// Get byte order mark.
@@ -732,4 +730,9 @@ TIFFParser.prototype = {
 
 		return this.canvas;
 	},
+	reset: function() {
+		this.tiffDataView = undefined;
+		this.littleEndian = undefined;
+		this.fileDirectories = [];
+	}
 }

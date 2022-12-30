@@ -37,7 +37,7 @@ b {
 	-khtml-user-drag: none;
 	-moz-user-drag: none;
 	-o-user-drag: none;
-	/*user-drag: none;*/
+	/*user-drag: none;transform-origin: top left;*/
 	transition: width 0.2s, height 0.2s, transform 0.2s;
 }
 
@@ -52,6 +52,7 @@ toolbar {
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	z-index:1;
 }
 
 toolbar>input[type="color"] {
@@ -68,10 +69,13 @@ toolbar>button {
 	padding: 3px;
 	width: 30px;
 	height: 30px;
-	background: white;
+	background: transparent;
 	border: none;
 	transition: background 0.1s;
 	transition-delay: -0.02s;
+	display:flex;
+	align-items:center;
+	justify-content:center;
 }
 
 toolbar>button:hover {
@@ -194,9 +198,13 @@ input {border:none}
 		background: rgb(20, 20, 20)
 	}
 
-	toolbar>button {
-		background: rgb(20, 20, 20)
+	toolbar.newsupported {
+		background: rgba(20, 20, 20,0.8)
 	}
+
+	/*toolbar>button {
+		background: rgb(20, 20, 20)
+	}*/
 
 	toolbar>button:hover {
 		background: rgb(50, 50, 50)
@@ -269,14 +277,18 @@ input {border:none}
 		color: black;
 		background: white
 	}
-
+	
 	toolbar {
-		background: white
+		background: rgb(255,255,255)
 	}
 
-	toolbar>button {
-		background: white
+	toolbar.newsupported {
+		background: rgba(255,255,255,0.8)
 	}
+
+	/*toolbar>button {
+		background: white
+	}*/
 
 	toolbar>button:hover {
 		background: lightgray
@@ -402,6 +414,7 @@ nodisplay {
 	white-space: nowrap;
 	min-height: 26px;
 	flex-shrink: 0;
+	z-index:1;
 }
 
 .clickable {
@@ -491,7 +504,7 @@ button {border:0;background-color: transparent;}
 	z-index: 10;
 }
 
-img, svg {vertical-align:middle;display: block;}
+img, svg {/*vertical-align:middle;*/display: block;}
 
 popuppane {
 	position: absolute;
@@ -548,6 +561,7 @@ popuppane {
 }
 
 .sticky {position:sticky;top:0;background: var(--panecolor)}
+.stickynopanecolor {position:sticky;top:0;}
 
 .th {font-weight: bold !important;}
 
@@ -622,4 +636,19 @@ carditem > img {
 	-khtml-user-drag: none;
 	-moz-user-drag: none;
 	-o-user-drag: none;
+}
+
+.fillcontainer {
+	width: 100%;
+	height: 100%;
+}
+
+.linedelem {
+	display:block;
+	width:100%;
+}
+
+.smallo {
+	font-size:10px;
+	opacity:0.6;
 }

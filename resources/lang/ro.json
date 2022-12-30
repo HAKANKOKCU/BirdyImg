@@ -70,5 +70,21 @@
 	"openExtensionsFile":"Deschideți fișierul de extensii",
 	"welcomeToBirdyImgEditor":"Bine ai venit la editorul BirdyImg!",
 	"recentlySaved":"Salvate Recent",
-	"recentlyOpened":"Deschise Recent"
+	"recentlyOpened":"Deschise Recent",
+	"search":"Cauta",
+	"galleryView":"Vedere Galerie",
+	"gvasA":"Vedere Galerie la partea de",
+	"gvasB":"a ferestrei",
+	"none":"Nimic",
+	"description":"Descriere",
+	"subject":"Subiect",
+	"author":"Autor",
+	"rating":"Evaluare",
+	"title":"Titlu",
+	"tags":"Taguri",
+	"autoHideTabs":"Ascunde automat filele",
+	"enableOffImageRendering":"Activați redarea în afara imaginii",
+	"transparentPanes":"Panouri transparente",
+	"classicToolbar":"Bara de instrumente clasică",
+	"toolbarSizeScale":"Scara de dimensiune a barei de instrumente"
 }
