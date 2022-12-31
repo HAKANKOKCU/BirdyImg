@@ -1,4 +1,4 @@
-const versionstring = "1.0 Beta 5"
+const versionstring = "1.0 Beta 6"
 
 const { ipcRenderer } = require("electron");
 
@@ -150,7 +150,8 @@ function newTab() {
 		zoomPrct: 1,
 		loadingCir:loadingcir,
 		ghostImg: document.createElement("img"),
-		tabdiv: tabdiv
+		tabdiv: tabdiv,
+		id:newtabid
 	}
 	var ndi = newtabid;
 	tswitchClose.addEventListener("click", function () {
@@ -220,6 +221,7 @@ function switchTab(id) {
 }
 
 function closeTab(id) {
+	var index = Object.keys(tabs).indexOf(id.toString())
 	var elemTitle = tabSwitcher.querySelector("div[BIMG-TabID=\"" + id + "\"]");
 	tabSwitcher.removeChild(elemTitle);
 	var elemimg = imgViewCnt.querySelector("img[BIMG-TabID=\"" + id + "\"]");
@@ -233,6 +235,16 @@ function closeTab(id) {
 	tabCount--;
 	ipcRenderer.send("closeTab", id);
 	autoHideTabs()
+	
+	if (id == tabID) {
+		if (id >= Object.keys(tabs)[Object.keys(tabs).length - 1]) {
+			switchTab(Object.keys(tabs)[Object.keys(tabs).length - 1])
+		}else if (id == 0) {
+			switchTab(Object.keys(tabs)[0])
+		}else {
+			switchTab(Object.keys(tabs)[index])
+		}
+	}
 }
 
 //newTab(); will be sent by main
@@ -396,11 +408,11 @@ function applySettings() {
 		}else {
 			extraStyling.innerHTML = ""
 		}
-		extraStyling.innerHTML += "toolbar>button>svg {transform: scale(" + settingsdata["toolbarSizeScale"] + ");} toolbar>button {width: " + (30 * settingsdata["toolbarSizeScale"]) + "px;height: " + (30 * settingsdata["toolbarSizeScale"]) + "px} #imgView {max-height: calc(100% - " + (30 * settingsdata["toolbarSizeScale"]) + "px)}"
 	}else {
 		document.body.style.accentColor = ""
 		extraStyling.innerHTML = ""
 	}
+	extraStyling.innerHTML += "toolbar>button>svg {transform: scale(" + settingsdata["toolbarSizeScale"] + ");} toolbar>button {width: " + (30 * settingsdata["toolbarSizeScale"]) + "px;height: " + (30 * settingsdata["toolbarSizeScale"]) + "px} #imgView {max-height: calc(100% - " + (30 * settingsdata["toolbarSizeScale"]) + "px)}"
 	autoHideTabs()
 }
 
@@ -1099,7 +1111,7 @@ function showSettings() {
 	langs.forEach((lang) => {
 		optSelectHTML += "<option value='" + lang + "'>" + lang + "</option>"
 	});
-	var sets = openWindow("<h1>" + langpack.settings + "</h1><h3>" + langpack.general + "</h3><input type='checkbox' name='cbEnableTabs' id='cbEnableTabs' class='enabletab'/><label for='cbEnableTabs'>" + langpack.enableTabs + "</label><br><input type='checkbox' name='cbBO' id='cbBO' class='blurOverlays'/><label for='cbBO'>" + langpack.blurOverlays + "</label><br><input type='checkbox' name='showxy' id='showxy' class='showxy'/><label for='showxy'>" + langpack.showPositionAndSizeInfo + "</label><br><input type='checkbox' name='aht' id='aht' class='aht'/><label for='aht'>" + langpack.autoHideTabs + "</label><br><input type='checkbox' name='ct' id='ct' class='ct'/><label for='ct'>" + langpack.classicToolbar + "</label><br><input type='checkbox' name='eoir' id='eoir' class='eoir'/><label for='eoir'>" + langpack.enableOffImageRendering + "</label><br><label>" + langpack.defaultPanelSide + "</label>&nbsp;<select class='paneSide'><option value='Right'>" + langpack.right + "</option><option value='Left'>" + langpack.left + "</option></select><br><label>" + langpack.toolbarSizeScale + "</label><input type='number' class='tsc'/><h3>" + langpack["colors"] + "</h3><input type='checkbox' class='enablecolors' id='enablecolors' name='enablecolors'/><label for='enablecolors'>" + langpack.enableCustomColors + "</label><h4>" + langpack.accentColor + "</h4><input type='color' class='accentPick'/><input type='checkbox' class='applytoolbar' id='applytoolbar' name='applytoolbar'/><label for='applytoolbar'>" + langpack.applyToToolbarButtons + "</label><h3>Language</h3><select value='" + settingsdata["language"] + "' class='langsb'>" + optSelectHTML + "</select><br><br><button class='openhistory'>" + langpack.history + "</button><button class='openfavorites'>" + langpack.favorites + "</button><br><br><p class='smallo'>BirdyImg " + versionstring + "</p>");
+	var sets = openWindow("<h1>" + langpack.settings + "</h1><h3>" + langpack.general + "</h3><input type='checkbox' name='cbEnableTabs' id='cbEnableTabs' class='enabletab'/><label for='cbEnableTabs'>" + langpack.enableTabs + "</label><br><input type='checkbox' name='cbBO' id='cbBO' class='blurOverlays'/><label for='cbBO'>" + langpack.blurOverlays + "</label><br><input type='checkbox' name='showxy' id='showxy' class='showxy'/><label for='showxy'>" + langpack.showPositionAndSizeInfo + "</label><br><input type='checkbox' name='aht' id='aht' class='aht'/><label for='aht'>" + langpack.autoHideTabs + "</label><br><input type='checkbox' name='ct' id='ct' class='ct'/><label for='ct'>" + langpack.classicToolbar + "</label><br><input type='checkbox' name='eoir' id='eoir' class='eoir'/><label for='eoir'>" + langpack.enableOffImageRendering + "</label><br><label>" + langpack.defaultPanelSide + "</label>&nbsp;<select class='paneSide'><option value='Right'>" + langpack.right + "</option><option value='Left'>" + langpack.left + "</option></select><br><label>" + langpack.toolbarSizeScale + ": </label><input type='number' class='tsc'/><h3>" + langpack["colors"] + "</h3><input type='checkbox' class='enablecolors' id='enablecolors' name='enablecolors'/><label for='enablecolors'>" + langpack.enableCustomColors + "</label><h4>" + langpack.accentColor + "</h4><input type='color' class='accentPick'/><input type='checkbox' class='applytoolbar' id='applytoolbar' name='applytoolbar'/><label for='applytoolbar'>" + langpack.applyToToolbarButtons + "</label><h3>Language</h3><select value='" + settingsdata["language"] + "' class='langsb'>" + optSelectHTML + "</select><br><br><button class='openhistory'>" + langpack.history + "</button><button class='openfavorites'>" + langpack.favorites + "</button><br><br><p class='smallo'>BirdyImg " + versionstring + "</p>");
 	sets.querySelector(".openhistory").addEventListener("click", function () {
 		showHistory()
 	})
