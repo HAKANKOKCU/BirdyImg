@@ -37,3 +37,4 @@ BirdyImg Image Viewer Version 1.0 Beta 5  <a href="https://drive.google.com/u/0/
 * electron
 * image-size
 * fs-extra
+* exif-parser
