@@ -86,5 +86,9 @@
 	"enableOffImageRendering":"Görüntü dışı resim çizilimini etkinleştir",
 	"transparentPanes":"Saydam Paneller",
 	"classicToolbar":"Klasik Araç Çubuğu",
-	"toolbarSizeScale":"Araç Çubuğu boyut ölçeği"
+	"toolbarSizeScale":"Araç Çubuğu boyut ölçeği",
+	"whenAllTabsAreClosed":"Tüm sekmeler kapatıldığında",
+	"closeApp":"Uygulamayı kapat",
+	"openNewTab":"Yeni sekme aç",
+	"doNothing":"Hiçbirşey yapma"
 }

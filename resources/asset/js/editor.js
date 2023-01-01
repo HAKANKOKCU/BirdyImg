@@ -315,7 +315,7 @@ function initEditor() {
         if (!isdrawing) return;
         try {
             if (editortool == "pen") drawlineat(event.offsetX / editorZoomPrct, event.offsetY / editorZoomPrct, oldevent.offsetX / editorZoomPrct, oldevent.offsetY / editorZoomPrct);
-            if (editortool == "eraser") eraseXY(event.offsetX, event.offsetY);
+            if (editortool == "eraser") eraseXY(event.offsetX / editorZoomPrct, event.offsetY / editorZoomPrct);
 			if (editortool == "liner") {
 				previewLine.setAttribute("x2",event.clientX + "px"); previewLine.setAttribute("y2",event.clientY + "px");
 			}
@@ -328,7 +328,7 @@ function initEditor() {
         //console.log(event)
         try {
             if (editortool == "pen") drawlineat((event.touches[0].clientX + canvasscrollable.scrollLeft) / editorZoomPrct, (event.touches[0].clientY + canvasscrollable.scrollTop) / editorZoomPrct, (oldevent.touches[0].clientX + canvasscrollable.scrollLeft) / editorZoomPrct, (oldevent.touches[0].clientY + canvasscrollable.scrollTop) / editorZoomPrct);
-            if (editortool == "eraser") eraseXY(event.touches[0].clientX + canvasscrollable.scrollLeft, event.touches[0].clientY + canvasscrollable.scrollTop);
+            if (editortool == "eraser") eraseXY((event.touches[0].clientX + canvasscrollable.scrollLeft) / editorZoomPrct, (event.touches[0].clientY + canvasscrollable.scrollTop) / editorZoomPrct);
 			if (editortool == "liner") {
 				previewLine.setAttribute("x2",event.touches[0].clientX + "px"); previewLine.setAttribute("y2",event.touches[0].clientY + "px");
 			}

@@ -40,6 +40,7 @@ var njs = {
 	"enableOffImageRendering":true,
 	//"transparentPanes":true,
 	"classicToolbar":false,
+	"whenAllTabsAreClosed": 1,
 	"toolbarSizeScale":1,
 	"colors": {
 		"enableCustomColors": false,
@@ -324,6 +325,10 @@ if (!gotTheLock) {
 
 	ipcMain.on("exitEditor", (e, arg) => {
 		Menu.setApplicationMenu(menu_design);
+	})
+	
+	ipcMain.on("close",(e,arg) => {
+		app_window.close()
 	})
 
 	ipcMain.on("openfile", (e, arg) => {

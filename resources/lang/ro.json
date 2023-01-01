@@ -86,5 +86,9 @@
 	"enableOffImageRendering":"Activați redarea în afara imaginii",
 	"transparentPanes":"Panouri transparente",
 	"classicToolbar":"Bara de instrumente clasică",
-	"toolbarSizeScale":"Scara de dimensiune a barei de instrumente"
+	"toolbarSizeScale":"Scara de dimensiune a barei de instrumente",
+	"whenAllTabsAreClosed":"Când toate filele sunt închise",
+	"closeApp":"Închideți aplicația",
+	"openNewTab":"Deschideți filă nouă",
+	"doNothing":"Nu face nimic"
 }

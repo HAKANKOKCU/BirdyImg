@@ -86,5 +86,9 @@
 	"enableOffImageRendering":"Enable off-image rendering",
 	"transparentPanes":"Transparent Panes",
 	"classicToolbar":"Classic Toolbar",
-	"toolbarSizeScale":"Toolbar Size Scale"
+	"toolbarSizeScale":"Toolbar Size Scale",
+	"whenAllTabsAreClosed":"When all tabs are closed",
+	"closeApp":"Close app",
+	"openNewTab":"Open new tab",
+	"doNothing":"Do nothing"
 }
