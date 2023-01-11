@@ -68,7 +68,7 @@ function initHome() {
 		nameCard.style.width = "100%";
 		nameCard.innerText = getFileName(item);
 		cardItem.appendChild(nameCard)
-		flexlist.appendChild(cardItem)
+		flexlist.insertBefore(cardItem,flexlist.firstChild)
 		cardItem.addEventListener("click",function() {
 			ipcRenderer.send("openfilep", item);
 			setTimeout(function() {
@@ -90,6 +90,7 @@ function initEditor() {
 	window.effects_darkerbutton = createElementWithContainerAndLangString("makeDarker", "button", effectsmenu);
 	window.effects_lighterbutton = createElementWithContainerAndLangString("makeLighter", "button", effectsmenu);
 	window.effects_reversebutton = createElementWithContainerAndLangString("reverseColors", "button", effectsmenu);
+	window.effects_grayscalebutton = createElementWithContainerAndLangString("grayscale", "button", effectsmenu);
 	window.exiteditorbutton = document.getElementById("exitEditorButton");
 	window.editorsavebutton = document.getElementById("editorSaveButton");
 	window.editorundobutton = document.getElementById("editorUndoButton");
@@ -232,6 +233,7 @@ function initEditor() {
 			if (item.type == "frectangle") drawrectangleattemp(item.x,item.y,item.sizex,item.sizey,true)
 			if (item.type == "rectangle") drawrectangleattemp(item.x,item.y,item.sizex,item.sizey,false)
 			if (item.type == "reverse") reverse();
+			if (item.type == "grayscale") grayScale();
 		})
 	}
 
@@ -251,14 +253,30 @@ function initEditor() {
 	
 	window.reverse = function() {
 		//var currentclor = ctx.fillStyle
-		for (let x = 0;x < canvas.width;x++) {
-			for (let y = 0;y < canvas.height;y++) {
-				const data = ctx.getImageData(x, y, 1, 1).data;
-				ctx.fillStyle = "rgba(" + (255 - data[0]) + "," + (255 - data[1]) + "," + (255 - data[2]) + "," + (data[3] / 255) + ")"
-				ctx.fillRect(x,y,1,1)
-			}
+		let imgData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+		let pixels = imgData.data;
+		for (var i = 0; i < pixels.length; i += 4) {
+			pixels[i] = 255 - pixels[i]
+			pixels[i + 1] = 255 - pixels[i + 1]
+			pixels[i + 2] = 255 - pixels[i + 2]
 		}
 		//ctx.fillStyle = currentclor;
+		ctx.putImageData(imgData, 0, 0);
+	}
+	
+	window.grayScale = function() {
+		//var currentclor = ctx.fillStyle
+		let imgData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+		let pixels = imgData.data;
+		for (var i = 0; i < pixels.length; i += 4) {
+			let lightness = parseInt((pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3);
+
+			pixels[i] = lightness;
+			pixels[i + 1] = lightness;
+			pixels[i + 2] = lightness;
+		}
+		//ctx.fillStyle = currentclor;
+		ctx.putImageData(imgData, 0, 0);
 	}
 
 	
@@ -435,6 +453,8 @@ function initEditor() {
     effects_lighterbutton.onclick = function () { makeLighter(); drawing.push({ type: "lighter" }); drawundos.push(1) };
 	
 	effects_reversebutton.onclick = function () { reverse(); drawing.push({ type: "reverse" }); drawundos.push(1) }
+	
+	effects_grayscalebutton.onclick = function () { grayScale(); drawing.push({ type: "grayscale" }); drawundos.push(1) }
 
     editorlockbutton.onclick = function () {
         editorlock = !editorlock;

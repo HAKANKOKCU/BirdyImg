@@ -1,4 +1,4 @@
-const versionstring = "1.0 Beta 7"
+const versionstring = "1.0 Beta 8"
 
 const { ipcRenderer } = require("electron");
 
@@ -399,6 +399,7 @@ function applySettings() {
 		item.style.transform = "translate(-50%, 0)";
 		item.style.left = "50%";
 	})
+	zoominf.style.backdropFilter = settingsdata["blurOverlays"] == true ? "blur(5px)" : "";
 	Array.prototype.forEach.call(document.querySelectorAll("toolbar"),(item)=> {
 		if (item.getAttribute("data-width") != null) {
 			item.style.width = settingsdata["classicToolbar"] == true ? "100%" : (item.getAttribute("data-width") * settingsdata["toolbarSizeScale"]) + "px"
