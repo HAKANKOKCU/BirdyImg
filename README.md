@@ -1,13 +1,13 @@
 # BirdyImg
-BirdyImg Image Viewer Version 1.0 Beta 8  <a href="https://drive.google.com/u/0/uc?id=1AtW-nxYYaj_jhO8vNVua_cGOdqlJBbUo&export=download">Download For Windows 64Bit</a> <a href="https://drive.google.com/uc?export=download&id=11KEGL1mm7Y3AGrSwQiFOECoolPVaHr8r">Download For Windows 32Bit</a> <a href="https://drive.google.com/uc?export=download&id=19CG_p8secNYt2dVz1P7IyOWHhJAMwUWQ">Download For Linux (Zip)</a> (From Google Drive)
+BirdyImg Image Viewer Version 1.0 Beta 9  <a href="https://drive.google.com/u/0/uc?id=1AtW-nxYYaj_jhO8vNVua_cGOdqlJBbUo&export=download">Download For Windows 64Bit</a> <a href="https://drive.google.com/uc?export=download&id=11KEGL1mm7Y3AGrSwQiFOECoolPVaHr8r">Download For Windows 32Bit</a> <a href="https://drive.google.com/uc?export=download&id=19CG_p8secNYt2dVz1P7IyOWHhJAMwUWQ">Download For Linux (Zip)</a> (From Google Drive)
 
 <!--![resim](https://user-images.githubusercontent.com/103432992/185777954-95c9db41-91af-4e6e-9b0a-f45470d2a6b3.png)-->
 <!--![resim](https://user-images.githubusercontent.com/103432992/189284081-a4f9760f-bf57-4d0a-84a6-61e0dc0afc3c.png)-->
 <!--![resim](https://user-images.githubusercontent.com/103432992/191976124-35317092-48ff-444f-96a2-64742d67c5f2.png)-->
 <!--![resim](https://user-images.githubusercontent.com/103432992/193451899-e83bcb69-9b57-4415-a4fb-f9d0b9c2473d.png)-->
 <!--![resim](https://user-images.githubusercontent.com/103432992/206913916-d70259c0-89c5-4525-8bcf-b4f8f35124d4.png)-->
-![resim](https://user-images.githubusercontent.com/103432992/211883173-d38f2090-34b3-41cc-a2a1-590c0b67e70e.png)
-
+<!--![resim](https://user-images.githubusercontent.com/103432992/211883173-d38f2090-34b3-41cc-a2a1-590c0b67e70e.png)-->
+![Ekran Görüntüsü (62)](https://user-images.githubusercontent.com/103432992/212546809-527674ec-ebf3-4715-a124-c00b14ab7754.png)
 
 
 * Minimum Windows Version To Run: Windows 7 x86
