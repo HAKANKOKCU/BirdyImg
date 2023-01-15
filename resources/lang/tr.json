@@ -90,5 +90,6 @@
 	"whenAllTabsAreClosed":"Tüm sekmeler kapatıldığında",
 	"closeApp":"Uygulamayı kapat",
 	"openNewTab":"Yeni sekme aç",
-	"doNothing":"Hiçbirşey yapma"
+	"doNothing":"Hiçbirşey yapma",
+	"disableTransparency":"Saydamlığı Devre Dışı Bırak"
 }

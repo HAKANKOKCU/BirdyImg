@@ -53,6 +53,7 @@ toolbar {
 	align-items: center;
 	justify-content: center;
 	z-index:1;
+	overflow:hidden;
 }
 
 toolbar>input[type="color"] {
@@ -241,7 +242,7 @@ input {border:none}
 	}
 
 	#tabSwitcher {
-		background-color: rgb(10, 10, 10)
+		background-color: rgb(20, 20, 20,0.8)
 	}
 
 	.tabClose>svg {
@@ -260,6 +261,14 @@ input {border:none}
 
 	button {
 		color:white;
+	}
+	.pane {
+		outline: none;
+		background: rgba(20,20,20,0.8)
+	}
+	.pane:focus {
+		outline: none;
+		background: rgba(20,20,20,0.9)
 	}
 }
 
@@ -325,7 +334,7 @@ input {border:none}
 	}
 
 	#tabSwitcher {
-		background-color: white
+		background-color: rgb(255, 255, 255,0.8)
 	}
 
 	.tabClose>svg {
@@ -334,6 +343,10 @@ input {border:none}
 
 	.tabClose>svg:hover {
 		fill: black
+	}
+	.pane:focus {
+		outline: none;
+		background: rgba(0,0,0,0.02)
 	}
 	html {
 		--panecolor: rgb(255,255,255);
@@ -344,8 +357,15 @@ input {border:none}
 	button {
 		color:black;
 	}
+	.pane {
+		outline: none;
+		background: rgba(255,255,255,0.8)
+	}
+	.pane:focus {
+		outline: none;
+		background: rgba(255,255,255,0.9)
+	}
 }
-
 .ilitem {
 	display: flex;
 	margin-bottom: 2px
@@ -434,6 +454,7 @@ nodisplay {
 	align-items: center;
 	transition: 0.2s;
 	cursor: pointer;
+	border-radius:8px 8px 0px 0px;
 }
 
 #tabSwitcher>div.active {
@@ -546,10 +567,6 @@ popuppane {
 	.popupWindow {
 		transition: none;
 	}
-}
-.pane:focus {
-	outline: none;
-	background: rgba(0,0,0,0.1)
 }
 
 .fullscreenWindow:focus {

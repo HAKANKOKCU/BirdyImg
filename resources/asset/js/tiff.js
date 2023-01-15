@@ -717,11 +717,20 @@ TIFFParser.prototype = {
 
 						ctx.fillStyle = this.makeRGBAFillValue(red, green, blue, opacity);
 						ctx.fillRect(x, yPadding + y, 1, 1);
+						//this.colorDatas.push(red)
+						//this.colorDatas.push(green)
+						//this.colorDatas.push(blue)
+						//this.colorDatas.push(opacity)
+						//var datas = new Uint8ClampedArray([red, green, blue, opacity])
+						//console.log(datas)
+						//ctx.putImageData(datas, x, yPadding + y);
 					}
 				}
 
 				numRowsInPreviousStrip = numRowsInStrip;
 			}
+			//console.log(this.colorDatas)
+			//ctx.putImageData(this.colorDatas, 0, 0);
 		}
 
 /*		for (var i = 0, numFileDirectories = this.fileDirectories.length; i < numFileDirectories; i++) {
@@ -734,5 +743,6 @@ TIFFParser.prototype = {
 		this.tiffDataView = undefined;
 		this.littleEndian = undefined;
 		this.fileDirectories = [];
+		//this.colorDatas = [];
 	}
 }

@@ -90,5 +90,6 @@
 	"whenAllTabsAreClosed":"Când toate filele sunt închise",
 	"closeApp":"Închideți aplicația",
 	"openNewTab":"Deschideți filă nouă",
-	"doNothing":"Nu face nimic"
+	"doNothing":"Nu face nimic",
+	"disableTransparency":"Dezactivați Transparența"
 }

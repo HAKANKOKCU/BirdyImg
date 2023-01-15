@@ -91,6 +91,7 @@ function initEditor() {
 	window.effects_lighterbutton = createElementWithContainerAndLangString("makeLighter", "button", effectsmenu);
 	window.effects_reversebutton = createElementWithContainerAndLangString("reverseColors", "button", effectsmenu);
 	window.effects_grayscalebutton = createElementWithContainerAndLangString("grayscale", "button", effectsmenu);
+	window.effects_disabletransparencybutton = createElementWithContainerAndLangString("disableTransparency", "button", effectsmenu);
 	window.exiteditorbutton = document.getElementById("exitEditorButton");
 	window.editorsavebutton = document.getElementById("editorSaveButton");
 	window.editorundobutton = document.getElementById("editorUndoButton");
@@ -108,6 +109,7 @@ function initEditor() {
 	window.canvas = document.createElement("canvas")
 	window.ctx = canvas.getContext("2d");
 	window.editortool = "pen";
+	window.editordrawstartpos = {}
 	canvasscrollable.appendChild(canvas)
 	ema.insertBefore(canvasscrollable, ema.firstChild)
 	
@@ -234,6 +236,7 @@ function initEditor() {
 			if (item.type == "rectangle") drawrectangleattemp(item.x,item.y,item.sizex,item.sizey,false)
 			if (item.type == "reverse") reverse();
 			if (item.type == "grayscale") grayScale();
+			if (item.type == "disabletransparency") disableTransparency();
 		})
 	}
 
@@ -278,14 +281,25 @@ function initEditor() {
 		//ctx.fillStyle = currentclor;
 		ctx.putImageData(imgData, 0, 0);
 	}
+	
+	window.disableTransparency = function() {
+		//var currentclor = ctx.fillStyle
+		let imgData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+		let pixels = imgData.data;
+		for (var i = 0; i < pixels.length; i += 4) {
+			pixels[i + 3] = 255;
+		}
+		//ctx.fillStyle = currentclor;
+		ctx.putImageData(imgData, 0, 0);
+	}
 
 	
 	window.editorApplyZoom = function() {
 		if (editorZoomPrct <= 0) editorZoomPrct = editorDefaultZoom;
 		canvas.style.width = (tabs[tabID].imgW * editorZoomPrct) + "px";
 		canvas.style.height = (tabs[tabID].imgH * editorZoomPrct) + "px";
-		canvasscrollable.style.justifyContent = ((tabs[tabID].imgW * editorZoomPrct) < canvasscrollable.offsetWidth && !isTouch) ? "center" : ""
-		canvasscrollable.style.alignItems = ((tabs[tabID].imgH * editorZoomPrct) < canvasscrollable.offsetHeight && !isTouch) ? "center" : ""
+		canvasscrollable.style.justifyContent = ((tabs[tabID].imgW * editorZoomPrct) < canvasscrollable.offsetWidth) ? "center" : ""
+		canvasscrollable.style.alignItems = ((tabs[tabID].imgH * editorZoomPrct) < canvasscrollable.offsetHeight) ? "center" : ""
 	}
 	
 	canvasscrollable.onwheel = function(e) {
@@ -307,10 +321,11 @@ function initEditor() {
 	ipcRenderer.on("exitEditorA", (event,data) => {exitEditor()})
 	
     window.saveEditorImage = function save() {
-        var win = openWindow("<h1>" + langpack.exportAs + "</h1><button data-export='image/png'>" + langpack.typeImage.replace("{TYPE}", "PNG") + "</button><button data-export='image/jpeg'>" + langpack.typeImage.replace("{TYPE}", "JPEG") + "</button><button data-export='image/webp'>" + langpack.typeImage.replace("{TYPE}", "WebP") + "</button>");
+        var win = openWindow("<h1>" + langpack.exportAs + "</h1><!--<label>Quality: </label><input max='100' class='quality' type='number'/>--><button data-export='image/png'>" + langpack.typeImage.replace("{TYPE}", "PNG") + "</button><button data-export='image/jpeg'>" + langpack.typeImage.replace("{TYPE}", "JPEG") + "</button><button data-export='image/webp'>" + langpack.typeImage.replace("{TYPE}", "WebP") + "</button>");
+		//win.getElementsByClassName("quality")[0].value = 100
         Array.prototype.forEach.call(win.querySelectorAll("button[data-export]"), (item) => {
             item.onclick = function () {
-                let canvasUrl = canvas.toDataURL(item.getAttribute("data-export"), 1.0);
+                let canvasUrl = canvas.toDataURL(item.getAttribute("data-export"), 1.0); //win.getElementsByClassName("quality")[0].value / 100
                 console.log(canvasUrl);
                 // const createEl = document.createElement('a');
                 // createEl.href = canvasUrl;
@@ -343,10 +358,19 @@ function initEditor() {
 
     canvas.addEventListener("touchmove",function (event) {
         if (!isdrawing) return;
+		if (editorlock) return;
         //console.log(event)
         try {
-            if (editortool == "pen") drawlineat((event.touches[0].clientX + canvasscrollable.scrollLeft) / editorZoomPrct, (event.touches[0].clientY + canvasscrollable.scrollTop) / editorZoomPrct, (oldevent.touches[0].clientX + canvasscrollable.scrollLeft) / editorZoomPrct, (oldevent.touches[0].clientY + canvasscrollable.scrollTop) / editorZoomPrct);
-            if (editortool == "eraser") eraseXY((event.touches[0].clientX + canvasscrollable.scrollLeft) / editorZoomPrct, (event.touches[0].clientY + canvasscrollable.scrollTop) / editorZoomPrct);
+			var x = event.touches[0].clientX + canvasscrollable.scrollLeft - canvas.offsetLeft; 
+			var y = event.touches[0].clientY + canvasscrollable.scrollTop - canvas.offsetTop; 
+			x = x / editorZoomPrct;
+			y = y / editorZoomPrct;
+			var ox = oldevent.touches[0].clientX + canvasscrollable.scrollLeft - canvas.offsetLeft; 
+			var oy = oldevent.touches[0].clientY + canvasscrollable.scrollTop - canvas.offsetTop; 
+			ox = ox / editorZoomPrct;
+			oy = oy / editorZoomPrct;
+            if (editortool == "pen") drawlineat(x, y, ox, oy);
+            if (editortool == "eraser") eraseXY(x,y);
 			if (editortool == "liner") {
 				previewLine.setAttribute("x2",event.touches[0].clientX + "px"); previewLine.setAttribute("y2",event.touches[0].clientY + "px");
 			}
@@ -357,7 +381,7 @@ function initEditor() {
     })
 
     canvas.onmousedown = canvas.ontouchstart = function (e) { 
-		if (!editorlock) isdrawing = true; e.preventDefault(); 
+		if (!editorlock) { isdrawing = true; e.preventDefault(); }else {return;}
 		var x = e.offsetX ? e.offsetX : event.touches[0].clientX + canvasscrollable.scrollLeft - canvas.offsetLeft; 
 		var y = e.offsetY ? e.offsetY : event.touches[0].clientY + canvasscrollable.scrollTop - canvas.offsetTop; 
 		x = x / editorZoomPrct;
@@ -367,7 +391,7 @@ function initEditor() {
 			previewLine.style.stroke = currentcolor;
 			previewLine.style.strokeWidth = lineW + "px";
 		} 
-		window.editordrawstartpos = {x:x,y:y}
+		editordrawstartpos = {x:x,y:y}
 	}
 
 	function rgbToHex(r, g, b) {
@@ -377,8 +401,8 @@ function initEditor() {
 	}
 
     canvas.onmouseup = canvas.ontouchend = function (e) {
-		var x = e.offsetX ? e.offsetX : event.touches[0].clientX + canvasscrollable.scrollLeft - canvas.offsetLeft; 
-		var y = e.offsetY ? e.offsetY : event.touches[0].clientY + canvasscrollable.scrollTop - canvas.offsetTop; 
+		var x = e.offsetX ? e.offsetX : oldevent.touches[0].clientX + canvasscrollable.scrollLeft - canvas.offsetLeft; 
+		var y = e.offsetY ? e.offsetY : oldevent.touches[0].clientY + canvasscrollable.scrollTop - canvas.offsetTop; 
 		x = x / editorZoomPrct;
 		y = y / editorZoomPrct;
 		if (editortool == "pickcolor") {
@@ -389,8 +413,6 @@ function initEditor() {
 			// BLUE  = data[2]
 			// ALPHA = data[3]
 			
-			//console.log(data);
-
 			currentcolor = `rgba(${data[0]},${data[1]},${data[2]},${data[3]})`
 			editorColorSelect.value = "#" + rgbToHex(data[0],data[1],data[2]);
 		}
@@ -455,6 +477,8 @@ function initEditor() {
 	effects_reversebutton.onclick = function () { reverse(); drawing.push({ type: "reverse" }); drawundos.push(1) }
 	
 	effects_grayscalebutton.onclick = function () { grayScale(); drawing.push({ type: "grayscale" }); drawundos.push(1) }
+	
+	effects_disabletransparencybutton.onclick = function () { disableTransparency(); drawing.push({ type: "disabletransparency" }); drawundos.push(1) }
 
     editorlockbutton.onclick = function () {
         editorlock = !editorlock;

@@ -90,5 +90,6 @@
 	"whenAllTabsAreClosed":"When all tabs are closed",
 	"closeApp":"Close app",
 	"openNewTab":"Open new tab",
-	"doNothing":"Do nothing"
+	"doNothing":"Do nothing",
+	"disableTransparency":"Disable Transparency"
 }

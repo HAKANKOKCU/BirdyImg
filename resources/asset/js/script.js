@@ -1,4 +1,4 @@
-const versionstring = "1.0 Beta 8"
+const versionstring = "1.0 Beta 9"
 
 const { ipcRenderer } = require("electron");
 
@@ -29,11 +29,12 @@ function createElementWithContainerAndLangString(langstring,type,container) {
 
 //for dedecting touchscreens
 window.isTouch = false
-document.addEventListener("touchstart",function() {isTouch = true})
-document.addEventListener("mousedown",function() {isTouch = false})
+document.body.addEventListener("touchstart",function() {isTouch = true;console.log("its touch!")})
+document.body.addEventListener("mousedown",function() {isTouch = false;console.log("its NOT touch!")})
 
 const RESIZE_BORDER_SIZE = 4;
 let imgViewCnt = document.getElementById("imgView");
+let mainimgcont = document.getElementsByTagName("imgmain")[0];
 let maincont = document.getElementsByTagName("main")[0];
 //let loadingText = document.getElementById("loading");
 let tabSwitcher = document.getElementById("tabSwitcher");
@@ -190,6 +191,7 @@ function switchTab(id) {
 		if (item.getAttribute("BIMG-TabID") == id) {
 			item.classList.add("active");
 			currentTabItemHeader = item;
+			tabSwitcher.scrollLeft = currentTabItemHeader.offsetLeft - (tabSwitcher.offsetWidth / 2) + (currentTabItemHeader.offsetWidth / 2);
 		} else {
 			item.classList.remove("active");
 		}
@@ -212,6 +214,15 @@ function switchTab(id) {
 		});
 		PKAbleSelect.value = selectedsval;
 		PKAbleUpdate.innerHTML = Math.max(filfo.stats.size / PKAbleSelect.value, 0.1).toFixed(1).toString();
+	})
+	var fil = document.getElementsByClassName("fileListItem");
+	Array.prototype.forEach.call(fil, (item) => {
+		if (item.getAttribute("data-imageid") == tabs[tabID].fileID) {
+			item.style.backgroundColor = "lightgray";
+			item.parentElement.parentElement.scrollTop = item.offsetTop - (item.parentElement.parentElement.offsetHeight / 2) + (item.offsetHeight / 2);
+		} else {
+			item.style.backgroundColor = ""
+		}
 	})
 	try {
 		var filfo = tabs[tabID].fileInf.path;
@@ -391,7 +402,9 @@ document.documentElement.appendChild(extraStyling)
 
 function applySettings() {
 	tabSwitcher.style.display = settingsdata["enableTabs"] == true ? "" : "none";
+	mainimgcont.style.overflow = settingsdata["enableOffImageRendering"] == true ? "visible" : "";
 	imgViewCnt.style.overflow = settingsdata["enableOffImageRendering"] == true ? "visible" : "";
+	tabSwitcher.style.backdropFilter = settingsdata["blurOverlays"] == true ? "blur(5px)" : "";
 	Array.prototype.forEach.call(document.querySelectorAll("toolbar.newsupported"),(item)=> {
 		item.style.borderRadius = settingsdata["classicToolbar"] == false ? "10px 10px 0 0" : "";
 		item.style.backdropFilter = settingsdata["blurOverlays"] == true ? "blur(5px)" : "";
@@ -422,7 +435,7 @@ function applySettings() {
 		document.body.style.accentColor = ""
 		extraStyling.innerHTML = ""
 	}
-	extraStyling.innerHTML += "toolbar>button>svg {transform: scale(" + settingsdata["toolbarSizeScale"] + ");} toolbar>button {width: " + (30 * settingsdata["toolbarSizeScale"]) + "px;height: " + (30 * settingsdata["toolbarSizeScale"]) + "px} #imgView {max-height: calc(100% - " + (30 * settingsdata["toolbarSizeScale"]) + "px)}"
+	extraStyling.innerHTML += "toolbar>button>svg {transform: scale(" + settingsdata["toolbarSizeScale"] + ");} toolbar>button {width: " + (30 * settingsdata["toolbarSizeScale"]) + "px;height: " + (30 * settingsdata["toolbarSizeScale"]) + "px} #imgView {max-height: calc(100% - " + (30 * settingsdata["toolbarSizeScale"]) + "px)}" + (settingsdata["blurOverlays"] == true ? ".pane {backdrop-filter:blur(5px)}" : "")
 	autoHideTabs()
 }
 
@@ -733,6 +746,7 @@ imgViewCnt.addEventListener("mousemove", function (evt) {
 	}
 	oldpos = { "x": evt.clientX, "y": evt.clientY }
 })
+var oldzoompos = {}
 imgViewCnt.addEventListener("touchmove", function (evt) {
 	if (currentGalleryView == null) {
 		if (evt.touches.length == 1) {
@@ -745,7 +759,21 @@ imgViewCnt.addEventListener("touchmove", function (evt) {
 				showXYInfo();
 			}
 			oldpos = { "x": evt.touches[0].clientX, "y": evt.touches[0].clientY }
+		}else if (evt.touches.length == 2) {
+			console.log("...")
+			if (dragging) {
+				var change1 = (evt.touches[0].clientX - oldzoompos.x) - (evt.touches[0].clientY - oldzoompos.y)
+				var change2 = (evt.touches[1].clientX - oldzoompos.x2) - (evt.touches[1].clientY - oldzoompos.y2)
+				console.log(change1 - change2)
+				retimgIfOut();
+				//console.log(tabs[tabID].imgX,tabs[tabID].imgY);
+				posImg();
+				showZoomInf();
+			}
+			oldzoompos = { "x": evt.touches[0].clientX, "y": evt.touches[0].clientY,"x2": evt.touches[1].clientX, "y2": evt.touches[1].clientY }
 		}
+		console.log(evt.touches.length)
+		event.preventDefault()
 	}
 })
 imgViewCnt.addEventListener("wheel", function (evt) {
@@ -994,8 +1022,7 @@ function copyCurrentImage() {
 			console.log(':(', err);  
 		}  
 
-		// Remove the selections - NOTE: Should use
-		// removeRange(range) when it is supported  
+		// Remove the selections - NOTE: Should use removeRange(range) when it is supported  
 		window.getSelection().removeAllRanges(); 
 		document.documentElement.style.userSelect = "";
 	}, 100);
@@ -1423,20 +1450,6 @@ function createPane(html, paneID, isAtRight) {
 	setTimeout(function () {
 		sb.style.width = "300px";
 	}, 10)
-	var aniposer = setInterval(function () {
-		if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
-			tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
-		}
-		if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
-			tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
-		}
-		posImg();
-		retimgIfOut();
-	}, 1)
-	setTimeout(function () {
-		clearInterval(aniposer)
-		animateZoomPos();
-	}, 200)
 	let m_pos;
 	function resize(e) {
 		if (isAtRight) {
@@ -1475,6 +1488,7 @@ function createPane(html, paneID, isAtRight) {
 				sb.style.borderLeft = "solid rgba(0,0,0,2)" + RESIZE_BORDER_SIZE + "px";
 			else
 				sb.style.borderRight = "solid rgba(0,0,0,2)" + RESIZE_BORDER_SIZE + "px";
+			e.preventDefault()
 		}
 	}, false);
 
@@ -1500,6 +1514,20 @@ function createPane(html, paneID, isAtRight) {
 			closeBtn.click()
 		}
 	})
+	var aniposer = setInterval(function () {
+		if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
+			tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
+		}
+		if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
+			tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
+		}
+		posImg();
+		retimgIfOut();
+	}, 1)
+	setTimeout(function () {
+		clearInterval(aniposer)
+		animateZoomPos();
+	}, 200)
 	return sb;
 }
 
@@ -1555,7 +1583,6 @@ function getFileExtension(pathorfilename) {
 
 var fil = document.querySelectorAll("*");
 Array.prototype.forEach.call(fil, (item) => {
-	// Unfocus item when clicked
 	item.addEventListener("mouseup", function (e) { if (e.target.tagName != "INPUT") item.blur() })
 })
 
@@ -1582,26 +1609,12 @@ document.addEventListener('drop', (event) => {
 	asyncfor(0, filsdrop.length - 1, 1, filsdrop, (step, array) => {
 		try {
 			newTab();
-			ipcRenderer.sendSync('openfilep', array[step].path);
+			setTimeout(function() {
+				ipcRenderer.sendSync('openfilep', array[step].path);
+			},50)
 		} catch { }
-	}, 100)
+	}, 125)
 });
-
-// Some parts from LimonJS:
-
-function asyncfor(start, end, step, importedvar, func, speed) {
-	var stp = start;
-	var asyncforr = setInterval(function () {
-		func(stp, importedvar);
-		if (stp > end) {
-			clearInterval(asyncforr);
-		}
-		if (stp === end) {
-			clearInterval(asyncforr);
-		}
-		stp += step;
-	}, speed);
-}
 
 function applyTranslations() {
 	var elements = document.querySelectorAll("[data-fromlang]")
@@ -1647,3 +1660,19 @@ ipcRenderer.on("zoomin", (event, data) => { zoomIn() });
 ipcRenderer.on("zoomout", (event, data) => { zoomOut() });
 ipcRenderer.on("addToFavorites", (event, data) => { addIMGToFavorites() });
 ipcRenderer.on("showGalleryViewFullScreen", (event, data) => { showGalleryViewFullScreen() });
+
+// Some parts from LimonJS:
+
+function asyncfor(start, end, step, importedvar, func, speed) {
+	var stp = start;
+	var asyncforr = setInterval(function () {
+		func(stp, importedvar);
+		if (stp > end) {
+			clearInterval(asyncforr);
+		}
+		if (stp === end) {
+			clearInterval(asyncforr);
+		}
+		stp += step;
+	}, speed);
+}

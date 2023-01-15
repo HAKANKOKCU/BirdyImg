@@ -215,7 +215,7 @@ if (!gotTheLock) {
 			icon: "resources/asset/bitmap/appico.png",
 			show: false,
 			title: "BirdyImg",
-			backgroundColor: '#000000'
+			backgroundColor: nativeTheme.shouldUseDarkColors ? '#000000' : '#FFFFFF'
 		};
 		if (settingsdata.bounds != null) {
 			windowinf.x = settingsdata.bounds.x;
@@ -476,7 +476,7 @@ if (!gotTheLock) {
 				}
 				var extension = pathlib.extname(path).toLowerCase();
 				var exif = {}
-				var fileData;
+				fileData = null;
 				try {
 					if (extension == ".svg") {
 						//if file is svg, send file data to renderer to read birdy-image-info etc.
@@ -493,22 +493,15 @@ if (!gotTheLock) {
 						parser.enableBinaryFields(true);
 						parser.enableTagNames(true);
 						parser.enableReturnTags(true);
-						exif = parser.parse().tags;
+						val = parser.parse()
+						exif = val.tags;
+						delete val
 					}
 				}catch (e) {
 					console.error(e);
 				}
 				if (extension == ".tif" || extension == ".tiff") {
 					var filedata = fs.readFileSync(path);
-					try {
-						var parser = require('exif-parser').create(typedArrayToBuffer(filedata));
-						//parser.enableBinaryFields(true);
-						//parser.enableTagNames(true);
-						//parser.enableReturnTags(true);
-						exif = parser.parse().tags;
-					}catch (e) {
-						console.error(e);
-					}
 					app_window.webContents.send("filedata", {
 						path: path,
 						size: dimensions,
@@ -553,6 +546,7 @@ if (!gotTheLock) {
 						filesizes: tabs[tabID].filesizes
 					});
 				}
+				delete fileData
 			}
 		}catch (e) {
 			dialog.showErrorBox("Error!", e.toString())
@@ -861,7 +855,7 @@ if (!gotTheLock) {
 			},
 			icon: "resources/asset/bitmap/appico.png",
 			title: langdata.birdyImgExtensions,
-			backgroundColor: '#000000',
+			backgroundColor: nativeTheme.shouldUseDarkColors ? '#000000' : '#FFFFFF',
 			width:420,
 			height:720
 		});
