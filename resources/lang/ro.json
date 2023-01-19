@@ -91,5 +91,7 @@
 	"closeApp":"Închideți aplicația",
 	"openNewTab":"Deschideți filă nouă",
 	"doNothing":"Nu face nimic",
-	"disableTransparency":"Dezactivați Transparența"
+	"disableTransparency":"Dezactivați Transparența",
+	"showTransparencyTexture":"Afișați textura de transparență",
+	"reload":"Reîncărcă"
 }

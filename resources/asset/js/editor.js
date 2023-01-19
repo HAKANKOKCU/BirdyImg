@@ -357,6 +357,7 @@ function initEditor() {
     }
 
     canvas.addEventListener("touchmove",function (event) {
+		console.log("moving!")
         if (!isdrawing) return;
 		if (editorlock) return;
         //console.log(event)
@@ -377,11 +378,12 @@ function initEditor() {
         } catch { }
         oldevent = event;
         event.preventDefault();
-		return false;
     })
 
     canvas.onmousedown = canvas.ontouchstart = function (e) { 
+		console.log("down!")
 		if (!editorlock) { isdrawing = true; e.preventDefault(); }else {return;}
+		console.log("drawing!")
 		var x = e.offsetX ? e.offsetX : event.touches[0].clientX + canvasscrollable.scrollLeft - canvas.offsetLeft; 
 		var y = e.offsetY ? e.offsetY : event.touches[0].clientY + canvasscrollable.scrollTop - canvas.offsetTop; 
 		x = x / editorZoomPrct;

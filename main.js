@@ -38,7 +38,7 @@ var njs = {
 	"blurOverlays": false, 
 	"autoHideTabs": false, 
 	"enableOffImageRendering":true,
-	//"transparentPanes":true,
+	"showTransparencyTexture":true,
 	"classicToolbar":false,
 	"whenAllTabsAreClosed": 1,
 	"toolbarSizeScale":1,
@@ -679,6 +679,14 @@ if (!gotTheLock) {
 						accelerator: "CmdOrCtrl+Shift+F",
 						click: function () {
 							app_window.webContents.send("addToFavorites","");
+						}
+					},
+					{ type: "separator" },
+					{
+						label: langdata.reload,
+						accelerator: "F5",
+						click: function () {
+							app_window.webContents.send("reloadimage","");
 						}
 					},
 					{ type: "separator" },

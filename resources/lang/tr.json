@@ -91,5 +91,7 @@
 	"closeApp":"Uygulamayı kapat",
 	"openNewTab":"Yeni sekme aç",
 	"doNothing":"Hiçbirşey yapma",
-	"disableTransparency":"Saydamlığı Devre Dışı Bırak"
+	"disableTransparency":"Saydamlığı Devre Dışı Bırak",
+	"showTransparencyTexture":"Saydamlık dokusunu göster",
+	"reload":"Yeniden Yükle"
 }

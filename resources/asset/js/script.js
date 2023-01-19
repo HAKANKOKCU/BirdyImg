@@ -1,4 +1,4 @@
-const versionstring = "1.0 Beta 9"
+const versionstring = "1.0 Beta 10"
 
 const { ipcRenderer } = require("electron");
 
@@ -106,6 +106,9 @@ function newTab() {
 	}catch (e) {console.log(e)}
 	var tabdiv = document.createElement("div")
 	var view = document.createElement("img");
+	try {
+		view.style.background = settingsdata.showTransparencyTexture == true ? 'url("./bitmap/transparencysquares.png")' : ""
+	}catch(e) {console.log(e)}
 	tabdiv.classList.add("tabdiv")
 	tabdiv.appendChild(view);
 	tabdiv.setAttribute("BIMG-TabID", newtabid);
@@ -405,6 +408,10 @@ function applySettings() {
 	mainimgcont.style.overflow = settingsdata["enableOffImageRendering"] == true ? "visible" : "";
 	imgViewCnt.style.overflow = settingsdata["enableOffImageRendering"] == true ? "visible" : "";
 	tabSwitcher.style.backdropFilter = settingsdata["blurOverlays"] == true ? "blur(5px)" : "";
+	Array.prototype.forEach.call(document.querySelectorAll("img[bimg-tabid]"),(view)=> {
+		console.log(view)
+		view.style.background = settingsdata.showTransparencyTexture == true ? 'url("./bitmap/transparencysquares.png")' : ""
+	})
 	Array.prototype.forEach.call(document.querySelectorAll("toolbar.newsupported"),(item)=> {
 		item.style.borderRadius = settingsdata["classicToolbar"] == false ? "10px 10px 0 0" : "";
 		item.style.backdropFilter = settingsdata["blurOverlays"] == true ? "blur(5px)" : "";
@@ -764,7 +771,10 @@ imgViewCnt.addEventListener("touchmove", function (evt) {
 			if (dragging) {
 				var change1 = (evt.touches[0].clientX - oldzoompos.x) - (evt.touches[0].clientY - oldzoompos.y)
 				var change2 = (evt.touches[1].clientX - oldzoompos.x2) - (evt.touches[1].clientY - oldzoompos.y2)
-				console.log(change1 - change2)
+				var changetotal = change1 + change2
+				console.log(changetotal)
+				var precentChange = ((tabs[tabID].imgW * tabs[tabID].zoomPrct) + changetotal) / tabs[tabID].imgW * tabs[tabID].zoomPrct
+				tabs[tabID].zoomPrct = precentChange
 				retimgIfOut();
 				//console.log(tabs[tabID].imgX,tabs[tabID].imgY);
 				posImg();
@@ -826,6 +836,7 @@ function createGalleryView() {
 	cnt.style.backgroundColor = "var(--panecolor)"
 	cnt.style.display = "grid"
 	cnt.style.gap = "10px"
+	cnt.style.padding = "20px"
 	cnt.style.gridTemplateColumns = "repeat(8, 1fr)"
 	cnt.style.overflow = "auto"
 	cnt.style.alignItems = "center";
@@ -840,7 +851,7 @@ function createGalleryView() {
 		image.style.maxWidth = "100%";
 		//image.setAttribute("tabindex",0)
 		//image.style.margin = "10px"
-		image.classList.add("limon","darkshandow")
+		image.classList.add("limon","darkshandow","scaleonhover","bghover","clickable")
 		image.title = getFileName(tabs[tabID].filelist[i]);
 		image.addEventListener("click",function() {
 			closeGalleryView();
@@ -1148,7 +1159,7 @@ function showSettings() {
 	langs.forEach((lang) => {
 		optSelectHTML += "<option value='" + lang + "'>" + lang + "</option>"
 	});
-	var sets = openWindow("<h1>" + langpack.settings + "</h1><h3>" + langpack.general + "</h3><input type='checkbox' name='cbEnableTabs' id='cbEnableTabs' class='enabletab'/><label for='cbEnableTabs'>" + langpack.enableTabs + "</label><br><input type='checkbox' name='cbBO' id='cbBO' class='blurOverlays'/><label for='cbBO'>" + langpack.blurOverlays + "</label><br><input type='checkbox' name='showxy' id='showxy' class='showxy'/><label for='showxy'>" + langpack.showPositionAndSizeInfo + "</label><br><input type='checkbox' name='aht' id='aht' class='aht'/><label for='aht'>" + langpack.autoHideTabs + "</label><br><input type='checkbox' name='ct' id='ct' class='ct'/><label for='ct'>" + langpack.classicToolbar + "</label><br><input type='checkbox' name='eoir' id='eoir' class='eoir'/><label for='eoir'>" + langpack.enableOffImageRendering + "</label><br><label>" + langpack.defaultPanelSide + "</label>&nbsp;<select class='paneSide'><option value='Right'>" + langpack.right + "</option><option value='Left'>" + langpack.left + "</option></select><br><label>" + langpack.whenAllTabsAreClosed + "</label>&nbsp;<select class='watac'><option value='0'>" + langpack.doNothing + "</option><option value='1'>" + langpack.closeApp + "</option><option value='2'>" + langpack.openNewTab + "</option></select><br><label>" + langpack.toolbarSizeScale + ": </label><input type='number' class='tsc'/><h3>" + langpack["colors"] + "</h3><input type='checkbox' class='enablecolors' id='enablecolors' name='enablecolors'/><label for='enablecolors'>" + langpack.enableCustomColors + "</label><h4>" + langpack.accentColor + "</h4><input type='color' class='accentPick'/><input type='checkbox' class='applytoolbar' id='applytoolbar' name='applytoolbar'/><label for='applytoolbar'>" + langpack.applyToToolbarButtons + "</label><h3>Language</h3><select value='" + settingsdata["language"] + "' class='langsb'>" + optSelectHTML + "</select><br><br><button class='openhistory'>" + langpack.history + "</button><button class='openfavorites'>" + langpack.favorites + "</button><br><br><p class='smallo'>BirdyImg " + versionstring + "</p>");
+	var sets = openWindow("<h1>" + langpack.settings + "</h1><h3>" + langpack.general + "</h3><input type='checkbox' name='cbEnableTabs' id='cbEnableTabs' class='enabletab'/><label for='cbEnableTabs'>" + langpack.enableTabs + "</label><br><input type='checkbox' name='cbBO' id='cbBO' class='blurOverlays'/><label for='cbBO'>" + langpack.blurOverlays + "</label><br><input type='checkbox' name='showxy' id='showxy' class='showxy'/><label for='showxy'>" + langpack.showPositionAndSizeInfo + "</label><br><input type='checkbox' name='aht' id='aht' class='aht'/><label for='aht'>" + langpack.autoHideTabs + "</label><br><input type='checkbox' name='ct' id='ct' class='ct'/><label for='ct'>" + langpack.classicToolbar + "</label><br><input type='checkbox' name='eoir' id='eoir' class='eoir'/><label for='eoir'>" + langpack.enableOffImageRendering + "</label><br><input type='checkbox' name='btt' id='btt' class='btt'/><label for='btt'>" + langpack.showTransparencyTexture + "</label><br><label>" + langpack.defaultPanelSide + "</label>&nbsp;<select class='paneSide'><option value='Right'>" + langpack.right + "</option><option value='Left'>" + langpack.left + "</option></select><br><label>" + langpack.whenAllTabsAreClosed + "</label>&nbsp;<select class='watac'><option value='0'>" + langpack.doNothing + "</option><option value='1'>" + langpack.closeApp + "</option><option value='2'>" + langpack.openNewTab + "</option></select><br><label>" + langpack.toolbarSizeScale + ": </label><input type='number' class='tsc'/><h3>" + langpack["colors"] + "</h3><input type='checkbox' class='enablecolors' id='enablecolors' name='enablecolors'/><label for='enablecolors'>" + langpack.enableCustomColors + "</label><h4>" + langpack.accentColor + "</h4><input type='color' class='accentPick'/><input type='checkbox' class='applytoolbar' id='applytoolbar' name='applytoolbar'/><label for='applytoolbar'>" + langpack.applyToToolbarButtons + "</label><h3>Language</h3><select value='" + settingsdata["language"] + "' class='langsb'>" + optSelectHTML + "</select><br><br><button class='openhistory'>" + langpack.history + "</button><button class='openfavorites'>" + langpack.favorites + "</button><br><br><p class='smallo'>BirdyImg " + versionstring + "</p>");
 	sets.querySelector(".openhistory").addEventListener("click", function () {
 		showHistory()
 	})
@@ -1185,6 +1196,7 @@ function showSettings() {
 	sets.querySelector(".paneSide").value = settingsdata["defaultPanelSide"];
 	sets.querySelector(".enabletab").checked = settingsdata["enableTabs"];
 	sets.querySelector(".showxy").checked = settingsdata["showPositionAndSizeInfo"];
+	sets.querySelector(".btt").checked = settingsdata["showTransparencyTexture"];
 	sets.querySelector(".aht").checked = settingsdata["autoHideTabs"];
 	sets.querySelector(".ct").checked = settingsdata["classicToolbar"];
 	sets.querySelector(".eoir").checked = settingsdata["enableOffImageRendering"];
@@ -1199,6 +1211,11 @@ function showSettings() {
 	});
 	sets.querySelector(".eoir").addEventListener("click", function () {
 		settingsdata["enableOffImageRendering"] = sets.querySelector(".eoir").checked;
+		ipcRenderer.send('savesettings', settingsdata);
+		applySettings()
+	});
+	sets.querySelector(".btt").addEventListener("click", function () {
+		settingsdata["showTransparencyTexture"] = sets.querySelector(".btt").checked;
 		ipcRenderer.send('savesettings', settingsdata);
 		applySettings()
 	});
@@ -1660,6 +1677,10 @@ ipcRenderer.on("zoomin", (event, data) => { zoomIn() });
 ipcRenderer.on("zoomout", (event, data) => { zoomOut() });
 ipcRenderer.on("addToFavorites", (event, data) => { addIMGToFavorites() });
 ipcRenderer.on("showGalleryViewFullScreen", (event, data) => { showGalleryViewFullScreen() });
+ipcRenderer.on("reloadimage", (event, data) => {
+	tabs[tabID].imgView.src = ""
+	ipcRenderer.send("openfilep", tabs[tabID].fileInf.path)
+});
 
 // Some parts from LimonJS:
 

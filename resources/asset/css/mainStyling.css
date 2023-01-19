@@ -567,6 +567,9 @@ popuppane {
 	.popupWindow {
 		transition: none;
 	}
+	.scaleonhover {
+		transition: none;
+	}
 }
 
 .fullscreenWindow:focus {
@@ -673,4 +676,23 @@ carditem > img {
 .smallo {
 	font-size:10px;
 	opacity:0.6;
+}
+
+.scaleonhover {
+	transition: 0.1s;
+}
+
+.scaleonhover:hover {
+	z-index:5;
+	transform:scale(1.2)
+}
+
+.showinfoonhover:not(:hover) > info {
+	display:none
+}
+.showinfoonhover:hover {
+	background-color: var(--panecolor)
+}
+.bghover:hover {
+	background-color: var(--panecolor)
 }

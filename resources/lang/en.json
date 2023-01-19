@@ -91,5 +91,7 @@
 	"closeApp":"Close app",
 	"openNewTab":"Open new tab",
 	"doNothing":"Do nothing",
-	"disableTransparency":"Disable Transparency"
+	"disableTransparency":"Disable Transparency",
+	"showTransparencyTexture":"Show transparency texture",
+	"reload":"Reload"
 }
