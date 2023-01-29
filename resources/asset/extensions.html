@@ -35,6 +35,12 @@
 			var infoDesc = document.createElement("p")
 			infoDesc.innerText = item.Description
 			infoCont.appendChild(infoDesc)
+			var infoAuthor = document.createElement("p")
+			infoAuthor.innerText = langpack.author + ": " + item.Author
+			infoCont.appendChild(infoAuthor)
+			var infoVersion = document.createElement("p")
+			infoVersion.innerText = "v" + item.Version
+			infoCont.appendChild(infoVersion)
 			cont.appendChild(infoCont)
 			divList.appendChild(cont)
 		})
@@ -43,6 +49,7 @@
 		window.exfpath = data
 	})
 	ipcRenderer.on("langpack",function(event,data) {
+		window.langpack = data
 		document.getElementById("oef").innerText = data.openExtensionsFile
 		document.getElementById("oef").addEventListener("click",function() {
 			ipcRenderer.send("launchpath", exfpath);

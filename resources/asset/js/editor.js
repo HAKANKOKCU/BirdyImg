@@ -84,6 +84,7 @@ function initEditor() {
 	window.editorDefaultZoom = 0.1;
 	window.ema = document.getElementsByTagName("editormain")[0];
 	window.editorcolorselect = document.getElementById("editorColorSelect");
+	window.editoropacityselect = document.getElementById("editorOpacitySelect");
 	window.editorsizenum = document.getElementById("editorSizeNum");
 	window.effectsmenu = document.getElementById("editorEffectsMenu");
 	window.effectsbutton = document.getElementById("editorEffectsButton");
@@ -92,6 +93,12 @@ function initEditor() {
 	window.effects_reversebutton = createElementWithContainerAndLangString("reverseColors", "button", effectsmenu);
 	window.effects_grayscalebutton = createElementWithContainerAndLangString("grayscale", "button", effectsmenu);
 	window.effects_disabletransparencybutton = createElementWithContainerAndLangString("disableTransparency", "button", effectsmenu);
+	//window.effects_fliphorizontalbutton = createElementWithContainerAndLangString("flipHorizontal", "button", effectsmenu);
+	//window.effects_flipverticalbutton = createElementWithContainerAndLangString("flipVertical", "button", effectsmenu);
+	window.effects_redonlybutton = createElementWithContainerAndLangString("redOnly", "button", effectsmenu);
+	window.effects_greenonlybutton = createElementWithContainerAndLangString("greenOnly", "button", effectsmenu);
+	window.effects_blueonlybutton = createElementWithContainerAndLangString("blueOnly", "button", effectsmenu);
+	window.effects_alphaonlybutton = createElementWithContainerAndLangString("alphaOnly", "button", effectsmenu);
 	window.exiteditorbutton = document.getElementById("exitEditorButton");
 	window.editorsavebutton = document.getElementById("editorSaveButton");
 	window.editorundobutton = document.getElementById("editorUndoButton");
@@ -100,6 +107,64 @@ function initEditor() {
 	window.editorToolsMenu = document.getElementById("editorToolsMenu");
 	window.editorZoomInButton = document.getElementById("editorZoomInButton");
 	window.editorZoomOutButton = document.getElementById("editorZoomOutButton");
+	window.dontcentereditorimage = false
+	window.cropresizeable = document.createElement("div"); cropresizeable.classList.add("resizable");
+	window.cropresizers = document.createElement("div"); cropresizers.classList.add("resizers");
+	window.cropresizera = document.createElement("div"); cropresizera.classList.add("resizer","top-left");
+	window.cropresizerb = document.createElement("div"); cropresizerb.classList.add("resizer","top-right");
+	window.cropresizerc = document.createElement("div"); cropresizerc.classList.add("resizer","bottom-left");
+	window.cropresizerd = document.createElement("div"); cropresizerd.classList.add("resizer","bottom-right");
+	window.cropcontrols = document.createElement("div"); cropcontrols.classList.add("controlbuttons");
+	window.cropcancelbutton = document.createElement("button");
+	cropcancelbutton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6Z"/></svg>`;
+	cropcancelbutton.addEventListener("click",function() {
+		canvasscrollable.removeChild(cropresizeable);
+		dontcentereditorimage = false;
+		editorApplyZoom();
+	})
+	cropcontrols.appendChild(cropcancelbutton);
+	window.tempcanvas = document.createElement("canvas");
+	window.cropbutton = document.createElement("button");
+	cropbutton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="m9.55 18-5.7-5.7 1.425-1.425L9.55 15.15l9.175-9.175L20.15 7.4Z"/></svg>`;
+	cropbutton.addEventListener("click",function() {
+		tempcanvas.width = parseInt(cropresizeable.style.width, 10) / editorZoomPrct;
+		tempcanvas.height = parseInt(cropresizeable.style.height, 10) / editorZoomPrct;
+		var destCtx = tempcanvas.getContext('2d');
+		var x = -(parseInt(cropresizeable.style.left, 10) / editorZoomPrct) - canvas.offsetLeft;
+		var y = -(parseInt(cropresizeable.style.top, 10) / editorZoomPrct) - canvas.offsetTop;
+		//var x = -(parseInt(cropresizeable.style.left, 10) - (canvas.offsetLeft * editorZoomPrct));
+		//var y = -(parseInt(cropresizeable.style.top, 10) - (canvas.offsetTop  * editorZoomPrct));
+		console.log(x)
+		destCtx.drawImage(canvas, x, y);
+		//destCtx.drawImage(canvas, 0,0);
+		//canvasscrollable.appendChild(tempcanvas);
+		canvasscrollable.removeChild(cropresizeable);
+		dontcentereditorimage = false;
+		editorApplyZoom();
+		var win = openWindow("<h1>" + langpack.exportAs + "</h1><!--<label>Quality: </label><input max='100' class='quality' type='number'/>--><button data-export='image/png'>" + langpack.typeImage.replace("{TYPE}", "PNG") + "</button><button data-export='image/jpeg'>" + langpack.typeImage.replace("{TYPE}", "JPEG") + "</button><button data-export='image/webp'>" + langpack.typeImage.replace("{TYPE}", "WebP") + "</button>");
+		//win.getElementsByClassName("quality")[0].value = 100
+        Array.prototype.forEach.call(win.querySelectorAll("button[data-export]"), (item) => {
+            item.onclick = function () {
+                let canvasUrl = tempcanvas.toDataURL(item.getAttribute("data-export"), 1.0); //win.getElementsByClassName("quality")[0].value / 100
+                console.log(canvasUrl);
+                // const createEl = document.createElement('a');
+                // createEl.href = canvasUrl;
+                // createEl.download = "Editor Save";
+                // createEl.click();
+                // createEl.remove();
+				const base64Data = canvasUrl.replace(/^data:image\/png;base64,/, "");
+				ipcRenderer.send("saveFile",base64Data)
+            }
+        });
+	})
+	cropcontrols.appendChild(cropbutton);
+	cropresizers.appendChild(cropresizera);
+	cropresizers.appendChild(cropresizerb);
+	cropresizers.appendChild(cropresizerc);
+	cropresizers.appendChild(cropresizerd);
+	cropresizeable.appendChild(cropresizers);
+	cropresizeable.appendChild(cropcontrols);
+	makeResizableDiv(cropresizeable, false);
 	window.editorlock = false;
 	window.editorRotate = 0;
 	window.editorZoomPrct = 1;
@@ -237,6 +302,7 @@ function initEditor() {
 			if (item.type == "reverse") reverse();
 			if (item.type == "grayscale") grayScale();
 			if (item.type == "disabletransparency") disableTransparency();
+			if (item.type == "only") only(item.channel);
 		})
 	}
 
@@ -282,6 +348,45 @@ function initEditor() {
 		ctx.putImageData(imgData, 0, 0);
 	}
 	
+	window.only = function(channelid) {
+		//var currentclor = ctx.fillStyle
+		let imgData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+		let pixels = imgData.data;
+		for (var i = 0; i < pixels.length; i += 4) {
+			pixels[i] = channelid == 0 ? pixels[i] : 0;
+			pixels[i + 1] = channelid == 1 ? pixels[i + 1] : 0;
+			pixels[i + 2] = channelid == 2 ? pixels[i + 2] : 0;
+			pixels[i + 3] = channelid == 3 ? pixels[i + 3] : 255;
+		}
+		//ctx.fillStyle = currentclor;
+		ctx.putImageData(imgData, 0, 0);
+	}
+	
+	window.flipHorizontal = function() {
+		//var currentclor = ctx.fillStyle
+		let imgData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+		let pixels = imgData.data;
+		let pixelsunchanged = pixels;
+		var i = 0
+		for (var y = 0; y < canvas.height; y += 1) {
+			var linestarti = i * 4
+			var lineipixels = []
+			for (var p = 0; p < canvas.width * 4; p += 1) {
+				lineipixels.push(pixelsunchanged[linestarti + p])
+			}
+			//console.log(lineipixels)
+			for (var x = 0; x < canvas.width; x += 1) {
+				pixels[i] = lineipixels[((lineipixels.length - 1) - i) - 3]
+				pixels[i + 1] = lineipixels[((lineipixels.length - 1) - i) - 2]
+				pixels[i + 2] = lineipixels[((lineipixels.length - 1) - i) - 1]
+				pixels[i + 3] = lineipixels[((lineipixels.length - 1) - i) - 0]
+				i += 1;
+			}
+		}
+		//ctx.fillStyle = currentclor;
+		ctx.putImageData(imgData, 0, 0);
+	}
+	
 	window.disableTransparency = function() {
 		//var currentclor = ctx.fillStyle
 		let imgData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -298,8 +403,8 @@ function initEditor() {
 		if (editorZoomPrct <= 0) editorZoomPrct = editorDefaultZoom;
 		canvas.style.width = (tabs[tabID].imgW * editorZoomPrct) + "px";
 		canvas.style.height = (tabs[tabID].imgH * editorZoomPrct) + "px";
-		canvasscrollable.style.justifyContent = ((tabs[tabID].imgW * editorZoomPrct) < canvasscrollable.offsetWidth) ? "center" : ""
-		canvasscrollable.style.alignItems = ((tabs[tabID].imgH * editorZoomPrct) < canvasscrollable.offsetHeight) ? "center" : ""
+		canvasscrollable.style.justifyContent = ((tabs[tabID].imgW * editorZoomPrct) < canvasscrollable.offsetWidth && !dontcentereditorimage) ? "center" : ""
+		canvasscrollable.style.alignItems = ((tabs[tabID].imgH * editorZoomPrct) < canvasscrollable.offsetHeight && !dontcentereditorimage) ? "center" : ""
 	}
 	
 	canvasscrollable.onwheel = function(e) {
@@ -416,7 +521,8 @@ function initEditor() {
 			// ALPHA = data[3]
 			
 			currentcolor = `rgba(${data[0]},${data[1]},${data[2]},${data[3]})`
-			editorColorSelect.value = "#" + rgbToHex(data[0],data[1],data[2]);
+			editorcolorselect.value = "#" + rgbToHex(data[0],data[1],data[2]);
+			editoropacityselect.value = data[3]
 		}
 		if (editortool == "liner") {
 			drawlineat(parseInt(previewLine.getAttribute("x1"), 10), parseInt(previewLine.getAttribute("y1"), 10), x, y, lineW);
@@ -445,8 +551,22 @@ function initEditor() {
 	}
 
     editorcolorselect.onchange = function () {
-        currentcolor = editorcolorselect.value;
+		var colorrgb = rgbcolor(editorcolorselect.value)
+		currentcolor = "rgba(" + colorrgb.r + "," + colorrgb.g + "," + colorrgb.b + "," + (editoropacityselect.value / 255) + ")";
     }
+	
+	editoropacityselect.onchange = function () {
+		var colorrgb = rgbcolor(editorcolorselect.value)
+		currentcolor = "rgba(" + colorrgb.r + "," + colorrgb.g + "," + colorrgb.b + "," + (editoropacityselect.value / 255) + ")";
+    }
+	
+	function rgbcolor(color) {
+		const r = parseInt(color.substr(1,2), 16)
+		const g = parseInt(color.substr(3,2), 16)
+		const b = parseInt(color.substr(5,2), 16)
+		return {r:r,g:g,b:b}
+	}
+	
     editorsizenum.value = lineW;
     editorsizenum.onchange = function () {
         lineW = editorsizenum.value;
@@ -462,8 +582,18 @@ function initEditor() {
 
     Array.prototype.forEach.call(editorToolsMenu.querySelectorAll("button"), (item) => {
         item.onclick = function () {
-            editortool = item.getAttribute("data-toolname");
-			editorTools.innerHTML = item.innerHTML;
+			if (item.getAttribute("data-toolname") == "cropper") {
+				canvasscrollable.appendChild(cropresizeable);
+				cropresizeable.style.top = "0px";
+				cropresizeable.style.left = "0px";
+				cropresizeable.style.width = canvas.style.width;
+				cropresizeable.style.height = canvas.style.height;
+				dontcentereditorimage = true;
+				editorApplyZoom();
+			}else {
+				editortool = item.getAttribute("data-toolname");
+				editorTools.innerHTML = item.innerHTML;
+			}
         }
     });
 
@@ -479,6 +609,11 @@ function initEditor() {
 	effects_reversebutton.onclick = function () { reverse(); drawing.push({ type: "reverse" }); drawundos.push(1) }
 	
 	effects_grayscalebutton.onclick = function () { grayScale(); drawing.push({ type: "grayscale" }); drawundos.push(1) }
+	
+	effects_redonlybutton.onclick = function () { only(0); drawing.push({ type: "only", channel: 0}); drawundos.push(1) }
+	effects_greenonlybutton.onclick = function () { only(1); drawing.push({ type: "only", channel: 1}); drawundos.push(1) }
+	effects_blueonlybutton.onclick = function () { only(2); drawing.push({ type: "only", channel: 2}); drawundos.push(1) }
+	effects_alphaonlybutton.onclick = function () { only(3); drawing.push({ type: "only", channel: 3}); drawundos.push(1) }
 	
 	effects_disabletransparencybutton.onclick = function () { disableTransparency(); drawing.push({ type: "disabletransparency" }); drawundos.push(1) }
 

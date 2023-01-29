@@ -24,7 +24,7 @@
 					</nodisplay>
 					<div id="zoominf" data-nohide="true"></div>
 				</div>
-				<toolbar class="newsupported" data-width="410">
+				<toolbar class="newsupported" data-width="410" id="maintoolbar">
 					<button id="prvFileButton" data-tooltipfromlang="previousImage">
 						<!--<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 							<path d="M10 22 0 12 10 2l1.775 1.775L3.55 12l8.225 8.225Z" />
@@ -89,6 +89,10 @@
 						</svg>
 					</button>
 					<sep></sep>
+					<button id="deleteFile" data-tooltipfromlang="deleteFile">
+						<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="m9.4 16.5 2.6-2.6 2.6 2.6 1.4-1.4-2.6-2.6L16 9.9l-1.4-1.4-2.6 2.6-2.6-2.6L8 9.9l2.6 2.6L8 15.1ZM7 21q-.825 0-1.412-.587Q5 19.825 5 19V6H4V4h5V3h6v1h5v2h-1v13q0 .825-.587 1.413Q17.825 21 17 21ZM17 6H7v13h10ZM7 6v13Z"/></svg>
+					</button>
+					<sep></sep>
 					<button id="copyImageButton"  data-tooltipfromlang="copyImage">
 						<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24">
 							<path
@@ -138,6 +142,7 @@
 						style="background-color: var(--panecolor);color:var(--textcolor)">
 					<input type="number" id="editorSizeNum"
 						style="background-color: var(--panecolor);color:var(--textcolor);height:30px;width:40px">
+					<input type="range" id="editorOpacitySelect" min="0" max="255" value="255">
 					<marginAuto></marginAuto>
 					<sep></sep>
 					<button id="editorZoomOutButton" data-tooltipfromlang="zoomOut">
@@ -198,6 +203,12 @@
 					<button data-toolname="frectangle">
 						<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M2 20V4h20v16Z"/></svg>
 					</button>
+					<button data-toolname="cropper">
+						<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M17 23v-4H7q-.825 0-1.412-.587Q5 17.825 5 17V7H1V5h4V1h2v16h16v2h-4v4Zm0-8V7H9V5h8q.825 0 1.413.588Q19 6.175 19 7v8Z"/></svg>
+					</button>
+					<!--<button data-toolname="pixel">
+						<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M3 11V3h8v8Zm0 10v-8h8v8Zm10-10V3h8v8Zm0 10v-8h8v8Z"/></svg>
+					</button>-->
 				</popuppane>
 			</editormain>
 			<editorhome style="display:none">

@@ -1,6 +1,6 @@
 console.time("startup");
 console.log("require electron")
-const { BrowserWindow, app, Menu, ipcMain, dialog, nativeTheme } = require("electron");
+const { BrowserWindow, app, Menu, ipcMain, dialog, nativeTheme,clipboard, desktopCapturer, screen } = require("electron");
 console.log("require fs-extra")
 var fs = require("fs-extra");
 const os = require('os');
@@ -40,6 +40,7 @@ var njs = {
 	"enableOffImageRendering":true,
 	"showTransparencyTexture":true,
 	"classicToolbar":false,
+	"reversedFileListOrder":false,
 	"whenAllTabsAreClosed": 1,
 	"toolbarSizeScale":1,
 	"colors": {
@@ -235,7 +236,7 @@ if (!gotTheLock) {
 						let jdata = fs.readFileSync(item)
 						let json = JSON.parse(jdata)
 						let dirpath = pathlib.dirname(item)
-						let data = fs.readFileSync(json["Path"].replace(/_DIR_/g,dirpath))
+						let data = fs.readFileSync(json["MainPath"].replace(/_DIR_/g,dirpath))
 						json["CURRENTDIR"] = dirpath;
 						extensions.push(json)
 						try { eval(data.toString()) } catch (e) { console.error(e) } 
@@ -290,6 +291,14 @@ if (!gotTheLock) {
 				});
 				app_window.webContents.send("langs", langs);
 			});
+			extensions.forEach((extension) => {
+				try {
+					if (extension.hasOwnProperty("RendererPath")) {
+						let dirpath = extension.CURRENTDIR
+						app_window.webContents.executeJavaScript(fs.readFileSync(extension["RendererPath"].replace(/_DIR_/g,dirpath)),true)
+					}
+				}catch (e) {console.error(e)}
+			})
 			console.timeEnd("startup");
 			iswindowloaded = true;
 		});
@@ -322,6 +331,10 @@ if (!gotTheLock) {
 	ipcMain.on("enterEditor", (e, arg) => {
 		Menu.setApplicationMenu(editormenu_design);
 	})
+	
+	ipcMain.on("writeImage", (e, arg) => {
+		clipboard.writeImage(arg)
+	})
 
 	ipcMain.on("exitEditor", (e, arg) => {
 		Menu.setApplicationMenu(menu_design);
@@ -330,6 +343,27 @@ if (!gotTheLock) {
 	ipcMain.on("close",(e,arg) => {
 		app_window.close()
 	})
+	
+	ipcMain.on("deleteCurrentFile", (e,arg) => {
+		deleteCurrentFile(arg)
+	})
+	
+	function deleteCurrentFile(arg) {
+		dialog.showMessageBox(app_window,{message: langdata.doYouWantToDeleteThisFileFromDisk,title: langdata.deleteFile, type: "question", buttons:[langdata.no,langdata.yes]}).then((res) => {
+			console.log(res)
+			if (res.response == 1) {
+				fs.unlinkSync(arg);
+				tabs[tabID].oldDirPath = ""
+				isFirstFolderLoad = true
+				tabs[tabID].fileID += 1
+				if (tabs[tabID].fileID > tabs[tabID].filelist.length - 1) {
+					console.log("Reset to 0")
+					tabs[tabID].fileID = 0;
+				}
+				openFil(tabs[tabID].filelist[tabs[tabID].fileID]);
+			}
+		})
+	}
 
 	ipcMain.on("openfile", (e, arg) => {
 		dialog
@@ -355,7 +389,8 @@ if (!gotTheLock) {
 			fileID: null,
 			oldDirPath: null,
 			filesInDIR: [],
-			isFirstFolderLoad: true
+			isFirstFolderLoad: true,
+			currentFile: null
 		};
 		e.returnValue = "";
 	})
@@ -453,6 +488,12 @@ if (!gotTheLock) {
 					click: function () {
 						app_window.webContents.send("addToFavorites","");
 					}
+				},
+				{
+					label: langdata.fileList,
+					click: function () {
+						app_window.webContents.send("showfilelist", "");
+					}
 				}
 			]
 			const menu = Menu.buildFromTemplate(template)
@@ -465,6 +506,7 @@ if (!gotTheLock) {
 	function openFil(path) {
 		try {
 			if (path != undefined) {
+				tabs[tabID].currentFile = path
 				var stats = fs.statSync(path);
 				//console.log(pathlib.extname(path).toLowerCase());
 				var sizeOf = require('image-size');
@@ -528,6 +570,9 @@ if (!gotTheLock) {
 					tabs[tabID].filesizes = [];
 					fs.readdir(dirpath, (err, files) => {
 						console.log("Loading Folder! - Found " + files.length + " files in directory.")
+						if (settingsdata["reversedFileListOrder"]) {
+							files = files.reverse();
+						}
 						tabs[tabID].filesInDIR = files;
 						tabs[tabID].isFirstFolderLoad = true
 						updateFileID(dirpath,path);
@@ -612,6 +657,32 @@ if (!gotTheLock) {
 		return pt[pt.length - 1]
 	}
 	
+	function capture(screenid) {
+		//const winBounds = app_window.getBounds();
+		//const whichScreen = screen.getDisplayNearestPoint({x: winBounds.x, y: winBounds.y});
+		var scree = screen.getAllDisplays()[screenid]
+		console.log(scree.size)
+		desktopCapturer.getSources({ types: ['screen'],thumbnailSize: scree.size })
+			.then( sources => {
+				var arg = sources[screenid].thumbnail.toPNG()
+				dialog
+					.showSaveDialog({
+						properties: ["createDirectory"],
+						filters: [{name:"*.png",extensions:"*.png"}]
+					})
+					.then((res) => {
+						if (!res.canceled) {
+							fs.writeFile(res.filePath, arg, 'base64', function (err) {
+								console.log(err);
+							});
+							settingsdata.recentlySaved.push(res.filePath);
+							saveSettings();
+							app_window.webContents.send("settingsdata", settingsdata);
+						}
+					})
+			})
+	}
+	
 	function bulidMAmenu() {
 		var atflabel
 		try {
@@ -659,6 +730,31 @@ if (!gotTheLock) {
 							app_window.webContents.send("showGalleryViewFullScreen", "");
 						}
 					},
+					{
+						label: langdata.startSlideshow,
+						accelerator: 'CmdOrCtrl+H',
+						click: function () {
+							app_window.webContents.send("slideshow", "");
+						}
+					},
+					{ type: "separator" },
+					{
+						label: langdata.screenshot,
+						accelerator: 'CmdOrCtrl+U',
+						click: function () {
+							var btns = []
+							Array.prototype.forEach.call(screen.getAllDisplays(),function(item,id) {
+								btns.push((id + 1).toString() + " (" + item.size.width.toString() + "x" + item.size.height.toString() + ") " + item.id)
+							})
+							dialog.showMessageBox({message: langdata.screenshotps,title: langdata.screenshot, type: "question", buttons:btns}).then((res) => {
+								dialog.showMessageBox({message: langdata.screenshotMessage, title: langdata.screenshot}).then(() => {
+									setTimeout(function() {
+										capture(res.response)
+									},5000)
+								})
+							})
+						}
+					},
 					{ type: "separator" },
 					{
 						label: langdata.copyImage,
@@ -687,6 +783,13 @@ if (!gotTheLock) {
 						accelerator: "F5",
 						click: function () {
 							app_window.webContents.send("reloadimage","");
+						}
+					},
+					{
+						label: langdata.deleteFile,
+						accelerator: 'Shift+Delete',
+						click: function () {
+							deleteCurrentFile(tabs[tabID].currentFile)
 						}
 					},
 					{ type: "separator" },
@@ -869,8 +972,9 @@ if (!gotTheLock) {
 		});
 		extensionsWin.setMenu(null);
 		extensionsWin.loadFile("resources/asset/extensions.html");
-		extensionsWin.webContents.on('dom-ready', function () {extensionsWin.webContents.send("extensions",extensions);
-		extensionsWin.webContents.send("langpack", langdata);extensionsWin.webContents.send("exfPath",os.homedir() + "/BirdyImg/extensions.data")})
+		extensionsWin.webContents.on('dom-ready', function () {
+			extensionsWin.webContents.send("langpack", langdata);extensionsWin.webContents.send("exfPath",os.homedir() + "/BirdyImg/extensions.data");extensionsWin.webContents.send("extensions",extensions);
+		})
 		//extensionsWin.openDevTools();
 	}
 }

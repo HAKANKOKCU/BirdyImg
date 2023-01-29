@@ -1,4 +1,4 @@
-const versionstring = "1.0 Beta 10"
+const versionstring = "1.0 Beta 11"
 
 const { ipcRenderer } = require("electron");
 
@@ -27,10 +27,10 @@ function createElementWithContainerAndLangString(langstring,type,container) {
 	return elem;
 }
 
-//for dedecting touchscreens
-window.isTouch = false
-document.body.addEventListener("touchstart",function() {isTouch = true;console.log("its touch!")})
-document.body.addEventListener("mousedown",function() {isTouch = false;console.log("its NOT touch!")})
+//for dedecting touchscreens (REMOVED.)
+//window.isTouch = false
+//document.body.addEventListener("touchstart",function() {isTouch = true;console.log("its touch!")})
+//document.body.addEventListener("mousedown",function() {isTouch = false;console.log("its NOT touch!")})
 
 const RESIZE_BORDER_SIZE = 4;
 let imgViewCnt = document.getElementById("imgView");
@@ -57,6 +57,8 @@ let showGalleryViewButton = document.getElementById("showGalleryView");
 let addToFavorites = document.getElementById("addToFavorites");
 let enterEditorButton = document.getElementById("enterEditorButton");
 //----
+let deleteFileButton = document.getElementById("deleteFile");
+//----
 let copyFileButton = document.getElementById("copyImageButton");
 let openFileButton = document.getElementById("openFileButton");
 
@@ -76,6 +78,11 @@ enterEditorButton.addEventListener("click", loadFileInEditor);
 copyFileButton.addEventListener("click", copyCurrentImage);
 addToFavorites.addEventListener("click", addIMGToFavorites)
 showGalleryViewButton.addEventListener("click",showGalleryViewFullScreen)
+deleteFileButton.addEventListener("click",deleteCurrentFile)
+
+function deleteCurrentFile() {
+	ipcRenderer.send("deleteCurrentFile",tabs[tabID].fileInf.path)
+}
 
 //editor
 ipcRenderer.on("editIMG",(event,data) => {
@@ -271,19 +278,19 @@ function closeTab(id) {
 }
 
 //newTab(); will be sent by main
-
+// for menu items:
 ipcRenderer.on("createnewtab", (event, data) => { newTab() });
 ipcRenderer.on("closecurrenttab", (event, data) => { closeTab(tabID) });
 
-ipcRenderer.on("settingsdata", (event, data) => {
+ipcRenderer.on("settingsdata", (event, data) => { //Get settings data
 	window.settingsdata = data;
-	applySettings()
+	applySettings() //And apply it
 });
 ipcRenderer.on("langs", (event, data) => {
 	langs = data;
 });
 window.parser = new DOMParser();
-ipcRenderer.on("filedata", (event, data) => {
+ipcRenderer.on("filedata", (event, data) => { //Open the file
 	if (tabCount == 0) newTab()
 	if (data.filedata != undefined) {
 		var xmlDoc = parser.parseFromString(data.filedata,"text/xml");
@@ -300,7 +307,9 @@ ipcRenderer.on("filedata", (event, data) => {
 		}
 	}
 	hiddenpart.appendChild(tabs[tabID].ghostImg);
-	document.title = "BirdyImg - " + getFileName(data.path);
+	if (typeof slideshowtimer == "undefined") {
+		document.title = "BirdyImg - " + getFileName(data.path);
+	}
 	tabs[tabID].loadingCir.style.display = "";
 	console.log(data);
 	if (data.useDURL == true) {
@@ -400,10 +409,10 @@ function autoHideTabs() {
 	}
 }
 
-let extraStyling = document.createElement("style")
+let extraStyling = document.createElement("style") //For some customization options.
 document.documentElement.appendChild(extraStyling)
 
-function applySettings() {
+function applySettings() { //Apply settings
 	tabSwitcher.style.display = settingsdata["enableTabs"] == true ? "" : "none";
 	mainimgcont.style.overflow = settingsdata["enableOffImageRendering"] == true ? "visible" : "";
 	imgViewCnt.style.overflow = settingsdata["enableOffImageRendering"] == true ? "visible" : "";
@@ -434,9 +443,9 @@ function applySettings() {
 	if (settingsdata["colors"]["enableCustomColors"] == true) {
 		document.body.style.accentColor = settingsdata["colors"]["accentColor"]["value"]
 		if (settingsdata["colors"]["accentColor"]["applyToToolbarButtons"] == true) {
-			extraStyling.innerHTML = "svg {fill: " + settingsdata["colors"]["accentColor"]["value"] + "}"
+			extraStyling.innerHTML = "svg {fill: " + settingsdata["colors"]["accentColor"]["value"] + "} body {--accentcolor:"+ settingsdata["colors"]["accentColor"]["value"] + "}"
 		}else {
-			extraStyling.innerHTML = ""
+			extraStyling.innerHTML = "body {--accentcolor:"+ settingsdata["colors"]["accentColor"]["value"] + "}"
 		}
 	}else {
 		document.body.style.accentColor = ""
@@ -446,11 +455,11 @@ function applySettings() {
 	autoHideTabs()
 }
 
-function typedArrayToBuffer(array) {
+function typedArrayToBuffer(array) { //Converts array to a buffer.
     return array.buffer.slice(array.byteOffset, array.byteLength + array.byteOffset)
 }
 
-ipcRenderer.on("filelist", (event, data) => {
+ipcRenderer.on("filelist", (event, data) => { //Get file list in folder
 	tabs[tabID].filelist = data.list;
 	tabs[tabID].filesizes = data.filesizes;
 	tabs[tabID].fileID = data.fileID;
@@ -501,30 +510,32 @@ function showfList() {
 	})
 }
 
-ipcRenderer.on("langpack", (event, data) => {
+ipcRenderer.on("langpack", (event, data) => { //This will give language pack.
 	window.langpack = data;
 	//loadingText.innerText = langpack.loadingImage;
-	applyTranslations();
+	applyTranslations(); //Apply translations at buttons etc.
 });
-ipcRenderer.on("imageinfo", (event, data) => {
+ipcRenderer.on("imageinfo", (event, data) => { //For menu/contextmenu item
 	openFileInfo();
 });
 
-function openFileInfo() {
+function openFileInfo() { // File info pane opener.
 	var filfo = tabs[tabID].fileInf;
-	var pane = openPane(generateFileInfoContent(), "FileInfo");
+	var pane = openPane(generateFileInfoContent(), "FileInfo"); //Get html from function and give the id for the pane.
+	//For file info stuff:
 	var PKAbleSelect = pane.getElementsByClassName("PKAbleSizeSelect")[0];
 	var PKAbleUpdate = pane.getElementsByClassName("PKAbleSizeUpdateSpan")[0];
 	var opendir = pane.getElementsByClassName("opendir")[0];
 	PKAbleSelect.addEventListener("change", function () {
 		PKAbleUpdate.innerHTML = Math.max(filfo.stats.size / PKAbleSelect.value, 0.1).toFixed(1).toString();
 	});
+	//To make the link to open the parent directory work
 	opendir.addEventListener("click", function () {
 		ipcRenderer.send("launchpath", getFolderPath(filfo.path));
 	});
 }
 
-function generateFileInfoContent() {
+function generateFileInfoContent() { //Generates HTML in file info pane.
 	var filfo = tabs[tabID].fileInf;
 	var namestr = getFileName(filfo.path).replace(/</g,"&lt;").replace(/>/g,"&gt;");
 	//var fnstr;
@@ -540,6 +551,7 @@ function generateFileInfoContent() {
 	} else {
 		pstr = pathstr
 	}
+	//EXIF stuff:
 	var desc = filfo.exif.XPComment
 	//console.log(parseArrayToString(desc));
 	if (desc == undefined) {desc = "???"} else {desc = parseArrayToString(desc).replace(/</g,"&lt;").replace(/>/g,"&gt;")}
@@ -555,10 +567,11 @@ function generateFileInfoContent() {
 	var tags = filfo.exif.XPKeywords
 	//console.log(parseArrayToString(sub));
 	if (tags == undefined) {tags = "???"} else {tags = parseArrayToString(tags).replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+	// Return The HTML:
 	return "<h1>" + langpack.imageInfo + "</h1><p></p><p class='ilitem'><b>" + langpack.name + "</b>: <span>" + namestr + "</span></p><p class='ilitem'><b>" + langpack.type + ": </b>" + getFileExtension(filfo.path) + "</p><p class='ilitem'><b>" + langpack.width + ": </b>" + tabs[tabID].imgW.toString() + " (" + filfo.size.width + ")" + "</p><p class='ilitem'><b>" + langpack.height + ": </b>" + tabs[tabID].imgH.toString() + " (" + filfo.size.height + ")" + "</p><p class='ilitem'><b>" + langpack.fileSize + ": </b><span class='PKAbleSizeUpdateSpan'>" + Math.max(filfo.stats.size / 1024, 0.1).toFixed(1).toString() + "</span><select class='PKAbleSizeSelect'><option value='1'>B</option><option selected value='1024'>KB</option><option value='1048576'>MB</option></select></p><p class='ilitem'><b>" + langpack.creationDate + ": </b><span>" + DateToString(filfo.stats.ctime) + "</span></p><p class='ilitem'><b>" + langpack.lastModifiedDate + ": </b><span>" + DateToString(filfo.stats.mtime) + "</span></p><p class='ilitem'><b>" + langpack.lastAccessDate + ": </b><span>" + DateToString(filfo.stats.atime) + "</span> </p><p class='ilitem'><b>" + langpack.folder + ": </b><span class='opendir clickable'>" + getFolderName(filfo.path) + "</span></p><p class='ilitem'><b>" + langpack.path + ": </b>" + pstr + "</p><p class='ilitem'><b>" + langpack.title + ": </b>" + tit + "</p><p class='ilitem'><b>" + langpack.description + ": </b>" + desc + "</p><p class='ilitem'><b>" + langpack.subject + ": </b>" + sub + "</p><p class='ilitem'><b>" + langpack.author + ": </b>" + aut + "</p><p class='ilitem'><b>" + langpack.rating + ": </b>" + rat + " / 5</p><p class='ilitem'><b>" + langpack.tags + ": </b>" + tags + "</p>"
 }
 
-function parseArrayToString(array) {
+function parseArrayToString(array) { //Array to string
 	if (typeof array != "string") {
 		var read = true
 		var str = ""
@@ -574,7 +587,7 @@ function parseArrayToString(array) {
 	}
 }
 
-function DateToString(date) {
+function DateToString(date) { //Converts date to string (DD.MM.YYYY HH:NN)
 	return date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear() + " " + date.getHours() + ":" + date.getMinutes();
 }
 
@@ -646,7 +659,7 @@ function fullimg() {
 	showZoomPrct();
 }
 
-addEventListener('resize', (event) => {
+addEventListener('resize', (event) => { //When window is resized
 	if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
 		animateZoomPos()
 		tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
@@ -664,21 +677,24 @@ document.addEventListener('keydown', function (event) {
 	if (event.target.tagName == "INPUT") return;
 	console.log(event.keyCode); //for debugging
 	if (!isInEditor) {
-		if (event.keyCode == 37) {
+		if (event.keyCode == 27) { //ESC
+			exitSlideshow()
+		}
+		if (event.keyCode == 37) { //LEFT ARROW
 			prvFile();
 		}
-		if (event.keyCode == 39) {
+		if (event.keyCode == 39) { //RIGHT ARROW
 			nextFile();
 		}
-		if (event.keyCode == 79) {
+		if (event.keyCode == 79) { //O
 			openFile();
 		}
 		if (event.ctrlKey) {
-			if (event.keyCode == 84) {
+			if (event.keyCode == 84) { // T
 				newTab();
 			}
 			if (event.shiftKey) {
-				if (event.keyCode == 9) {
+				if (event.keyCode == 9) { //TAB
 					tabID--;
 					if (tabID < 0) {
 						tabID = 0;
@@ -686,7 +702,7 @@ document.addEventListener('keydown', function (event) {
 					switchTab(tabID);
 				}
 			} else {
-				if (event.keyCode == 9) {
+				if (event.keyCode == 9) { //TAB
 					tabID++;
 					if (tabID == tabCount) {
 						tabID = tabCount - 1;
@@ -697,7 +713,7 @@ document.addEventListener('keydown', function (event) {
 		}
 	}
 });
-document.addEventListener("mousemove", function (event) {
+document.addEventListener("mousemove", function (event) { //When mouse moved set x and y
 	mouseX = event.x;
 	mouseY = event.y;
 })
@@ -722,7 +738,7 @@ function riNR() {
 //	} else if (tabs[tabID].imgY > 0) { tabs[tabID].imgY = 0 } else if (tabs[tabID].imgY < -((tabs[tabID].imgH * tabs[tabID].zoomPrct) - imgViewCnt.offsetWidth)) { tabs[tabID].imgY = -((tabs[tabID].imgH * tabs[tabID].zoomPrct) - imgViewCnt.offsetWidth) }
 //}
 
-function retimgIfOut() {
+function retimgIfOut() { //When image is at place it should not be at, Revert it
 	if (tabs[tabID].rot == 90) {
 		//	riHR();
 	} else if (tabs[tabID].rot == 270) {
@@ -766,7 +782,7 @@ imgViewCnt.addEventListener("touchmove", function (evt) {
 				showXYInfo();
 			}
 			oldpos = { "x": evt.touches[0].clientX, "y": evt.touches[0].clientY }
-		}else if (evt.touches.length == 2) {
+		}else if (evt.touches.length == 2) { //I think this **doesnt work!**
 			console.log("...")
 			if (dragging) {
 				var change1 = (evt.touches[0].clientX - oldzoompos.x) - (evt.touches[0].clientY - oldzoompos.y)
@@ -786,7 +802,7 @@ imgViewCnt.addEventListener("touchmove", function (evt) {
 		event.preventDefault()
 	}
 })
-imgViewCnt.addEventListener("wheel", function (evt) {
+imgViewCnt.addEventListener("wheel", function (evt) { //When mouse wheel is rotated, zoom in or out
 	if (currentGalleryView == null) {
 		var oldsizeW = tabs[tabID].imgW * tabs[tabID].zoomPrct;
 		var oldsizeH = tabs[tabID].imgH * tabs[tabID].zoomPrct;
@@ -863,27 +879,29 @@ function createGalleryView() {
 }
 window.currentGalleryView = null;
 function showGalleryViewFullScreen() {
-	if (currentGalleryView == null) {
+	if (currentGalleryView == null) { //Toggle gallery view (if its null, open; else, close)
 		var view = createGalleryView()
 		imgViewCnt.appendChild(view)
 		currentGalleryView = view
+		//Hide tabs and viewer.
 		tabs[tabID].tabdiv.style.display = "none"
 		tabSwitcher.style.display = "none"
-		document.title = "BirdyImg - " + langpack.galleryView;
+		document.title = "BirdyImg - " + langpack.galleryView; // Change title to BirdyImg - (Translation for galleryView)
 	}else {closeGalleryView()}
 }
 function closeGalleryView() {
 	imgViewCnt.removeChild(currentGalleryView)
 	currentGalleryView.innerHTML = ""
 	currentGalleryView = null
+	// Show tabs and viewer.
 	tabs[tabID].tabdiv.style.display = ""
 	tabSwitcher.style.display = ""
-	document.title = "BirdyImg - " + getFileName(tabs[tabID].fileInf.path) + " (" + tabs[tabID].imgW + "x" + tabs[tabID].imgH + ")";
+	document.title = "BirdyImg - " + getFileName(tabs[tabID].fileInf.path) + " (" + tabs[tabID].imgW + "x" + tabs[tabID].imgH + ")"; //Change title to BirdyImg - (File Name) ((Width)x(Height))
 	autoHideTabs()
 	applySettings()
 }
 
-function posImg() {
+function posImg() { //Position, rotate and scale image
 	tabs[tabID].imgView.style.top = tabs[tabID].imgY + "px";
 	tabs[tabID].imgView.style.left = tabs[tabID].imgX + "px";
 	//if (tabs[tabID].rot == 90) {
@@ -905,7 +923,7 @@ function posImg() {
 	tabs[tabID].imgView.style.transform = "rotate(" + tabs[tabID].rot + "deg)";
 }
 
-var remfunc = null;
+var remfunc = null; //For removing timeout when it fires again
 
 function animateZoomPos() {
 	if (remfunc != null) {
@@ -918,7 +936,7 @@ function animateZoomPos() {
 	}, 201)
 }
 
-function openFile() {
+function openFile() { //Opens Open File Dialog
 	ipcRenderer.send("openfile", tabID)
 }
 
@@ -973,7 +991,7 @@ function showXYInfo() {
 	showZoomInf();
 }
 
-var hidei = null;
+var hidei = null; //To remove timeout when it fires again.
 function showZoomInf() {
 	zoominf.style.opacity = "1";
 	if (hidei != null) clearTimeout(hidei);
@@ -983,31 +1001,31 @@ function showZoomInf() {
 	},2700)
 }
 
-function imageLoaded(id) {
-	tabs[tabID].loadingCir.style.display = "none";
+function imageLoaded(id) { //When image loaded.
+	tabs[id].loadingCir.style.display = "none";
 	//setTimeout(function() {
-	tabs[id].imgW = tabs[tabID].ghostImg.clientWidth;
-	tabs[id].imgH = tabs[tabID].ghostImg.clientHeight;
-	document.title = "BirdyImg - " + getFileName(tabs[tabID].fileInf.path) + " (" + tabs[id].imgW + "x" + tabs[id].imgH + ")";
+	tabs[id].imgW = tabs[id].ghostImg.clientWidth;
+	tabs[id].imgH = tabs[id].ghostImg.clientHeight;
+	document.title = "BirdyImg - " + getFileName(tabs[id].fileInf.path) + " (" + tabs[id].imgW + "x" + tabs[id].imgH + ")";
 	console.log("set width", tabs[id].imgW, tabs[id].imgH);
-	tabs[tabID].zoomPrct = 1;
+	tabs[id].zoomPrct = 1;
 	try {
-		while (tabs[id].imgW * tabs[tabID].zoomPrct > imgViewCnt.offsetWidth) {
-			tabs[tabID].zoomPrct -= 0.1
+		while (tabs[id].imgW * tabs[id].zoomPrct > imgViewCnt.offsetWidth) {
+			tabs[id].zoomPrct -= 0.1
 		}
 	} catch { }
 	try {
-		while (tabs[id].imgH * tabs[tabID].zoomPrct > imgViewCnt.offsetHeight) {
-			tabs[tabID].zoomPrct -= 0.1
+		while (tabs[id].imgH * tabs[id].zoomPrct > imgViewCnt.offsetHeight) {
+			tabs[id].zoomPrct -= 0.1
 		}
 	} catch { }
-	if (tabs[id].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
+	if (tabs[id].imgW * tabs[id].zoomPrct < imgViewCnt.offsetWidth) {
 		animateZoomPos()
-		tabs[id].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[id].imgW * tabs[tabID].zoomPrct / 2)
+		tabs[id].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[id].imgW * tabs[id].zoomPrct / 2)
 	}
-	if (tabs[id].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
+	if (tabs[id].imgH * tabs[id].zoomPrct < imgViewCnt.offsetHeight) {
 		animateZoomPos()
-		tabs[id].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[id].imgH * tabs[tabID].zoomPrct / 2)
+		tabs[id].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[id].imgH * tabs[id].zoomPrct / 2)
 	}
 	animateZoomPos();
 	posImg();
@@ -1015,35 +1033,39 @@ function imageLoaded(id) {
 }
 
 function copyCurrentImage() {
-	//clipboard.writeImage(tabs[tabID].imgView.src.replace("file://",""));
-	document.documentElement.style.userSelect = "all"
-	setTimeout(() => {
-		var imageElem = tabs[tabID].imgView;  
-		var range = document.createRange();
+	var path = tabs[tabID].fileInf.path
+	if (getFileExtension(path) == "png" || getFileExtension(path) == "jpg" || getFileExtension(path) == "jpeg" || getFileExtension(path) == "jpe" || getFileExtension(path) == "jfif") { //Check if its supported
+		ipcRenderer.send("writeImage", path) //Send main procress to copy the image at path.
+	}else { //Copy image as html when not supported
+		document.documentElement.style.userSelect = "all"
+		setTimeout(() => { //Wait to let css styling applied.
+			var imageElem = tabs[tabID].imgView;  
+			var range = document.createRange();
 
-		range.selectNode(imageElem);
-		window.getSelection().removeAllRanges();
-		window.getSelection().addRange(range);  
+			range.selectNode(imageElem);
+			window.getSelection().removeAllRanges();
+			window.getSelection().addRange(range);  
 
-		try {
-			var successful = document.execCommand('copy');  
-			var msg = successful ? 'successful' : 'unsuccessful';  
-			console.log('Copy image: ' + msg); 
-		} catch(err) {  
-			console.log(':(', err);  
-		}  
+			try {
+				var successful = document.execCommand('copy');  
+				var msg = successful ? 'successful' : 'unsuccessful';  
+				console.log('Copy image: ' + msg); 
+			} catch(err) {  
+				console.log(':(', err);  
+			}  
 
-		// Remove the selections - NOTE: Should use removeRange(range) when it is supported  
-		window.getSelection().removeAllRanges(); 
-		document.documentElement.style.userSelect = "";
-	}, 100);
+			// Remove the selections - NOTE: Should use removeRange(range) when it is supported  
+			window.getSelection().removeAllRanges(); 
+			document.documentElement.style.userSelect = "";
+		}, 100);
+	}
 }
 
 function recyleImg() {
 	ipcRenderer.send("recylefile", tabs[tabID].fileInf.path)
 }
 
-function openFWindow(html) {
+function openFWindow(html) { //Open a fullscreen window.
 	var win = document.createElement("div");
 	win.classList.add("fullscreenWindow");
 	win.style.overflow = "auto";
@@ -1083,7 +1105,7 @@ function openFWindow(html) {
 	return contDiv;
 }
 
-function openPopupWindow(html) {
+function openPopupWindow(html) { //Open a popup window.
 	var overlay = document.createElement("div");
 	overlay.classList.add("overlay")
 	if (settingsdata["blurOverlays"]) {
@@ -1134,12 +1156,13 @@ function openPopupWindow(html) {
 	return contDiv;
 }
 
-function openWindow(html) {
+function openWindow(html) { //Automatically opens fullscreen or popup
 	let viewportHeight = window.innerHeight;
 	let viewportWidth = window.innerWidth;
 	
 	var openpopup = true
 	
+	//If screen is small dont open popup.
 	if (viewportHeight < 450) {
 		openpopup = false
 	}
@@ -1154,12 +1177,13 @@ function openWindow(html) {
 	}
 }
 
-function showSettings() {
+function showSettings() { //Open settings window
 	var optSelectHTML = "<option value='AUTO'>" + langpack.automatic + "</option>";
 	langs.forEach((lang) => {
 		optSelectHTML += "<option value='" + lang + "'>" + lang + "</option>"
 	});
-	var sets = openWindow("<h1>" + langpack.settings + "</h1><h3>" + langpack.general + "</h3><input type='checkbox' name='cbEnableTabs' id='cbEnableTabs' class='enabletab'/><label for='cbEnableTabs'>" + langpack.enableTabs + "</label><br><input type='checkbox' name='cbBO' id='cbBO' class='blurOverlays'/><label for='cbBO'>" + langpack.blurOverlays + "</label><br><input type='checkbox' name='showxy' id='showxy' class='showxy'/><label for='showxy'>" + langpack.showPositionAndSizeInfo + "</label><br><input type='checkbox' name='aht' id='aht' class='aht'/><label for='aht'>" + langpack.autoHideTabs + "</label><br><input type='checkbox' name='ct' id='ct' class='ct'/><label for='ct'>" + langpack.classicToolbar + "</label><br><input type='checkbox' name='eoir' id='eoir' class='eoir'/><label for='eoir'>" + langpack.enableOffImageRendering + "</label><br><input type='checkbox' name='btt' id='btt' class='btt'/><label for='btt'>" + langpack.showTransparencyTexture + "</label><br><label>" + langpack.defaultPanelSide + "</label>&nbsp;<select class='paneSide'><option value='Right'>" + langpack.right + "</option><option value='Left'>" + langpack.left + "</option></select><br><label>" + langpack.whenAllTabsAreClosed + "</label>&nbsp;<select class='watac'><option value='0'>" + langpack.doNothing + "</option><option value='1'>" + langpack.closeApp + "</option><option value='2'>" + langpack.openNewTab + "</option></select><br><label>" + langpack.toolbarSizeScale + ": </label><input type='number' class='tsc'/><h3>" + langpack["colors"] + "</h3><input type='checkbox' class='enablecolors' id='enablecolors' name='enablecolors'/><label for='enablecolors'>" + langpack.enableCustomColors + "</label><h4>" + langpack.accentColor + "</h4><input type='color' class='accentPick'/><input type='checkbox' class='applytoolbar' id='applytoolbar' name='applytoolbar'/><label for='applytoolbar'>" + langpack.applyToToolbarButtons + "</label><h3>Language</h3><select value='" + settingsdata["language"] + "' class='langsb'>" + optSelectHTML + "</select><br><br><button class='openhistory'>" + langpack.history + "</button><button class='openfavorites'>" + langpack.favorites + "</button><br><br><p class='smallo'>BirdyImg " + versionstring + "</p>");
+	var sets = openWindow("<h1>" + langpack.settings + "</h1><h3>" + langpack.general + "</h3><input type='checkbox' name='cbEnableTabs' id='cbEnableTabs' class='enabletab'/><label for='cbEnableTabs'>" + langpack.enableTabs + "</label><br><input type='checkbox' name='cbBO' id='cbBO' class='blurOverlays'/><label for='cbBO'>" + langpack.blurOverlays + "</label><br><input type='checkbox' name='showxy' id='showxy' class='showxy'/><label for='showxy'>" + langpack.showPositionAndSizeInfo + "</label><br><input type='checkbox' name='aht' id='aht' class='aht'/><label for='aht'>" + langpack.autoHideTabs + "</label><br><input type='checkbox' name='ct' id='ct' class='ct'/><label for='ct'>" + langpack.classicToolbar + "</label><br><input type='checkbox' name='eoir' id='eoir' class='eoir'/><label for='eoir'>" + langpack.enableOffImageRendering + "</label><br><input type='checkbox' name='btt' id='btt' class='btt'/><label for='btt'>" + langpack.showTransparencyTexture + "</label><br><input type='checkbox' name='rflo' id='rflo' class='rflo'/><label for='rflo'>" + langpack.reversedFileListOrder + "</label><br><label>" + langpack.defaultPanelSide + "</label>&nbsp;<select class='paneSide'><option value='Right'>" + langpack.right + "</option><option value='Left'>" + langpack.left + "</option></select><br><label>" + langpack.whenAllTabsAreClosed + "</label>&nbsp;<select class='watac'><option value='0'>" + langpack.doNothing + "</option><option value='1'>" + langpack.closeApp + "</option><option value='2'>" + langpack.openNewTab + "</option></select><br><label>" + langpack.toolbarSizeScale + ": </label><input type='number' class='tsc'/><h3>" + langpack["colors"] + "</h3><input type='checkbox' class='enablecolors' id='enablecolors' name='enablecolors'/><label for='enablecolors'>" + langpack.enableCustomColors + "</label><h4>" + langpack.accentColor + "</h4><input type='color' class='accentPick'/><input type='checkbox' class='applytoolbar' id='applytoolbar' name='applytoolbar'/><label for='applytoolbar'>" + langpack.applyToToolbarButtons + "</label><h3>Language</h3><select value='" + settingsdata["language"] + "' class='langsb'>" + optSelectHTML + "</select><br><br><button class='openhistory'>" + langpack.history + "</button><button class='openfavorites'>" + langpack.favorites + "</button><br><br><p class='smallo'>BirdyImg " + versionstring + "</p>");
+	// Handle events, set values etc.:
 	sets.querySelector(".openhistory").addEventListener("click", function () {
 		showHistory()
 	})
@@ -1199,11 +1223,17 @@ function showSettings() {
 	sets.querySelector(".btt").checked = settingsdata["showTransparencyTexture"];
 	sets.querySelector(".aht").checked = settingsdata["autoHideTabs"];
 	sets.querySelector(".ct").checked = settingsdata["classicToolbar"];
+	sets.querySelector(".rflo").checked = settingsdata["reversedFileListOrder"];
 	sets.querySelector(".eoir").checked = settingsdata["enableOffImageRendering"];
 	sets.querySelector(".applytoolbar").checked = settingsdata["colors"]["accentColor"]["applyToToolbarButtons"];
 	sets.querySelector(".accentPick").value = settingsdata["colors"]["accentColor"]["value"]
 	sets.querySelector(".enablecolors").checked = settingsdata["colors"]["enableCustomColors"]
 	sets.querySelector(".blurOverlays").checked = settingsdata["blurOverlays"]
+	sets.querySelector(".rflo").addEventListener("click", function () {
+		settingsdata["reversedFileListOrder"] = sets.querySelector(".rflo").checked;
+		ipcRenderer.send('savesettings', settingsdata);
+		applySettings()
+	});
 	sets.querySelector(".enabletab").addEventListener("click", function () {
 		settingsdata["enableTabs"] = sets.querySelector(".enabletab").checked;
 		ipcRenderer.send('savesettings', settingsdata);
@@ -1251,7 +1281,7 @@ function showSettings() {
 	});
 }
 
-function showHistory() {
+function showHistory() { //Opens history window.
 	var ch = "<h1>" + langpack.history + "</h1>"
 	var his = openWindow(ch)
 	var clearButton = document.createElement("button");
@@ -1318,7 +1348,7 @@ function showHistory() {
 	his.appendChild(table)
 }
 
-function showFavorites() {
+function showFavorites() { //Opens favorites window.
 	var ch = "<h1>" + langpack.favorites + "</h1>"
 	var his = openWindow(ch)
 	var table = document.createElement("table")
@@ -1371,7 +1401,7 @@ function showFavorites() {
 	his.appendChild(table)
 }
 
-function openRightPane(html, paneID) {
+function openRightPane(html, paneID) { //Opens a pane at right side.
 	var sb = createPane(html, paneID, true);
 	maincont.appendChild(sb);
 	sb.focus()
@@ -1379,7 +1409,7 @@ function openRightPane(html, paneID) {
 	return sbcontent;
 }
 
-function openLeftPane(html, paneID) {
+function openLeftPane(html, paneID) { //Opens a pane at left side.
 	var sb = createPane(html, paneID, false);
 	maincont.insertBefore(sb, maincont.firstChild);
 	sb.focus()
@@ -1387,7 +1417,7 @@ function openLeftPane(html, paneID) {
 	return sbcontent;
 }
 
-function openPane(html, paneID, O) {
+function openPane(html, paneID, O) { //Opens a pane at the side (O is a boolean, true = right, false = left.)
 	var sidecheck = O == true ? "Right" : "Left";
 	var sb = createPane(html, paneID, settingsdata["defaultPanelSide"] != sidecheck);
 	if (settingsdata["defaultPanelSide"] == sidecheck)
@@ -1398,7 +1428,7 @@ function openPane(html, paneID, O) {
 	return sbcontent;
 }
 
-function createPane(html, paneID, isAtRight) {
+function createPane(html, paneID, isAtRight) { //Creates a pane (DOESNT SHOW IT.)
 	var sb = document.createElement("div");
 	sb.classList.add("pane")
 	sb.setAttribute("tabindex",0);
@@ -1548,7 +1578,7 @@ function createPane(html, paneID, isAtRight) {
 	return sb;
 }
 
-function rotL() {
+function rotL() { //Rotate left
 	tabs[tabID].rot -= 90;
 	if (tabs[tabID].rot == -360) {
 		tabs[tabID].rot = 0
@@ -1560,7 +1590,7 @@ function rotL() {
 	posImg();
 }
 
-function rotR() {
+function rotR() { //Rotate right
 	tabs[tabID].rot += 90;
 	if (tabs[tabID].rot == 360) {
 		tabs[tabID].rot = 0
@@ -1594,16 +1624,20 @@ function getFolderPath(path) {
 }
 
 function getFileExtension(pathorfilename) {
-	var pt = pathorfilename.split(".");
-	return pt[pt.length - 1]
+	if (pathorfilename.includes(".")) { //Check if file name has a "."
+		var pt = pathorfilename.split(".");
+		return pt[pt.length - 1]
+	}else {
+		return "???" //No implementation for file names doesnt have "."
+	}
 }
 
-var fil = document.querySelectorAll("*");
-Array.prototype.forEach.call(fil, (item) => {
+var fil = document.querySelectorAll("*"); //Get all elements.
+Array.prototype.forEach.call(fil, (item) => { //Auto-unfocus when mouse up fired.
 	item.addEventListener("mouseup", function (e) { if (e.target.tagName != "INPUT") item.blur() })
 })
 
-function getReadableFileSizeString(fileSizeInBytes) {
+function getReadableFileSizeString(fileSizeInBytes) { //BYTES to readable string. (example here is for 2048 bytes.)
 	var i = -1;
 	var byteUnits = [' KB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
 	do {
@@ -1611,46 +1645,46 @@ function getReadableFileSizeString(fileSizeInBytes) {
 		i++;
 	} while (fileSizeInBytes > 1024);
 
-	return [Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i], byteUnits[i]];
+	return [Math.max(fileSizeInBytes, 0.1).toFixed(1) + byteUnits[i], byteUnits[i]]; //Returns a array. (0: 2, 1: KB)
 }
 
-document.addEventListener('dragover', (e) => {
+document.addEventListener('dragover', (e) => { //When you enter window while dragging a file.
 	e.preventDefault();
 	e.stopPropagation();
 });
 
-document.addEventListener('drop', (event) => {
+document.addEventListener('drop', (event) => { //When you drop the file
 	event.preventDefault();
 	event.stopPropagation();
 	var filsdrop = event.dataTransfer.files;
-	asyncfor(0, filsdrop.length - 1, 1, filsdrop, (step, array) => {
+	asyncfor(0, filsdrop.length - 1, 1, filsdrop, (step, array) => { // every 125 miliseconds, open the next file that dropped.
 		try {
 			newTab();
-			setTimeout(function() {
+			setTimeout(function() { //Let the new tab load and open the image.
 				ipcRenderer.sendSync('openfilep', array[step].path);
 			},50)
 		} catch { }
 	}, 125)
 });
 
-function applyTranslations() {
+function applyTranslations() { //Apply translations for elements require it.
 	var elements = document.querySelectorAll("[data-fromlang]")
 	Array.prototype.forEach.call(elements, applyTranslationFor)
 	elements = document.querySelectorAll("[data-tooltipfromlang]")
 	Array.prototype.forEach.call(elements, applyTranslationTooltipFor)
 }
 
-function applyTranslationFor(element) {
+function applyTranslationFor(element) { //Apply translation for element as content
 	var transl = element.getAttribute("data-fromlang");
 	element.innerHTML = langpack[transl];
 }
 
-function applyTranslationTooltipFor(element) {
+function applyTranslationTooltipFor(element) { //Apply translation for element as tooltip
 	var transl = element.getAttribute("data-tooltipfromlang");
 	element.title = langpack[transl];
 }
 
-function addIMGToFavorites() {
+function addIMGToFavorites() { //Adds current image to your favorites list
 	var filfo = tabs[tabID].fileInf.path;
 	if (settingsdata.favorites.includes(filfo)) {
 		var index = settingsdata.favorites.indexOf(filfo);
@@ -1665,11 +1699,12 @@ function addIMGToFavorites() {
 	addToFavorites.title = settingsdata.favorites.includes(filfo) ? langpack.removeFromFavorites : langpack.addToFavorites;
 }
 
-imgViewCnt.addEventListener('contextmenu', (e) => {
+imgViewCnt.addEventListener('contextmenu', (e) => {//When right mouse button is clicked.
 	e.preventDefault();
 	ipcRenderer.send('showimagecontext')
 }, false)
 
+//Events for menu items:
 ipcRenderer.on("copyimage", (event, data) => { copyCurrentImage() });
 ipcRenderer.on("rotateleft", (event, data) => { rotL() });
 ipcRenderer.on("rotateright", (event, data) => { rotR() });
@@ -1681,6 +1716,140 @@ ipcRenderer.on("reloadimage", (event, data) => {
 	tabs[tabID].imgView.src = ""
 	ipcRenderer.send("openfilep", tabs[tabID].fileInf.path)
 });
+ipcRenderer.on("slideshow", (event, data) => {
+	if (typeof slideshowtimer != "undefined") {
+		clearInterval(slideshowtimer)
+	}
+	window.slideshowtimer = setInterval(function() {
+		nextFile()
+	},5000)
+	tabSwitcher.style.display = "none"
+	imgViewCnt.style.maxHeight = "100%"
+	document.getElementById("maintoolbar").style.display = "none"
+	zoominf.innerText = langpack.pressEscToExit
+	showZoomInf()
+	document.title = "BirdyImg - " + langpack.slideshow
+	retimgIfOut();
+	posImg();
+});
+
+function exitSlideshow() {
+	if (typeof slideshowtimer != "undefined") {
+		clearInterval(slideshowtimer)
+		tabSwitcher.style.display = ""
+		imgViewCnt.style.maxHeight = ""
+		document.getElementById("maintoolbar").style.display = ""
+		autoHideTabs()
+		document.title = "BirdyImg - " + getFileName(tabs[tabID].fileInf.path) + " (" + tabs[tabID].imgW + "x" + tabs[tabID].imgH + ")"; //Change title to BirdyImg - (File Name) ((Width)x(Height))
+		retimgIfOut();
+		posImg();
+	}
+}
+
+/*Make resizable div by Hung Nguyen (MODIFIED)*/
+function makeResizableDiv(element, draggable) {
+  const resizers = element.getElementsByClassName("resizer")
+  const minimum_size = 20;
+  let original_width = 0;
+  let original_height = 0;
+  let original_x = 0;
+  let original_y = 0;
+  let original_mouse_x = 0;
+  let original_mouse_y = 0;
+  if (draggable) {
+		var oldx
+		var oldy
+		var dt
+		var dl
+		var dragging = false;
+		element.addEventListener("mousedown",function(event) {
+			oldx = event.pageX;
+			oldy = event.pageY;
+			dt = parseFloat(getComputedStyle(element, null).getPropertyValue('top').replace('px', ''));
+			dl = parseFloat(getComputedStyle(element, null).getPropertyValue('left').replace('px', ''));
+			dragging = true;
+			console.log("down")
+		})
+		element.addEventListener("mousemove",function(event) {
+			if (dragging) {
+				element.style.top = dt + (event.pageY - oldy) + "px"
+				element.style.left = dl + (event.pageX - oldy) + "px"
+				//oldx = event.pageX;
+				//oldy = event.pageY;
+				console.log("drag")
+			}
+		})
+		element.addEventListener("mouseup",function(event) {
+			dragging = false;
+			console.log("up")
+		})
+	}
+  for (let i = 0;i < resizers.length; i++) {
+    const currentResizer = resizers[i];
+    currentResizer.addEventListener('mousedown', function(e) {
+      e.preventDefault()
+      original_width = parseFloat(getComputedStyle(element, null).getPropertyValue('width').replace('px', ''));
+      original_height = parseFloat(getComputedStyle(element, null).getPropertyValue('height').replace('px', ''));
+      original_x = element.getBoundingClientRect().left;
+      original_y = element.getBoundingClientRect().top;
+      original_mouse_x = e.pageX;
+      original_mouse_y = e.pageY;
+      window.addEventListener('mousemove', resize)
+      window.addEventListener('mouseup', stopResize)
+    })
+    
+    function resize(e) {
+      if (currentResizer.classList.contains('bottom-right')) {
+        const width = original_width + (e.pageX - original_mouse_x);
+        const height = original_height + (e.pageY - original_mouse_y)
+        if (width > minimum_size) {
+          element.style.width = width + 'px'
+        }
+        if (height > minimum_size) {
+          element.style.height = height + 'px'
+        }
+      }
+      else if (currentResizer.classList.contains('bottom-left')) {
+        const height = original_height + (e.pageY - original_mouse_y)
+        const width = original_width - (e.pageX - original_mouse_x)
+        if (height > minimum_size) {
+          element.style.height = height + 'px'
+        }
+        if (width > minimum_size) {
+          element.style.width = width + 'px'
+          element.style.left = (original_x + (e.pageX - original_mouse_x)) + element.parentElement.scrollLeft + 'px'
+        }
+      }
+      else if (currentResizer.classList.contains('top-right')) {
+        const width = original_width + (e.pageX - original_mouse_x)
+        const height = original_height - (e.pageY - original_mouse_y)
+        if (width > minimum_size) {
+          element.style.width = width + 'px'
+        }
+        if (height > minimum_size) {
+          element.style.height = height + 'px'
+          element.style.top = (original_y + (e.pageY - original_mouse_y)) + element.parentElement.scrollTop + 'px'
+        }
+      }
+      else {
+        const width = original_width - (e.pageX - original_mouse_x)
+        const height = original_height - (e.pageY - original_mouse_y)
+        if (width > minimum_size) {
+          element.style.width = width + 'px'
+          element.style.left = (original_x + (e.pageX - original_mouse_x)) + element.parentElement.scrollLeft + 'px'
+        }
+        if (height > minimum_size) {
+          element.style.height = height + 'px'
+          element.style.top = (original_y + (e.pageY - original_mouse_y)) + element.parentElement.scrollTop + 'px'
+        }
+      }
+    }
+    
+    function stopResize() {
+      window.removeEventListener('mousemove', resize)
+    }
+  }
+}
 
 // Some parts from LimonJS:
 
