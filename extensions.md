@@ -15,9 +15,7 @@ Warning (If you are gonna import more than 1 extensions): Extensions should be s
 * Name: Name of the extension
 * Description: Description of the extension
 * Icon: Icon of the extension (40x40 Recomended)
-* Path: Path of the JavaScript will be executed in main process
-### Coming Soon
-* [ ] MainPath: Same as "Path" (**PATH WILL BE REMOVED**)
-* [ ] RendererPath: Path of the JavaScript will be executed in renderer procress
-* [ ] Version: Version of the extension
-* [ ] Author: Author of the extension
+* MainPath: Path of the JavaScript will be executed in main process
+* RendererPath: Path of the JavaScript will be executed in renderer procress
+* Version: Version of the extension
+* Author: Author of the extension
