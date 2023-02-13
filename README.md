@@ -16,6 +16,7 @@ BirdyImg Image Viewer Version 1.0 Beta 11  <a href="https://drive.google.com/u/0
 # How much memory it uses?
 * When you open it it uses around 57mb (i also dont know how electron uses this low amount of ram)
 * When you open 9mb image (9.030 KB) it uses around 70mb
+* When you open lots of images, after some time it uses around 100mb
 
 # Keyboard Shortcuts
 * Right Arrow: Next Image
