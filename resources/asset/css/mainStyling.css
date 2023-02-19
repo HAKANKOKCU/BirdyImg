@@ -40,6 +40,7 @@ b {
 	-o-user-drag: none;
 	/*user-drag: none;transform-origin: top left;*/
 	transition: width 0.2s, height 0.2s, transform 0.2s;
+	/*image-rendering: pixelated;*/
 }
 
 .tabdiv>img.aniLR {
@@ -490,7 +491,12 @@ hiddenpart {
 	display: block
 }
 
-.fileListItem>center>img {
+.fileListItem {
+	display:flex;
+	justify-content:center;
+}
+
+.fileListItem>img {
 	max-height: 100px;
 	max-width: 245px
 }
@@ -576,6 +582,12 @@ popuppane {
 	.pane {
 		transition:none !important;
 	}
+	.leftbutton {
+		transition:none !important;
+	}
+	.rightbutton {
+		transition:none !important;
+	}
 }
 
 .fullscreenWindow:focus {
@@ -597,6 +609,15 @@ popuppane {
 
 .dangerousbtnicon:hover {
 	fill:darkred;
+}
+
+.dangerousbtn {
+	background-color:red;
+	color:white
+}
+
+.dangerousbtn:hover {
+	background-color:darkred;
 }
 
 .overlay {
@@ -734,8 +755,8 @@ input[type=range]::-webkit-slider-runnable-track {
 }
 
 .resizable .resizers .resizer{
-  width: 10px;
-  height: 10px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%; /*magic to turn square into circle*/
   background: white;
   border: 3px solid var(--accentcolor);
@@ -769,3 +790,57 @@ input[type=range]::-webkit-slider-runnable-track {
 }
 
 h4 {margin:4px;}
+
+.roundbutton {
+	border-radius: 100%;
+	border: 1px solid var(--accentcolor);
+	width:100px;
+	height:100px;
+	background: rgba(0,0,0,0.2)
+}
+
+.leftbutton {
+	position:absolute;
+	opacity:0;
+	transition: all 0.2s;
+	top: calc(50% - 50px);
+	z-index:1;
+	width:100px;
+	height:100px;
+}
+
+.leftbutton > .roundbutton {
+	padding:24px;
+}
+
+.leftbutton:not(:hover) {
+	right: calc(100% - 20px);
+}
+
+.leftbutton:hover {
+	right: calc(100% - 100px);
+	opacity: 1;
+}
+
+.rightbutton {
+	position:absolute;
+	opacity:0;
+	transition: all 0.2s;
+	top: calc(50% - 50px);
+	z-index:1;
+	width:100px;
+	height:100px;
+}
+
+.rightbutton > .roundbutton {
+	padding:26px;
+}
+
+.rightbutton:not(:hover) {
+	left: calc(100% - 20px);
+}
+
+.rightbutton:hover {
+	left: calc(100% - 100px);;
+	opacity: 1;
+}

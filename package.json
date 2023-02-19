@@ -13,7 +13,7 @@
   "author": "HAKANKOKCU",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^22.0.1",
+    "electron": "^22.2.0",
     "electron-packager": "^15.5.1"
   },
   "dependencies": {

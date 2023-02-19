@@ -11,6 +11,7 @@
 </head>
 
 <body style="overflow:auto">
+	<button style="width:100%" id="iex"></button>
 	<div class="listWithImages">
 		<center><svg class="circular" viewBox="25 25 50 50" style="position: unset;"><circle class="path" cx="50" cy="50" r="20" fill="none" stroke-width="2"stroke-miterlimit="20" style="stroke:currentColor" /></svg></center>
 	</div>
@@ -41,9 +42,32 @@
 			var infoVersion = document.createElement("p")
 			infoVersion.innerText = "v" + item.Version
 			infoCont.appendChild(infoVersion)
+			var removebutton = document.createElement("button")
+			removebutton.innerText = langpack.remove
+			removebutton.classList.add("dangerousbtn");
+			infoCont.appendChild(removebutton)
+			removebutton.addEventListener("click", function() {
+				var res = ipcRenderer.sendSync("messagebox", {
+					message: langpack.removeExtensionWarn,
+					type: "question",
+					title: langpack.remove,
+					buttons: [
+						langpack.no,
+						langpack.yes
+					]
+				});
+				if (res == 0) return;
+				var index = data.indexOf(item);
+				data.splice(index, 1);
+				divList.removeChild(cont)
+				ipcRenderer.send("saveextensions", data)
+			})
 			cont.appendChild(infoCont)
 			divList.appendChild(cont)
 		})
+	})
+	document.getElementById("iex").addEventListener("click",function() {
+		ipcRenderer.send("importExtension", "");
 	})
 	ipcRenderer.on("exfPath",function(event,data) {
 		window.exfpath = data
@@ -51,6 +75,7 @@
 	ipcRenderer.on("langpack",function(event,data) {
 		window.langpack = data
 		document.getElementById("oef").innerText = data.openExtensionsFile
+		document.getElementById("iex").innerText = data.importExtension
 		document.getElementById("oef").addEventListener("click",function() {
 			ipcRenderer.send("launchpath", exfpath);
 		})

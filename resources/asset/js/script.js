@@ -1,4 +1,4 @@
-const versionstring = "1.0 Beta 11"
+const versionstring = "1.0 Beta 12"
 
 const { ipcRenderer } = require("electron");
 
@@ -62,6 +62,11 @@ let deleteFileButton = document.getElementById("deleteFile");
 let copyFileButton = document.getElementById("copyImageButton");
 let openFileButton = document.getElementById("openFileButton");
 
+//Left and right buttons:
+
+let leftButton = document.getElementsByClassName("leftbutton")[0];
+let rightButton = document.getElementsByClassName("rightbutton")[0];
+
 // Add events to buttons:
 
 prvFileButton.addEventListener("click", prvFile);
@@ -79,6 +84,8 @@ copyFileButton.addEventListener("click", copyCurrentImage);
 addToFavorites.addEventListener("click", addIMGToFavorites)
 showGalleryViewButton.addEventListener("click",showGalleryViewFullScreen)
 deleteFileButton.addEventListener("click",deleteCurrentFile)
+leftButton.addEventListener("click", prvFile);
+rightButton.addEventListener("click", nextFile);
 
 function deleteCurrentFile() {
 	ipcRenderer.send("deleteCurrentFile",tabs[tabID].fileInf.path)
@@ -115,6 +122,7 @@ function newTab() {
 	var view = document.createElement("img");
 	try {
 		view.style.background = settingsdata.showTransparencyTexture == true ? 'url("./bitmap/transparencysquares.png")' : ""
+		view.style.imageRendering = settingsdata.imageRenderingType == 1 ? "pixelated" : settingsdata.imageRenderingType == 2 ? "crisp-edges" : ""
 	}catch(e) {console.log(e)}
 	tabdiv.classList.add("tabdiv")
 	tabdiv.appendChild(view);
@@ -249,8 +257,8 @@ function closeTab(id) {
 	elemimg.src = "";
 	imgViewCnt.removeChild(tabs[id].tabdiv);
 	try {
-		hiddenpart.removeChild(tabs[tabID].ghostImg);
-		tabs[tabID].ghostImg.src = "";
+		hiddenpart.removeChild(tabs[id].ghostImg);
+		tabs[id].ghostImg.src = "";
 	} catch { }
 	delete tabs[id];
 	tabCount--;
@@ -286,7 +294,7 @@ ipcRenderer.on("settingsdata", (event, data) => { //Get settings data
 	window.settingsdata = data;
 	applySettings() //And apply it
 });
-ipcRenderer.on("langs", (event, data) => {
+ipcRenderer.on("langs", (event, data) => { //Language list
 	langs = data;
 });
 window.parser = new DOMParser();
@@ -333,7 +341,9 @@ ipcRenderer.on("filedata", (event, data) => { //Open the file
 		tabs[tabID].imgW = tabs[tabID].ghostImg.clientWidth;
 		tabs[tabID].imgH = tabs[tabID].ghostImg.clientHeight;
 		console.log("set width", tabs[tabID].imgW, tabs[tabID].imgH);
-		document.title = "BirdyImg - " + getFileName(data.path) + " (" + tabs[tabID].imgW + "x" + tabs[tabID].imgH + ")";
+		if (typeof slideshowtimer == "undefined") {
+			document.title = "BirdyImg - " + getFileName(data.path) + " (" + tabs[tabID].imgW + "x" + tabs[tabID].imgH + ")";
+		}
 	}
 	if (tabs[tabID].ghostImg.complete) {
 		imgloaded()
@@ -417,9 +427,11 @@ function applySettings() { //Apply settings
 	mainimgcont.style.overflow = settingsdata["enableOffImageRendering"] == true ? "visible" : "";
 	imgViewCnt.style.overflow = settingsdata["enableOffImageRendering"] == true ? "visible" : "";
 	tabSwitcher.style.backdropFilter = settingsdata["blurOverlays"] == true ? "blur(5px)" : "";
+	//console.log(settingsdata)
 	Array.prototype.forEach.call(document.querySelectorAll("img[bimg-tabid]"),(view)=> {
-		console.log(view)
+		//console.log(view)
 		view.style.background = settingsdata.showTransparencyTexture == true ? 'url("./bitmap/transparencysquares.png")' : ""
+		view.style.imageRendering = settingsdata.imageRenderingType == 1 ? "pixelated" : settingsdata.imageRenderingType == 2 ? "crisp-edges" : ""
 	})
 	Array.prototype.forEach.call(document.querySelectorAll("toolbar.newsupported"),(item)=> {
 		item.style.borderRadius = settingsdata["classicToolbar"] == false ? "10px 10px 0 0" : "";
@@ -431,7 +443,7 @@ function applySettings() { //Apply settings
 	zoominf.style.backdropFilter = settingsdata["blurOverlays"] == true ? "blur(5px)" : "";
 	Array.prototype.forEach.call(document.querySelectorAll("toolbar"),(item)=> {
 		if (item.getAttribute("data-width") != null) {
-			item.style.width = settingsdata["classicToolbar"] == true ? "100%" : (item.getAttribute("data-width") * settingsdata["toolbarSizeScale"]) + "px"
+			item.style.maxWidth = settingsdata["classicToolbar"] == true ? "100%" : (item.getAttribute("data-width") * settingsdata["toolbarSizeScale"]) + "px"
 		}else {
 			item.style.width = "100%"
 		}
@@ -443,7 +455,12 @@ function applySettings() { //Apply settings
 	if (settingsdata["colors"]["enableCustomColors"] == true) {
 		document.body.style.accentColor = settingsdata["colors"]["accentColor"]["value"]
 		if (settingsdata["colors"]["accentColor"]["applyToToolbarButtons"] == true) {
-			extraStyling.innerHTML = "svg {fill: " + settingsdata["colors"]["accentColor"]["value"] + "} body {--accentcolor:"+ settingsdata["colors"]["accentColor"]["value"] + "}"
+			extraStyling.innerHTML = "svg {fill: " + settingsdata["colors"]["accentColor"]["value"] + "} body {--accentcolor:"+ settingsdata["colors"]["accentColor"]["value"];
+			if (settingsdata["colors"]["accentColor"]["applyAsTextColor"]) {
+				extraStyling.innerHTML += ";color:" + settingsdata["colors"]["accentColor"]["value"] + "; --textcolor: " + settingsdata["colors"]["accentColor"]["value"] + "} button,input,select {color:" + settingsdata["colors"]["accentColor"]["value"] + ";}"
+			}else {
+				extraStyling.innerHTML += "}"
+			}
 		}else {
 			extraStyling.innerHTML = "body {--accentcolor:"+ settingsdata["colors"]["accentColor"]["value"] + "}"
 		}
@@ -480,26 +497,51 @@ ipcRenderer.on("showfilelist", (event, data) => {
 
 function showfList() {
 	var HTMLs = "<h1>" + langpack.fileList + "</h1><input class='linedelem search sticky' placeholder='" + langpack.search + "'></input>"
-	tabs[tabID].filelist.forEach((item, index) => {
-		var extraCSSLI = "";
-		if (index == tabs[tabID].fileID) { extraCSSLI = "background-color:lightgray" }
-		HTMLs += "<div class='fileListItem' data-imageid='" + index + "' style='" + extraCSSLI + "'><center>" + ( getFileExtension(item) == "tif" ? item : "<img loading='lazy' class='limon darkshandow'>" ) + "</center></div>"
-	});
+	// tabs[tabID].filelist.forEach((item, index) => {
+		// var extraCSSLI = "";
+		// if (index == tabs[tabID].fileID) { extraCSSLI = "background-color:lightgray" }
+		// HTMLs += "<div class='fileListItem' data-imageid='" + index + "' style='" + extraCSSLI + "' tabindex='-1'><center>" + ( (getFileExtension(item) == "tif" || getFileExtension(item) == "tiff") ? getFileName(item) : "<img loading='lazy' class='limon darkshandow'>" ) + "</center></div>"
+	// });
 	var pane = openPane(HTMLs, "filelist");
-	var listelem = pane.getElementsByClassName("fileListItem")
-	Array.prototype.forEach.call(listelem, (item) => {
-		var id = item.getAttribute("data-imageid");
-		var fitem = tabs[tabID].filelist[id];
-		item.title = getFileName(fitem) + "\n" + langpack.fileSize + ": " + getReadableFileSizeString(tabs[tabID].filesizes[id])[0];
-		var img = item.getElementsByTagName("img")[0]
-		if (img != undefined) {
-			img.alt = fitem
-			img.src = fitem
+	// var listelem = pane.getElementsByClassName("fileListItem")
+	var listelem = [];
+	tabs[tabID].filelist.forEach((item, index) => {
+		var maindiv = document.createElement("div")
+		maindiv.setAttribute("data-imageid",index)
+		maindiv.classList.add("fileListItem")
+		if (index == tabs[tabID].fileID) {
+			maindiv.style.background = "lightgray";
 		}
-		item.addEventListener("click", function () {
-			ipcRenderer.send("openfilep", fitem)
+		maindiv.tabIndex = "0";
+		if (getFileExtension(item) == "tif" || getFileExtension(item) == "tiff") {
+			maindiv.innerText = getFileName(item)
+		}else {
+			var img = document.createElement("img");
+			img.classList.add("limon","darkshandow");
+			img.alt = item;
+			img.src = item;
+			maindiv.appendChild(img);
+		}
+		pane.appendChild(maindiv);
+		maindiv.title = getFileName(item) + "\n" + langpack.fileSize + ": " + getReadableFileSizeString(tabs[tabID].filesizes[index])[0];
+		maindiv.addEventListener("click", function () {
+			ipcRenderer.send("openfilep", item)
 		})
+		listelem.push(maindiv);
 	})
+	// Array.prototype.forEach.call(listelem, (item) => {
+		// var id = item.getAttribute("data-imageid");
+		// var fitem = tabs[tabID].filelist[id];
+		// item.title = getFileName(fitem) + "\n" + langpack.fileSize + ": " + getReadableFileSizeString(tabs[tabID].filesizes[id])[0];
+		// var img = item.getElementsByTagName("img")[0]
+		// if (img != undefined) {
+			// img.alt = fitem
+			// img.src = fitem
+		// }
+		// item.addEventListener("click", function () {
+			// ipcRenderer.send("openfilep", fitem)
+		// })
+	// })
 	var searchbox = pane.getElementsByClassName("search")[0]
 	searchbox.addEventListener("change",function() {
 		var query = searchbox.value;
@@ -588,7 +630,10 @@ function parseArrayToString(array) { //Array to string
 }
 
 function DateToString(date) { //Converts date to string (DD.MM.YYYY HH:NN)
-	return date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear() + " " + date.getHours() + ":" + date.getMinutes();
+	try {
+		return (settingsdata["usemmddyyyydateformat"] ? (date.getMonth() + 1) + "." + date.getDate() + "." + date.getFullYear() : date.getDate() + "." + (date.getMonth() + 1) + "." + date.getFullYear()) + " " + date.getHours() + ":" + date.getMinutes();
+	}catch {}
+	return "???"
 }
 
 ipcRenderer.on("dsimg", (event, data) => fullimagesize())
@@ -772,21 +817,21 @@ imgViewCnt.addEventListener("mousemove", function (evt) {
 var oldzoompos = {}
 imgViewCnt.addEventListener("touchmove", function (evt) {
 	if (currentGalleryView == null) {
-		if (evt.touches.length == 1) {
+		if (evt.targetTouches.length === 1) {
 			if (dragging) {
-				tabs[tabID].imgX += evt.touches[0].clientX - oldpos.x;
-				tabs[tabID].imgY += evt.touches[0].clientY - oldpos.y;
+				tabs[tabID].imgX += evt.targetTouches[0].clientX - oldpos.x;
+				tabs[tabID].imgY += evt.targetTouches[0].clientY - oldpos.y;
 				retimgIfOut();
 				//console.log(tabs[tabID].imgX,tabs[tabID].imgY);
 				posImg();
 				showXYInfo();
 			}
-			oldpos = { "x": evt.touches[0].clientX, "y": evt.touches[0].clientY }
-		}else if (evt.touches.length == 2) { //I think this **doesnt work!**
+			oldpos = { "x": evt.targetTouches[0].clientX, "y": evt.targetTouches[0].clientY }
+		}else if (evt.targetTouches.length == 2) { //I think this **doesnt work!**
 			console.log("...")
 			if (dragging) {
-				var change1 = (evt.touches[0].clientX - oldzoompos.x) - (evt.touches[0].clientY - oldzoompos.y)
-				var change2 = (evt.touches[1].clientX - oldzoompos.x2) - (evt.touches[1].clientY - oldzoompos.y2)
+				var change1 = (evt.targetTouches[0].clientX - oldzoompos.x) - (evt.targetTouches[0].clientY - oldzoompos.y)
+				var change2 = (evt.targetTouches[1].clientX - oldzoompos.x2) - (evt.targetTouches[1].clientY - oldzoompos.y2)
 				var changetotal = change1 + change2
 				console.log(changetotal)
 				var precentChange = ((tabs[tabID].imgW * tabs[tabID].zoomPrct) + changetotal) / tabs[tabID].imgW * tabs[tabID].zoomPrct
@@ -796,9 +841,9 @@ imgViewCnt.addEventListener("touchmove", function (evt) {
 				posImg();
 				showZoomInf();
 			}
-			oldzoompos = { "x": evt.touches[0].clientX, "y": evt.touches[0].clientY,"x2": evt.touches[1].clientX, "y2": evt.touches[1].clientY }
+			oldzoompos = { "x": evt.targetTouches[0].clientX, "y": evt.targetTouches[0].clientY,"x2": evt.targetTouches[1].clientX, "y2": evt.targetTouches[1].clientY }
 		}
-		console.log(evt.touches.length)
+		console.log(evt.targetTouches.length)
 		event.preventDefault()
 	}
 })
@@ -859,6 +904,8 @@ function createGalleryView() {
 	cnt.style.justifyContent = "center";
 	cnt.style.height = "100%"
 	cnt.style.width = "100%"
+	cnt.style.position = "relative"
+	cnt.style.zIndex = "2"
 	for (let i = 0; i < tabs[tabID].filelist.length;i++) {
 		var image = document.createElement("img");
 		//image.style.display = "inline-block"
@@ -949,7 +996,14 @@ function nextFile() {
 }
 
 function zoomIn() {
-	tabs[tabID].zoomPrct += 0.1;
+	var icdec = 0.1
+	if (tabs[tabID].zoomPrct > 10) {
+		icdec = 0.2
+	}
+	if (tabs[tabID].zoomPrct < 0.3) {
+		icdec = 0.01
+	}
+	tabs[tabID].zoomPrct += icdec;
 	if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
 		animateZoomPos()
 		tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
@@ -964,8 +1018,15 @@ function zoomIn() {
 }
 
 function zoomOut() {
-	tabs[tabID].zoomPrct -= 0.1;
-	if (tabs[tabID].zoomPrct <= 0) { tabs[tabID].zoomPrct = 0.1 }
+	var icdec = 0.1
+	if (tabs[tabID].zoomPrct > 10) {
+		icdec = 0.2
+	}
+	if (tabs[tabID].zoomPrct < 0.3) {
+		icdec = 0.01
+	}
+	tabs[tabID].zoomPrct -= icdec;
+	if (tabs[tabID].zoomPrct <= 0) { tabs[tabID].zoomPrct = 0.01 }
 	if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
 		animateZoomPos()
 		tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
@@ -1182,14 +1243,20 @@ function showSettings() { //Open settings window
 	langs.forEach((lang) => {
 		optSelectHTML += "<option value='" + lang + "'>" + lang + "</option>"
 	});
-	var sets = openWindow("<h1>" + langpack.settings + "</h1><h3>" + langpack.general + "</h3><input type='checkbox' name='cbEnableTabs' id='cbEnableTabs' class='enabletab'/><label for='cbEnableTabs'>" + langpack.enableTabs + "</label><br><input type='checkbox' name='cbBO' id='cbBO' class='blurOverlays'/><label for='cbBO'>" + langpack.blurOverlays + "</label><br><input type='checkbox' name='showxy' id='showxy' class='showxy'/><label for='showxy'>" + langpack.showPositionAndSizeInfo + "</label><br><input type='checkbox' name='aht' id='aht' class='aht'/><label for='aht'>" + langpack.autoHideTabs + "</label><br><input type='checkbox' name='ct' id='ct' class='ct'/><label for='ct'>" + langpack.classicToolbar + "</label><br><input type='checkbox' name='eoir' id='eoir' class='eoir'/><label for='eoir'>" + langpack.enableOffImageRendering + "</label><br><input type='checkbox' name='btt' id='btt' class='btt'/><label for='btt'>" + langpack.showTransparencyTexture + "</label><br><input type='checkbox' name='rflo' id='rflo' class='rflo'/><label for='rflo'>" + langpack.reversedFileListOrder + "</label><br><label>" + langpack.defaultPanelSide + "</label>&nbsp;<select class='paneSide'><option value='Right'>" + langpack.right + "</option><option value='Left'>" + langpack.left + "</option></select><br><label>" + langpack.whenAllTabsAreClosed + "</label>&nbsp;<select class='watac'><option value='0'>" + langpack.doNothing + "</option><option value='1'>" + langpack.closeApp + "</option><option value='2'>" + langpack.openNewTab + "</option></select><br><label>" + langpack.toolbarSizeScale + ": </label><input type='number' class='tsc'/><h3>" + langpack["colors"] + "</h3><input type='checkbox' class='enablecolors' id='enablecolors' name='enablecolors'/><label for='enablecolors'>" + langpack.enableCustomColors + "</label><h4>" + langpack.accentColor + "</h4><input type='color' class='accentPick'/><input type='checkbox' class='applytoolbar' id='applytoolbar' name='applytoolbar'/><label for='applytoolbar'>" + langpack.applyToToolbarButtons + "</label><h3>Language</h3><select value='" + settingsdata["language"] + "' class='langsb'>" + optSelectHTML + "</select><br><br><button class='openhistory'>" + langpack.history + "</button><button class='openfavorites'>" + langpack.favorites + "</button><br><br><p class='smallo'>BirdyImg " + versionstring + "</p>");
+	var sets = openWindow("<h1>" + langpack.settings + "</h1><h3>" + langpack.general + "</h3><input type='checkbox' name='cbEnableTabs' id='cbEnableTabs' class='enabletab'/><label for='cbEnableTabs'>" + langpack.enableTabs + "</label><br><input type='checkbox' name='cbBO' id='cbBO' class='blurOverlays'/><label for='cbBO'>" + langpack.blurOverlays + "</label><br><input type='checkbox' name='showxy' id='showxy' class='showxy'/><label for='showxy'>" + langpack.showPositionAndSizeInfo + "</label><br><input type='checkbox' name='aht' id='aht' class='aht'/><label for='aht'>" + langpack.autoHideTabs + "</label><br><input type='checkbox' name='ct' id='ct' class='ct'/><label for='ct'>" + langpack.classicToolbar + "</label><br><input type='checkbox' name='eoir' id='eoir' class='eoir'/><label for='eoir'>" + langpack.enableOffImageRendering + "</label><br><input type='checkbox' name='btt' id='btt' class='btt'/><label for='btt'>" + langpack.showTransparencyTexture + "</label><br><input type='checkbox' name='udf' id='udf' class='udf'/><label for='udf'>" + langpack.usemmddyyyydateformat + "</label><br><input type='checkbox' name='rflo' id='rflo' class='rflo'/><label for='rflo'>" + langpack.reversedFileListOrder + "</label><br><label>" + langpack.defaultPanelSide + "</label>&nbsp;<select class='paneSide'><option value='Right'>" + langpack.right + "</option><option value='Left'>" + langpack.left + "</option></select><br><label>" + langpack.imageRenderingType + "</label>&nbsp;<select class='irt'><option value='0'>" + langpack.blurred + "</option><option value='1'>" + langpack.pixelated + "</option><option value='2'>" + langpack.nearestNeighbor + "</option></select><br><label>" + langpack.whenAllTabsAreClosed + "</label>&nbsp;<select class='watac'><option value='0'>" + langpack.doNothing + "</option><option value='1'>" + langpack.closeApp + "</option><option value='2'>" + langpack.openNewTab + "</option></select><br><label>" + langpack.toolbarSizeScale + ": </label><input type='number' class='tsc'/><h3>" + langpack["colors"] + "</h3><input type='checkbox' class='enablecolors' id='enablecolors' name='enablecolors'/><label for='enablecolors'>" + langpack.enableCustomColors + "</label><h4>" + langpack.accentColor + "</h4><input type='color' class='accentPick'/><input type='checkbox' class='applytoolbar' id='applytoolbar' name='applytoolbar'/><label for='applytoolbar'>" + langpack.applyToToolbarButtons + "</label><input type='checkbox' class='applytext' id='applytext' name='applytext'/><label for='applytext'>" + langpack.applyAsTextColor + "</label><h3>Language</h3><select value='" + settingsdata["language"] + "' class='langsb'>" + optSelectHTML + "</select><br><br><button class='openhistory'>" + langpack.history + "</button><button class='openfavorites'>" + langpack.favorites + "</button><br><br><p class='smallo'>BirdyImg " + versionstring + "<br><a href='' class='project'>HAKANKOKCU/BirdyImg</a></p>");
 	// Handle events, set values etc.:
+	
 	sets.querySelector(".openhistory").addEventListener("click", function () {
 		showHistory()
 	})
 	sets.querySelector(".openfavorites").addEventListener("click", function () {
 		showFavorites()
 	})
+	sets.querySelector(".irt").addEventListener("change", function () {
+		settingsdata["imageRenderingType"] = Number(sets.querySelector(".irt").value);
+		ipcRenderer.send('savesettings', settingsdata);
+		applySettings();
+	});
 	sets.querySelector(".langsb").addEventListener("change", function () {
 		settingsdata["language"] = sets.querySelector(".langsb").value;
 		ipcRenderer.send('savesettings', settingsdata);
@@ -1214,10 +1281,15 @@ function showSettings() { //Open settings window
 		ipcRenderer.send('savesettings', settingsdata);
 		applySettings()
 	});
+	sets.querySelector(".project").addEventListener("click", function(e) {
+		ipcRenderer.send("launchpath", "https://github.com/HAKANKOKCU/BirdyImg")
+		e.preventDefault();
+	})
 	sets.querySelector(".tsc").value = settingsdata["toolbarSizeScale"]
 	sets.querySelector(".langsb").value = settingsdata["language"];
 	sets.querySelector(".watac").value = settingsdata["whenAllTabsAreClosed"];
 	sets.querySelector(".paneSide").value = settingsdata["defaultPanelSide"];
+	sets.querySelector(".irt").value = settingsdata["imageRenderingType"];
 	sets.querySelector(".enabletab").checked = settingsdata["enableTabs"];
 	sets.querySelector(".showxy").checked = settingsdata["showPositionAndSizeInfo"];
 	sets.querySelector(".btt").checked = settingsdata["showTransparencyTexture"];
@@ -1225,10 +1297,17 @@ function showSettings() { //Open settings window
 	sets.querySelector(".ct").checked = settingsdata["classicToolbar"];
 	sets.querySelector(".rflo").checked = settingsdata["reversedFileListOrder"];
 	sets.querySelector(".eoir").checked = settingsdata["enableOffImageRendering"];
+	sets.querySelector(".udf").checked = settingsdata["usemmddyyyydateformat"];
 	sets.querySelector(".applytoolbar").checked = settingsdata["colors"]["accentColor"]["applyToToolbarButtons"];
+	sets.querySelector(".applytext").checked = settingsdata["colors"]["accentColor"]["applyAsTextColor"]
 	sets.querySelector(".accentPick").value = settingsdata["colors"]["accentColor"]["value"]
 	sets.querySelector(".enablecolors").checked = settingsdata["colors"]["enableCustomColors"]
 	sets.querySelector(".blurOverlays").checked = settingsdata["blurOverlays"]
+	sets.querySelector(".udf").addEventListener("click", function () {
+		settingsdata["usemmddyyyydateformat"] = sets.querySelector(".udf").checked;
+		ipcRenderer.send('savesettings', settingsdata);
+		applySettings()
+	});
 	sets.querySelector(".rflo").addEventListener("click", function () {
 		settingsdata["reversedFileListOrder"] = sets.querySelector(".rflo").checked;
 		ipcRenderer.send('savesettings', settingsdata);
@@ -1266,6 +1345,11 @@ function showSettings() { //Open settings window
 	});
 	sets.querySelector(".applytoolbar").addEventListener("click", function () {
 		settingsdata["colors"]["accentColor"]["applyToToolbarButtons"] = sets.querySelector(".applytoolbar").checked;
+		ipcRenderer.send('savesettings', settingsdata);
+		applySettings()
+	});
+	sets.querySelector(".applytext").addEventListener("click", function () {
+		settingsdata["colors"]["accentColor"]["applyAsTextColor"] = sets.querySelector(".applytext").checked;
 		ipcRenderer.send('savesettings', settingsdata);
 		applySettings()
 	});
@@ -1428,6 +1512,7 @@ function openPane(html, paneID, O) { //Opens a pane at the side (O is a boolean,
 	return sbcontent;
 }
 
+
 function createPane(html, paneID, isAtRight) { //Creates a pane (DOESNT SHOW IT.)
 	var sb = document.createElement("div");
 	sb.classList.add("pane")
@@ -1440,6 +1525,7 @@ function createPane(html, paneID, isAtRight) { //Creates a pane (DOESNT SHOW IT.
 	sb.style.overflow = "auto";
 	sb.style.position = "relative";
 	sb.style.maxWidth = "100%";
+	sb.style.zIndex = "2";
 	if (isAtRight)
 		sb.style.borderLeft = "solid rgba(0,0,0,0)" + RESIZE_BORDER_SIZE + "px";
 	else
@@ -1701,7 +1787,9 @@ function addIMGToFavorites() { //Adds current image to your favorites list
 
 imgViewCnt.addEventListener('contextmenu', (e) => {//When right mouse button is clicked.
 	e.preventDefault();
-	ipcRenderer.send('showimagecontext')
+	if (currentGalleryView == null) {
+		ipcRenderer.send('showimagecontext')
+	}
 }, false)
 
 //Events for menu items:
@@ -1717,6 +1805,10 @@ ipcRenderer.on("reloadimage", (event, data) => {
 	ipcRenderer.send("openfilep", tabs[tabID].fileInf.path)
 });
 ipcRenderer.on("slideshow", (event, data) => {
+	slideshow()
+});
+
+function slideshow() {
 	if (typeof slideshowtimer != "undefined") {
 		clearInterval(slideshowtimer)
 	}
@@ -1731,11 +1823,12 @@ ipcRenderer.on("slideshow", (event, data) => {
 	document.title = "BirdyImg - " + langpack.slideshow
 	retimgIfOut();
 	posImg();
-});
+}
 
 function exitSlideshow() {
 	if (typeof slideshowtimer != "undefined") {
 		clearInterval(slideshowtimer)
+		slideshowtimer = undefined;
 		tabSwitcher.style.display = ""
 		imgViewCnt.style.maxHeight = ""
 		document.getElementById("maintoolbar").style.display = ""
@@ -1786,8 +1879,11 @@ function makeResizableDiv(element, draggable) {
 	}
   for (let i = 0;i < resizers.length; i++) {
     const currentResizer = resizers[i];
-    currentResizer.addEventListener('mousedown', function(e) {
-      e.preventDefault()
+	function start(e) {
+		e.preventDefault()
+		if (typeof e.touches != "undefined") {
+			e = e.touches[0];
+		}
       original_width = parseFloat(getComputedStyle(element, null).getPropertyValue('width').replace('px', ''));
       original_height = parseFloat(getComputedStyle(element, null).getPropertyValue('height').replace('px', ''));
       original_x = element.getBoundingClientRect().left;
@@ -1796,9 +1892,17 @@ function makeResizableDiv(element, draggable) {
       original_mouse_y = e.pageY;
       window.addEventListener('mousemove', resize)
       window.addEventListener('mouseup', stopResize)
-    })
-    
+	  window.addEventListener('touchmove', resize)
+      window.addEventListener('touchend', stopResize)
+	  //window.addEventListener('touchcancel', stopResize)
+	}
+    currentResizer.addEventListener('mousedown',start)
+    currentResizer.addEventListener('touchstart',start)
     function resize(e) {
+		console.log("resizinnn")
+		if (typeof e.touches != "undefined") {
+			e = e.touches[0];
+		}
       if (currentResizer.classList.contains('bottom-right')) {
         const width = original_width + (e.pageX - original_mouse_x);
         const height = original_height + (e.pageY - original_mouse_y)
@@ -1847,6 +1951,7 @@ function makeResizableDiv(element, draggable) {
     
     function stopResize() {
       window.removeEventListener('mousemove', resize)
+	  window.removeEventListener('touchmove', resize)
     }
   }
 }
@@ -1866,3 +1971,217 @@ function asyncfor(start, end, step, importedvar, func, speed) {
 		stp += step;
 	}, speed);
 }
+
+// Gamepad support cuz i bored. btw i guess its impossible to open images..:
+
+var gamepadid
+var lastgmp
+var focusedid = 0
+
+function axisvalue(axis) {
+	var valaxis
+	if (axis > 3) {
+		valaxis = axis
+	}else {
+		valaxis = axis //* 10
+	}
+	if (Math.abs(valaxis) > 0.003921627998352051) {
+		return valaxis
+	}else if (valaxis < 0) {
+		return valaxis
+	}
+	return 0
+}
+
+function padloop() {
+	if (document.hasFocus()) {
+		var gamepad = navigator.getGamepads()[gamepadid];
+		//AXES were the most painful ones..
+		var axisb = axisvalue(gamepad.axes[2]);
+		if (axisb != 0) {
+			tabs[tabID].imgX -= axisb * 50;
+			retimgIfOut();
+			posImg();
+			showXYInfo();
+		}
+		var axise = axisvalue(gamepad.axes[5]);
+		if (axise != 0) {
+			tabs[tabID].imgY -= axise * 50;
+			retimgIfOut();
+			posImg();
+			showXYInfo();
+		}
+		var axisi = axisvalue(gamepad.axes[9]);
+		if (axisi < 3) {
+			//console.log("zoomin")
+			if (axisi < 0) axisi/=20
+			if (axisi > 0) axisi/=2
+			tabs[tabID].zoomPrct -= axisi;
+			if (tabs[tabID].zoomPrct < 0.01) {
+				tabs[tabID].zoomPrct = 0.01
+			}
+			if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
+				animateZoomPos()
+				tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
+			}
+			if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
+				animateZoomPos()
+				tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
+			}
+			retimgIfOut();
+			posImg();
+			showZoomPrct();
+		}
+		//Buttons were easy
+		if (gamepad.buttons[11].pressed) {
+			if (!lastgmp.buttons[11].pressed) {
+				tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2);
+				tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2);
+				animateZoomPos();
+				posImg();
+			}
+		}
+		if (gamepad.buttons[4].pressed) {
+			if (!lastgmp.buttons[4].pressed) {
+				prvFile();
+			}
+		}
+		if (gamepad.buttons[5].pressed) {
+			if (!lastgmp.buttons[5].pressed) {
+				nextFile();
+			}
+		}
+		//Focus support
+		if (gamepad.buttons[7].pressed) {
+			if (!lastgmp.buttons[7].pressed) {
+				focusedid += 1;
+				//Sorry if its slow...
+				var focusableelements = document.querySelectorAll("button,input,select,a,[tabindex]")
+				focusedid = Array.prototype.indexOf.call(focusableelements,document.activeElement)
+				focusedid += 1
+				if (focusedid > focusableelements.length -1) {
+					focusedid = 0
+				}
+				focusableelements[focusedid].focus();
+			}
+		}
+		if (gamepad.buttons[6].pressed) {
+			if (!lastgmp.buttons[6].pressed) {
+				focusedid -= 1;
+				//Sorry if its slow...
+				var focusableelements = document.querySelectorAll("button,input,select,[tabindex]")
+				focusedid = Array.prototype.indexOf.call(focusableelements,document.activeElement)
+				focusedid -= 1
+				if (focusedid < 0) {
+					focusedid = focusableelements.length -1
+				}
+				focusableelements[focusedid].focus();
+			}
+		}
+		if (gamepad.buttons[1].pressed) {
+			if (!lastgmp.buttons[1].pressed) {
+				document.activeElement.click();
+			}
+		}
+		if (gamepad.buttons[8].pressed) {
+			if (!lastgmp.buttons[8].pressed) {
+				showSettings();
+			}
+		}
+		if (gamepad.buttons[0].pressed) {
+			if (!lastgmp.buttons[0].pressed) {
+				var sb = document.querySelector('[paneid="FileInfo"]');
+				if (sb == undefined) {
+					openFileInfo()
+				}else {
+					sb.style.width = "0";
+					var aniposer = setInterval(function () {
+						if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
+							tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
+						}
+						if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
+							tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
+						}
+						posImg();
+						retimgIfOut();
+					}, 1)
+					setTimeout(function () {
+						maincont.removeChild(sb);
+						if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
+							animateZoomPos()
+							tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
+						}
+						if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
+							animateZoomPos()
+							tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
+						}
+						posImg();
+						retimgIfOut();
+						//sbcontent.innerHTML = "";
+						sb.innerHTML = "";
+					}, 200)
+				}
+			}
+		}
+		if (gamepad.buttons[9].pressed) {
+			if (!lastgmp.buttons[9].pressed) {
+				if (typeof slideshowtimer != "undefined") {
+					exitSlideshow();
+				}else {
+					slideshow();
+				}
+			}
+		}
+		if (gamepad.buttons[2].pressed) {
+			if (!lastgmp.buttons[2].pressed) {
+				var sb = document.querySelector('[paneid="filelist"]');
+				if (sb == undefined) {
+					showfList()
+				}else {
+					sb.style.width = "0";
+					var aniposer = setInterval(function () {
+						if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
+							tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
+						}
+						if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
+							tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
+						}
+						posImg();
+						retimgIfOut();
+					}, 1)
+					setTimeout(function () {
+						maincont.removeChild(sb);
+						if (tabs[tabID].imgW * tabs[tabID].zoomPrct < imgViewCnt.offsetWidth) {
+							animateZoomPos()
+							tabs[tabID].imgX = (imgViewCnt.offsetWidth / 2) - (tabs[tabID].imgW * tabs[tabID].zoomPrct / 2)
+						}
+						if (tabs[tabID].imgH * tabs[tabID].zoomPrct < imgViewCnt.offsetHeight) {
+							animateZoomPos()
+							tabs[tabID].imgY = (imgViewCnt.offsetHeight / 2) - (tabs[tabID].imgH * tabs[tabID].zoomPrct / 2)
+						}
+						posImg();
+						retimgIfOut();
+						//sbcontent.innerHTML = "";
+						sb.innerHTML = "";
+					}, 200)
+				}
+			}
+		}
+		lastgmp = gamepad
+	}
+}
+var cid;
+window.addEventListener("gamepadconnected", (e) => {
+	const gp = navigator.getGamepads()[e.gamepad.index];
+	gamepadid = e.gamepad.index
+	console.log("Gamepad connected at index %d: %s. %d buttons, %d axes.",
+	gp.index, gp.id,
+	gp.buttons.length, gp.axes.length);
+	cid = setInterval(padloop,50)
+});
+
+window.addEventListener("gamepaddisconnected", (e) => {
+	clearInterval(cid);
+	console.log("Gamepad disconnected from index %d: %s",
+    e.gamepad.index, e.gamepad.id);
+});

@@ -114,5 +114,14 @@
 	"screenshot":"Screenshot",
 	"screenshotMessage": "Your screen will be captured after 5 seconds when you close this message box.",
 	"screenshotps":"Pick screen number to capture",
-	"reversedFileListOrder":"Reversed file list order"
+	"reversedFileListOrder":"Reversed file list order",
+	"remove":"Remove",
+	"removeExtensionWarn":"Do you want to remove this extension?",
+	"importExtension":"Import extension",
+	"applyAsTextColor":"Apply as text color",
+	"imageRenderingType":"Image rendering type",
+	"blurred":"Blurred",
+	"pixelated":"Pixelated",
+	"nearestNeighbor":"Nearest Neighbor",
+	"usemmddyyyydateformat":"Use mm/dd/yyyy date format"
 }

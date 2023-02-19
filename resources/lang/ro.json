@@ -114,5 +114,14 @@
 	"screenshot":"Captură de ecran",
 	"screenshotMessage": "Ecranul dvs. va fi capturat după 5 secunde când închideți această casetă de mesaj.",
 	"screenshotps":"Alegeți numărul ecranului pentru a captura",
-	"reversedFileListOrder":"Ordinea listei de fișiere inversată"
+	"reversedFileListOrder":"Ordinea listei de fișiere inversată",
+	"remove":"Elimina",
+	"removeExtensionWarn":"Doriți să eliminați această extensie?",
+	"importExtension":"Importați extensia",
+	"applyAsTextColor":"Aplicați ca culoare de text",
+	"imageRenderingType":"Tipul de redare de imagine",
+	"blurred":"Blurat",
+	"pixelated":"Pixelat",
+	"nearestNeighbor":"Cel mai apropiat vecin",
+	"usemmddyyyydateformat":"Utilizați formatul de dată ll/zz/aaaa"
 }

@@ -43,12 +43,15 @@ var njs = {
 	"reversedFileListOrder":false,
 	"whenAllTabsAreClosed": 1,
 	"toolbarSizeScale":1,
+	"imageRenderingType": 0,
+	"usemmddyyyydateformat":false,
 	"colors": {
 		"enableCustomColors": false,
 		"accentColor": {
 			/*"auto": false,*/
 			"value": "#FFAC1C",
-			"applyToToolbarButtons": false
+			"applyToToolbarButtons": false,
+			"applyAsTextColor": false
 		}
 	}
 }
@@ -68,9 +71,11 @@ if (!gotTheLock) {
 	app.quit()
 } else {
 	var eventfires = {
-		menuBulid: []
+		menuBulid: [],
+		windowLoaded: []
 	}
 	function addMenuBulidListener(func) {eventfires.menuBulid.push(func)}
+	function addWindowLoadedListener(func) {eventfires.windowLoaded.push(func)}
 	
 	function loadLang() {
 		rawdata = "";
@@ -231,13 +236,20 @@ if (!gotTheLock) {
 		try {
 			datastr = fs.readFileSync(os.homedir() + "/BirdyImg/extensions.data")
 			if (datastr.toString().trim() != "") {
-				datastr.toString().split("|").forEach((item) => {
+				list = {}
+				try {
+					list = JSON.parse(datastr.toString())
+				}catch {
+					list = datastr.toString().split("|")
+				}
+				list.forEach((item) => {
 					try {
 						let jdata = fs.readFileSync(item)
 						let json = JSON.parse(jdata)
 						let dirpath = pathlib.dirname(item)
 						let data = fs.readFileSync(json["MainPath"].replace(/_DIR_/g,dirpath))
 						json["CURRENTDIR"] = dirpath;
+						json["CURRENTPATH"] = item;
 						extensions.push(json)
 						try { eval(data.toString()) } catch (e) { console.error(e) } 
 					} catch (e) { console.error(e) }
@@ -276,6 +288,7 @@ if (!gotTheLock) {
 						}
 					}
 				},200)
+				eventfires.windowLoaded.forEach((func) => func())
 				isfirstopen = false
 			}
 			app_window.webContents.send("langpack", langdata);
@@ -334,6 +347,40 @@ if (!gotTheLock) {
 	
 	ipcMain.on("writeImage", (e, arg) => {
 		clipboard.writeImage(arg)
+	})
+	
+	ipcMain.on("saveextensions", (e,arg) => {
+		var jsonarray = []
+		arg.forEach(function(i) {
+			jsonarray.push(i.CURRENTPATH)
+		})
+		var stringify = JSON.stringify(jsonarray);
+		extensions = arg;
+		fs.writeFileSync(os.homedir() + "/BirdyImg/extensions.data", stringify)
+	})
+	
+	ipcMain.on("importExtension", (e,arg) => {
+		dialog
+			.showOpenDialog(this.app_window, {
+				properties: ["openFile"],
+				filters: [
+					{
+						name: "JSON",
+						extensions: ["json"]
+					}
+				]
+			})
+			.then((res) => {
+				if (!res.canceled) {
+					var jsonarray = []
+					extensions.forEach(function(i) {
+						jsonarray.push(i.CURRENTPATH)
+					})
+					jsonarray.push(res.filePaths[0])
+					var stringify = JSON.stringify(jsonarray);
+					fs.writeFileSync(os.homedir() + "/BirdyImg/extensions.data", stringify)
+				}
+			})
 	})
 
 	ipcMain.on("exitEditor", (e, arg) => {
@@ -437,6 +484,10 @@ if (!gotTheLock) {
 	ipcMain.on("recylefile", (e, arg) => {
 		alert(arg);
 	});
+	
+	ipcMain.on("messagebox", (event,arg) => {
+		event.returnValue = dialog.showMessageBoxSync(BrowserWindow.fromWebContents(event.sender),arg)
+	})
 
 	ipcMain.on("closeTab", (e, arg) => {
 		delete tabs[arg];
@@ -503,24 +554,43 @@ if (!gotTheLock) {
 	function typedArrayToBuffer(array) {
 		return array.buffer.slice(array.byteOffset, array.byteLength + array.byteOffset)
 	}
+	function getFileExtension(pathorfilename) {
+		if (pathorfilename.includes(".")) { //Check if file name has a "."
+			var pt = pathorfilename.split(".");
+			return pt[pt.length - 1]
+		}else {
+			return "???" //No implementation for file names doesnt have "."
+		}
+	}
 	function openFil(path) {
 		try {
 			if (path != undefined) {
 				tabs[tabID].currentFile = path
-				var stats = fs.statSync(path);
-				//console.log(pathlib.extname(path).toLowerCase());
-				var sizeOf = require('image-size');
-				var dimensions;
-				try {
-					dimensions = sizeOf(path);
-				} catch {
-					dimensions = { width: 0, height: 0 }
+				console.log(path)
+				var isuri = path.includes("://");
+				var stats = {}
+				if (!isuri) {
+					stats = fs.statSync(path);
 				}
-				var extension = pathlib.extname(path).toLowerCase();
+				//console.log(pathlib.extname(path).toLowerCase());
+				var dimensions = { width: 0, height: 0 };
+				if (!isuri) {
+					var sizeOf = require('image-size');
+					try {
+						dimensions = sizeOf(path);
+					} catch {
+					}
+				}
+				var extension
+				if (isuri) {
+					extension = pathlib.extname(path).toLowerCase();
+				}else {
+					extension = getFileExtension(path).toLowerCase();
+				}
 				var exif = {}
 				fileData = null;
 				try {
-					if (extension == ".svg") {
+					if (extension == "svg") {
 						//if file is svg, send file data to renderer to read birdy-image-info etc.
 						fileData = fs.readFileSync(path,"utf-8");
 						
@@ -529,7 +599,7 @@ if (!gotTheLock) {
 					console.error(e);
 				}
 				try {
-					if (extension == ".jpg" || extension == ".jpeg" || extension == ".jpe" || extension == ".jfif") {
+					if ((!isuri) && (extension == "jpg" || extension == "jpeg" || extension == "jpe" || extension == "jfif")) {
 						var filedata = fs.readFileSync(path);
 						var parser = require('exif-parser').create(typedArrayToBuffer(filedata)); //typedArrayToBuffer(filedata)
 						parser.enableBinaryFields(true);
@@ -542,7 +612,7 @@ if (!gotTheLock) {
 				}catch (e) {
 					console.error(e);
 				}
-				if (extension == ".tif" || extension == ".tiff") {
+				if (extension == "tif" || extension == "tiff") {
 					var filedata = fs.readFileSync(path);
 					app_window.webContents.send("filedata", {
 						path: path,
@@ -564,36 +634,41 @@ if (!gotTheLock) {
 						filedata:fileData
 					});
 				}
-				var dirpath = pathlib.dirname(path);
-				if (tabs[tabID].oldDirPath != dirpath) {
-					tabs[tabID].filelist = [];
-					tabs[tabID].filesizes = [];
-					fs.readdir(dirpath, (err, files) => {
-						console.log("Loading Folder! - Found " + files.length + " files in directory.")
-						if (settingsdata["reversedFileListOrder"]) {
-							files = files.reverse();
-						}
-						tabs[tabID].filesInDIR = files;
-						tabs[tabID].isFirstFolderLoad = true
+				delete exif;
+				if (!isuri) {
+					var dirpath = pathlib.dirname(path);
+					if (tabs[tabID].oldDirPath != dirpath) {
+						tabs[tabID].filelist = [];
+						tabs[tabID].filesizes = [];
+						fs.readdir(dirpath, (err, files) => {
+							console.log("Loading Folder! - Found " + files.length + " files in directory.")
+							if (settingsdata["reversedFileListOrder"]) {
+								files = files.reverse();
+							}
+							tabs[tabID].filesInDIR = files;
+							tabs[tabID].isFirstFolderLoad = true
+							updateFileID(dirpath,path);
+							app_window.webContents.send("filelist", {
+								fileID: tabs[tabID].fileID,
+								list: tabs[tabID].filelist,
+								filesizes: tabs[tabID].filesizes
+							});
+						});
+						tabs[tabID].oldDirPath = dirpath;
+					}else {
 						updateFileID(dirpath,path);
 						app_window.webContents.send("filelist", {
 							fileID: tabs[tabID].fileID,
 							list: tabs[tabID].filelist,
 							filesizes: tabs[tabID].filesizes
 						});
-					});
-					tabs[tabID].oldDirPath = dirpath;
-				}else {
-					updateFileID(dirpath,path);
-					app_window.webContents.send("filelist", {
-						fileID: tabs[tabID].fileID,
-						list: tabs[tabID].filelist,
-						filesizes: tabs[tabID].filesizes
-					});
+					}
 				}
 				delete fileData
+				delete stats;
 			}
 		}catch (e) {
+			console.error(e);
 			dialog.showErrorBox("Error!", e.toString())
 		}
 	}
@@ -668,7 +743,7 @@ if (!gotTheLock) {
 				dialog
 					.showSaveDialog({
 						properties: ["createDirectory"],
-						filters: [{name:"*.png",extensions:"*.png"}]
+						filters: [{name:langdata["typeImage"].replace("{TYPE}", "PNG"),extensions:["png"]}]
 					})
 					.then((res) => {
 						if (!res.canceled) {
@@ -680,6 +755,7 @@ if (!gotTheLock) {
 							app_window.webContents.send("settingsdata", settingsdata);
 						}
 					})
+				delete sources;
 			})
 	}
 	
@@ -917,6 +993,13 @@ if (!gotTheLock) {
 						accelerator: 'CmdOrCtrl+S',
 						click: function () {
 							app_window.webContents.send("exportImg", "");
+						}
+					},
+					{
+						label: langdata.undo,
+						accelerator: 'CmdOrCtrl+Z',
+						click: function () {
+							app_window.webContents.send("undoEditor", "");
 						}
 					},
 					{ type: 'separator' },

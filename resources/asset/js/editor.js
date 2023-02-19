@@ -9,7 +9,19 @@ window.enterEditor = function enterEditor() {
     ipcRenderer.send("enterEditor", "");
     if (!isEditorInited) initEditor();
 }
-window.exitEditor = function exitEditor() {
+window.exitEditor = function exitEditor(force) {
+	if (force != true) {
+		var res = ipcRenderer.sendSync("messagebox", {
+			message: langpack.doYouWantToExitEditor,
+			type: "question",
+			title: langpack.exitEditor,
+			buttons: [
+				langpack.no,
+				langpack.yes
+			]
+		});
+		if (res == 0) return;
+	}
     editorMain.style.display = "none";
     viewMain.style.display = "";
     isInEditor = false;
@@ -31,6 +43,7 @@ window.loadFileInEditor = function loadFileInEditor() {
 		canvas.height = tabs[tabID].imgH;
 		editorApplyZoom();
 		ctx = canvas.getContext("2d");
+		ctx.imageSmoothingEnabled = false;
 		ctx.drawImage(tabs[tabID].ghostImg, 0, 0);
 	}
 }
@@ -116,11 +129,13 @@ function initEditor() {
 	window.cropresizerd = document.createElement("div"); cropresizerd.classList.add("resizer","bottom-right");
 	window.cropcontrols = document.createElement("div"); cropcontrols.classList.add("controlbuttons");
 	window.cropcancelbutton = document.createElement("button");
+	window.isCropping = false;
 	cropcancelbutton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="24" width="24"><path d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6Z"/></svg>`;
 	cropcancelbutton.addEventListener("click",function() {
 		canvasscrollable.removeChild(cropresizeable);
 		dontcentereditorimage = false;
 		editorApplyZoom();
+		isCropping = false;
 	})
 	cropcontrols.appendChild(cropcancelbutton);
 	window.tempcanvas = document.createElement("canvas");
@@ -130,6 +145,7 @@ function initEditor() {
 		tempcanvas.width = parseInt(cropresizeable.style.width, 10) / editorZoomPrct;
 		tempcanvas.height = parseInt(cropresizeable.style.height, 10) / editorZoomPrct;
 		var destCtx = tempcanvas.getContext('2d');
+		ctx.imageSmoothingEnabled = false;
 		var x = -(parseInt(cropresizeable.style.left, 10) / editorZoomPrct) - canvas.offsetLeft;
 		var y = -(parseInt(cropresizeable.style.top, 10) / editorZoomPrct) - canvas.offsetTop;
 		//var x = -(parseInt(cropresizeable.style.left, 10) - (canvas.offsetLeft * editorZoomPrct));
@@ -156,6 +172,7 @@ function initEditor() {
 				ipcRenderer.send("saveFile",base64Data)
             }
         });
+		isCropping = false;
 	})
 	cropcontrols.appendChild(cropbutton);
 	cropresizers.appendChild(cropresizera);
@@ -173,6 +190,7 @@ function initEditor() {
 	window.canvasscrollable = document.createElement("editorImageScrollablePart");
 	window.canvas = document.createElement("canvas")
 	window.ctx = canvas.getContext("2d");
+	ctx.imageSmoothingEnabled = false;
 	window.editortool = "pen";
 	window.editordrawstartpos = {}
 	canvasscrollable.appendChild(canvas)
@@ -464,8 +482,7 @@ function initEditor() {
     canvas.addEventListener("touchmove",function (event) {
 		console.log("moving!")
         if (!isdrawing) return;
-		if (editorlock) return;
-        //console.log(event)
+        console.log(event)
         try {
 			var x = event.touches[0].clientX + canvasscrollable.scrollLeft - canvas.offsetLeft; 
 			var y = event.touches[0].clientY + canvasscrollable.scrollTop - canvas.offsetTop; 
@@ -484,13 +501,13 @@ function initEditor() {
         oldevent = event;
         event.preventDefault();
     })
-
-    canvas.onmousedown = canvas.ontouchstart = function (e) { 
+	
+	function down(e) {
 		console.log("down!")
-		if (!editorlock) { isdrawing = true; e.preventDefault(); }else {return;}
+		if ((!editorlock) && (!isCropping)) { isdrawing = true; e.preventDefault(); }else {return;}
 		console.log("drawing!")
-		var x = e.offsetX ? e.offsetX : event.touches[0].clientX + canvasscrollable.scrollLeft - canvas.offsetLeft; 
-		var y = e.offsetY ? e.offsetY : event.touches[0].clientY + canvasscrollable.scrollTop - canvas.offsetTop; 
+		var x = e.offsetX ? e.offsetX : e.touches[0].clientX + canvasscrollable.scrollLeft - canvas.offsetLeft; 
+		var y = e.offsetY ? e.offsetY : e.touches[0].clientY + canvasscrollable.scrollTop - canvas.offsetTop; 
 		x = x / editorZoomPrct;
 		y = y / editorZoomPrct;
 		if (editortool == "liner") {
@@ -500,14 +517,19 @@ function initEditor() {
 		} 
 		editordrawstartpos = {x:x,y:y}
 	}
+	
+	canvas.addEventListener("mousedown", down);
+	canvas.addEventListener("touchstart", down);
 
 	function rgbToHex(r, g, b) {
 		if (r > 255 || g > 255 || b > 255)
 			throw "Invalid color values";
 		return ((r << 16) | (g << 8) | b).toString(16);
 	}
-
-    canvas.onmouseup = canvas.ontouchend = function (e) {
+	
+	function up(e) {
+		console.log("up...")
+		if (editorlock || isCropping) {return;}
 		var x = e.offsetX ? e.offsetX : oldevent.touches[0].clientX + canvasscrollable.scrollLeft - canvas.offsetLeft; 
 		var y = e.offsetY ? e.offsetY : oldevent.touches[0].clientY + canvasscrollable.scrollTop - canvas.offsetTop; 
 		x = x / editorZoomPrct;
@@ -539,16 +561,27 @@ function initEditor() {
 		if (editortool == "rectangle") {
 			var sizex = x - editordrawstartpos.x
 			var sizey = y - editordrawstartpos.y
+			if (e.shiftKey) {
+				if (sizex > sizey) sizey = sizex;
+				if (sizey > sizex) sizex = sizey;
+			}
 			drawrectangleat(editordrawstartpos.x,editordrawstartpos.y,sizex,sizey,false)
 		}
 		if (editortool == "frectangle") {
 			var sizex = x - editordrawstartpos.x
 			var sizey = y - editordrawstartpos.y
+			if (e.shiftKey) {
+				if (sizex > sizey) sizey = sizex;
+				if (sizey > sizex) sizex = sizey;
+			}
 			drawrectangleat(editordrawstartpos.x,editordrawstartpos.y,sizex,sizey,true)
 		}
 		isdrawing = false; oldevent = undefined; drawundos.push(drawundocounter); drawundocounter = 0; 
 		e.preventDefault()
-	}
+	} 
+
+    canvas.addEventListener("mouseup", up);
+	canvas.addEventListener("touchend", up);
 
     editorcolorselect.onchange = function () {
 		var colorrgb = rgbcolor(editorcolorselect.value)
@@ -590,6 +623,7 @@ function initEditor() {
 				cropresizeable.style.height = canvas.style.height;
 				dontcentereditorimage = true;
 				editorApplyZoom();
+				isCropping = true;
 			}else {
 				editortool = item.getAttribute("data-toolname");
 				editorTools.innerHTML = item.innerHTML;
@@ -629,5 +663,6 @@ function initEditor() {
     editorundobutton.onclick = editorUndo;
     editorsavebutton.onclick = saveEditorImage;
     ipcRenderer.on("exportImg", (event, dt) => editorsavebutton.click());
+	ipcRenderer.on("undoEditor", (event, dt) => editorUndoButton.click());
     isEditorInited = true;
 }

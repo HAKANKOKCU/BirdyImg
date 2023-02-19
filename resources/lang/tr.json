@@ -114,5 +114,14 @@
 	"screenshot":"Ekran Alıntısı",
 	"screenshotMessage": "Ekranınız bu mesaj kutusunu kapattığınızda 5 saniye sonra alınacaktır.",
 	"screenshotps":"Ekran alıntısı alınacak ekran numarasını seçin",
-	"reversedFileListOrder":"Ters çevirilmiş dosya listesi sırası"
+	"reversedFileListOrder":"Ters çevirilmiş dosya listesi sırası",
+	"remove":"Kaldır",
+	"removeExtensionWarn":"Bu eklentiyi kaldırmak istiyor musunuz?",
+	"importExtension":"Eklenti içe aktar",
+	"applyAsTextColor":"Yazı rengi olarak uygula",
+	"imageRenderingType":"Resim görüntülenme şekli",
+	"blurred":"Bulanıklaştırılmış",
+	"pixelated":"Pikselleştirilmiş",
+	"nearestNeighbor":"En yakın komşu",
+	"usemmddyyyydateformat":"aa/gg/yyyy zaman tipini kullan"
 }
