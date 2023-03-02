@@ -19,3 +19,13 @@ Warning (If you are gonna import more than 1 extensions): Extensions should be s
 * RendererPath: Path of the JavaScript will be executed in renderer procress
 * Version: Version of the extension
 * Author: Author of the extension
+
+## Main Procress Functions
+### addMenuBulidListener
+`addMenuBulidListener(function())`: Adds function to listener for creation of the main app menu. The function passed should not have a parameter.
+#### Editing menu with it
+There are 2 Objects (JSON typed):
+* `menu_design`: JSON for main app menu
+* `editormenu_design`: JSON for editor menu
+### addWindowLoadedListener
+`addWindowLoadedListener(function())`: Adds function to listener for when page/app is loaded. The function passed should not have a parameter.
