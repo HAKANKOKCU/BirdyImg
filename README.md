@@ -13,6 +13,25 @@ BirdyImg Image Viewer Version 1.0 Beta 12  <a href="https://drive.google.com/u/0
 * Minimum Windows Version To Run: Windows 7 x86
 * Recomended Minimum Windows Version: Windows 11 x64 (I generally test in this windows version)
 
+# Features
+* Cross-Platform (There isn't mac version because it's not tested.)
+
+* Can Play Gifs And APng
+
+* Low Memory Usage (Unlike other electron apps)
+
+* Tabs Support
+
+* Info About Zoom Precent (and also defaulty disabled, you can also get current displayed size and position)
+
+* "Favorites" List
+
+* Editor
+
+* Extensions Support <a href="https://github.com/HAKANKOKCU/BirdyImg/blob/main/extensions.md">(Info)</a>
+
+* -Useless Feature- Gamepad Support
+
 # How much memory it uses?
 * When you open it it uses around 57mb (i also dont know how electron uses this low amount of ram)
 * When you open 9mb image (9.030 KB) it uses around 70mb
