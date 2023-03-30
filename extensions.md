@@ -29,3 +29,6 @@ There are 2 Objects (JSON typed):
 * `editormenu_design`: JSON for editor menu
 ### addWindowLoadedListener
 `addWindowLoadedListener(function())`: Adds function to listener for when page/app is loaded. The function passed should not have a parameter.
+
+# Example Extension
+https://drive.google.com/file/d/1NWP5Uv4sUBft3OAPKT1J1GMwFrZfJXZq/view?usp=share_link
