@@ -11,7 +11,7 @@ BirdyImg Image Viewer Version 1.0 Beta 12  <a href="https://drive.google.com/u/0
 ![resim](https://user-images.githubusercontent.com/103432992/215317788-60f0f050-ada2-4c9c-8ea8-4b74680cc036.png)
 
 * Minimum Windows Version To Run: Windows 7 x86
-* Recomended Minimum Windows Version: Windows 11 x64 (I generally test in this windows version)
+* Recomended Minimum Windows Version: Windows 10 x64
 
 # Features
 * Cross-Platform (There isn't mac version because it's not tested.)
