@@ -44,6 +44,7 @@ BirdyImg Image Viewer Version 1.0 Beta 12  <a href="https://drive.google.com/u/0
 * Ctrl + T: New Tab
 * Ctrl + Tab: Next Tab
 * Ctrl + Shift + Tab: Previous Tab
+Other shortcuts can be seen at app menu bar
 
 # Supported Languages
 * English
