@@ -1,4 +1,8 @@
 # BirdyImg
+![Bitbucket open issues](https://img.shields.io/bitbucket/issues/HAKANKOKCU/BirdyImg?style=for-the-badge)
+![Bitbucket open pull requests](https://img.shields.io/bitbucket/pr/HAKANKOKCU/BirdyImg?style=for-the-badge)
+![Bitbucket custom](https://img.shields.io/badge/VERSION-1.0%20BETA%2012-yellow?style=for-the-badge)
+
 BirdyImg Image Viewer Version 1.0 Beta 12 <a href="#downloading">Download</a>
 
 <!--![resim](https://user-images.githubusercontent.com/103432992/185777954-95c9db41-91af-4e6e-9b0a-f45470d2a6b3.png)-->
