@@ -1,5 +1,5 @@
 # BirdyImg
-BirdyImg Image Viewer Version 1.0 Beta 12  <a href="https://drive.google.com/u/0/uc?id=1AtW-nxYYaj_jhO8vNVua_cGOdqlJBbUo&export=download">Download For Windows 64Bit</a> <a href="https://drive.google.com/uc?export=download&id=11KEGL1mm7Y3AGrSwQiFOECoolPVaHr8r">Download For Windows 32Bit</a> <a href="https://drive.google.com/uc?export=download&id=19CG_p8secNYt2dVz1P7IyOWHhJAMwUWQ">Download For Linux (Zip)</a> (From Google Drive)
+BirdyImg Image Viewer Version 1.0 Beta 12 <a href="#downloading">Download</a>
 
 <!--![resim](https://user-images.githubusercontent.com/103432992/185777954-95c9db41-91af-4e6e-9b0a-f45470d2a6b3.png)-->
 <!--![resim](https://user-images.githubusercontent.com/103432992/189284081-a4f9760f-bf57-4d0a-84a6-61e0dc0afc3c.png)-->
@@ -10,8 +10,19 @@ BirdyImg Image Viewer Version 1.0 Beta 12  <a href="https://drive.google.com/u/0
 <!--![Ekran Görüntüsü (62)](https://user-images.githubusercontent.com/103432992/212546809-527674ec-ebf3-4715-a124-c00b14ab7754.png)-->
 ![resim](https://user-images.githubusercontent.com/103432992/215317788-60f0f050-ada2-4c9c-8ea8-4b74680cc036.png)
 
+# Downloading
+## Windows
 * Minimum Windows Version To Run: Windows 7 x86
 * Recomended Minimum Windows Version: Windows 10 x64
+* 32 Bit: <a href="https://drive.google.com/uc?export=download&id=11KEGL1mm7Y3AGrSwQiFOECoolPVaHr8r">Download For Windows 32Bit</a>
+* 64 Bit: <a href="https://drive.google.com/u/0/uc?id=1AtW-nxYYaj_jhO8vNVua_cGOdqlJBbUo&export=download">Download For Windows 64Bit</a>
+
+## Linux
+* 64 Bit: <a href="https://drive.google.com/uc?export=download&id=19CG_p8secNYt2dVz1P7IyOWHhJAMwUWQ">Download For Linux (Zip)</a>
+### How to run in linux
+* Extract the zip
+* Make "BirdyImg" executable
+* Run it via terminal (`./BirdyImg`) or your file manager
 
 # Features
 * Cross-Platform (There isn't mac version because it's not tested.)
@@ -36,6 +47,8 @@ BirdyImg Image Viewer Version 1.0 Beta 12  <a href="https://drive.google.com/u/0
 * Ctrl + T: New Tab
 * Ctrl + Tab: Next Tab
 * Ctrl + Shift + Tab: Previous Tab
+
+
 Other shortcuts can be seen at app menu bar
 
 # Supported Languages
